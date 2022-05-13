@@ -11,8 +11,6 @@ use Pano\Middleware\PanoMiddleware;
  {
      public function boot()
      {
-         $this->app->singleton(Pano::class, fn () => new Pano());
-
          $this->app['view']->addNamespace('Pano', __DIR__.'/../resources/views');
 
          $this->app['view']->composer('Pano::pano', function ($view) {
@@ -36,5 +34,6 @@ use Pano\Middleware\PanoMiddleware;
 
      public function register()
      {
+         $this->app->singleton(Pano::class, fn () => new Pano());
      }
  }
