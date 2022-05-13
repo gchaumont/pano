@@ -21,6 +21,12 @@ use Pano\Middleware\PanoMiddleware;
 
          $router = $this->app->make(Router::class);
 
+         $this->loadViewsFrom(__DIR__.'/../resources/views', 'pano');
+
+         $this->publishes([
+             __DIR__.'/../public' => public_path('vendor/pano'),
+         ]);
+
          $router->aliasMiddleware('pano', PanoMiddleware::class);
 
          $this->commands([

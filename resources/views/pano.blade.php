@@ -9,8 +9,8 @@
 
 
 
-  <link href="{{ mix('css/app.css') }}" rel="stylesheet">
-  <script src="{{ mix('js/app.js') }}" async></script>
+  <link href="{{ mix('css/app.css', 'vendor/pano') }}" rel="stylesheet">
+  <script src="{{ mix('js/app.js', 'vendor/pano') }}" async></script>
 
         {{-- <link rel="preconnect" href="{{asset('')}}"> --}}
 
