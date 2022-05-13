@@ -1,0 +1,30 @@
+{
+  "name": "gchaumont/pano",
+  "description": "Applications for Elastico Resources",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Guy Chaumont",
+      "email": "gchaumont@me.com"
+    }
+  ],
+  "require": {
+    "php" : "^8.1",
+    "illuminate/collections": "^9.11",
+    "illuminate/support": "^9.11"
+  },
+
+   "autoload": {
+    "psr-4": {
+      "Pano\\": "src"
+    }
+  },
+  "extra": {
+    "laravel": {
+        "providers": [
+            "Pano\\PanoServiceProvider"
+        ]
+    }
+}
+}
