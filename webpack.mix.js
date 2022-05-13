@@ -17,10 +17,11 @@ let child_process = require('child_process');
  */
 
 
-mix.js('resources/js/app.js', 'public/app.js')
-    .sass('resources/sass/app.scss', 'public/app.css')
+mix.js('resources/js/app.js', 'public')
+    .sass('resources/sass/app.scss', '')
+    .setPublicPath('public')
     .vue({ runtimeOnly: true })
-    // .version()
+    .version()
 
 
 
