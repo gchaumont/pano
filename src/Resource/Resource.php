@@ -2,12 +2,20 @@
 
 namespace Pano\Resource;
 
+use Elastico\Models\DataAccessObject;
+use Elastico\Models\Model;
+use Illuminate\Support\Str;
+use Pano\Concerns\Linkable;
+use Pano\Metrics\Metric;
+
 abstract class Resource
 {
-    public string $model;
-
+    use Linkable;
     public string $group;
 
+    public null|string $icon = null;
+
+    public static string $title = 'name';
     /**
      * Columns that should be searched.
      */
@@ -31,14 +39,33 @@ abstract class Resource
     // Eager load relations
     public array $with = [];
 
-    public function name(): string
+    protected string $model;
+
+    protected int $perPage = 50;
+
+    public function getName(): string
     {
-        return class_basename($this->model);
+        return Str::plural(Str::headline(class_basename($this->model)));
     }
 
-    public function uriKey(): string
+    public function getTitle(DataAccessObject $object): string
     {
-        return strtolower($this->name());
+        return $object->{static::$title} ?? $object->get_id();
+    }
+
+    public function perPage(): int
+    {
+        return $this->perPage;
+    }
+
+    public function getUriKey(): string
+    {
+        return Str::slug($this->getName());
+    }
+
+    public function getRouteKey(): string
+    {
+        return Str::slug(strtolower(class_basename($this->model)));
     }
 
     public function actions(): array
@@ -74,52 +101,92 @@ abstract class Resource
         $model->sendEmailVerificationNotification();
     }
 
-    public static function redirectAfterCreate(NovaRequest $request, $resource)
+    public static function redirectAfterCreate(PanoRequest $request, $resource)
     {
         return '/resources/'.static::uriKey().'/'.$resource->getKey();
     }
 
-    public static function redirectAfterUpdate(NovaRequest $request, $resource)
+    public static function redirectAfterUpdate(PanoRequest $request, $resource)
     {
         return '/resources/'.static::uriKey().'/'.$resource->getKey();
     }
 
-    public static function redirectAfterDelete(NovaRequest $request)
+    public static function redirectAfterDelete(PanoRequest $request)
     {
         return null;
     }
 
     public function fieldsForIndex($request): array
     {
+        return collect($this->fields())
+            ->filter(fn ($field) => $field->isVisibleOnIndex($request))
+            ->values()
+            ->all()
+        ;
     }
 
     public function fieldsForDetail($request): array
     {
+        return collect($this->fields())
+            ->filter(fn ($field) => $field->isVisibleOnDetail($request))
+            ->values()
+            ->all()
+        ;
     }
 
     public function fieldsForCreate($request): array
     {
+        return collect($this->fields())
+            ->filter(fn ($field) => $field->isVisibleOnCreate($request))
+            ->values()
+            ->all()
+        ;
     }
 
     public function fieldsForUpdate($request): array
     {
+        return collect($this->fields())
+            ->filter(fn ($field) => $field->isVisibleOnUpdate($request))
+            ->values()
+            ->all()
+        ;
     }
 
-    public function url(): string
+    public function linkTo(string|Model $resource): string
     {
-        // return route($app->getAppRoute().'.app.resource.index', [
-        //     'app' => $app->uriKey(),
-        //     'resource' => $this->uriKey(),
-        // ], false);
+        $resource = $resource instanceof Model ? $resource->get_id() : $resource;
+
+        return route($this->getRoute('show'), $resource, false);
+    }
+
+    public function getRoute($endpoint = 'index'): string
+    {
+        return $this->namespace.':resources.'.$this->getRouteKey().'.'.$endpoint;
+    }
+
+    public function getMetric(string $metric): Metric
+    {
+        $metric = collect($this->getMetrics())->first(fn ($m) => $m->getRouteKey() == $metric);
+        if (empty($metric)) {
+            throw new \RuntimeException("The metric [{$metric}] was not found in the Resource ".$this->getName());
+        }
+
+        return $metric;
+    }
+
+    public function getMetrics(): array
+    {
+        return $this->metrics ??= collect($this->metrics())->map(fn ($m) => $m->namespace($this->getRoute()))->all();
     }
 
     public function jsonConfig(): array
     {
         return [
-            'name' => $this->name(),
-            'key' => $this->uriKey(),
-            // 'apiKey' => $this->
-            // 'link' => $this->url($app),
+            'name' => $this->getName(),
+            // 'key' => $this->getUriKey(),
+            'metrics' => array_map(fn ($metric) => $metric->jsonConfig(), $this->getMetrics()),
+            'route' => $this->getRoute(),
+            'path' => $this->url(),
             'fields' => array_map(fn ($field) => $field->jsonConfig(), $this->fields()),
         ];
     }

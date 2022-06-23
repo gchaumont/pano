@@ -1,3 +1,39 @@
-.test {
-	color: blue,
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "chartist/dist/scss/chartist.scss";
+
+
+:root {
+    --color-bg-card: theme(colors.slate.100);
+    // --interfaceBorderColor: theme(colors.slate.600),  
+    --backdropColor: rgba(220, 220, 220, .5);
+}
+
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        color: white;
+        --color-bg-card: theme(colors.slate.800);
+
+        --backdropColor: rgba(0, 0, 0, .5); 
+    }
+    input, select {
+        @apply bg-slate-600;
+    }
+}
+
+@layer utilities {
+    .link {
+        @apply text-blue-500 hover:text-blue-600  dark:text-blue-400 dark:hover:text-blue-500 ;
+}
+
+}
+
+@layer base {
+    body {
+        @apply dark:bg-slate-900 bg-slate-200;
+}
+
 }

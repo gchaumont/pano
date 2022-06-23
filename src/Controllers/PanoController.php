@@ -20,7 +20,7 @@ use Pano\Pano;
       */
      public function config()
      {
-         return resolve(Pano::class)->currentApp()->jsonConfig();
+         return resolve(Pano::class)->rootApp()->jsonConfig();
      }
 
      /**

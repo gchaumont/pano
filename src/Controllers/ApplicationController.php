@@ -3,14 +3,14 @@
 namespace Pano\Controllers;
 
 use App\Http\Controllers\Controller;
-use Pano\Application;
+use Pano\Application\Application;
 
- class ApplicationController extends Controller
- {
-     public Application $app;
+class ApplicationController extends Controller
+{
+    public Application $app;
 
-     public function home()
-     {
-         return view('Pano::pano');
-     }
- }
+    public function home()
+    {
+        return view('Pano::pano');
+    }
+}

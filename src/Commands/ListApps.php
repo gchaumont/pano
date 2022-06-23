@@ -28,29 +28,33 @@ class ListApps extends Command
      */
     public function handle()
     {
+        // dd(resolve(Pano::class));
+        // dd(collect(resolve(Pano::class)->applications())->map(fn ($app) => $app->getRoute()));
         $applications = $this->getApps(resolve(Pano::class));
 
-        $apps = array_map(fn ($app) => [
-            'Route' => $app->getAppRoute(),
-            $app->appName(),
-            $app->getAppUrl(),
-            get_class($app),
-        ], $applications);
+        $applications = $applications->map(fn ($app) => [
+            'name' => $app->getName(),
+            'route' => $app->getRoute(),
+            'url' => $app->getAppUrl(),
+            'class' => get_class($app),
+        ])
+            ->sortBy('route')
+        ;
 
         $this->table(
-            ['Route', 'Name', 'Path',  'Class'],
-            $apps
+            ['Name', 'Route', 'Url',  'Class'],
+            $applications->all()
         );
     }
 
-    public function getApps($appContainer): array
+    public function getApps($appContainer)
     {
-        $apps = $appContainer->getApplications();
-        $allApps = $apps;
+        $apps = collect($appContainer->getApplications());
+
         foreach ($apps as $app) {
-            array_push($allApps, ...array_values($this->getApps($app)));
+            $apps = $apps->concat($this->getApps($app));
         }
 
-        return $allApps;
+        return $apps->values();
     }
 }

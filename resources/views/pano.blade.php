@@ -5,7 +5,7 @@
 
   <meta name="csrf-token" content="{{ csrf_token() }}">
   
-  <meta name="panoapp-root" content="{{ resolve(\Pano\Pano::class)->currentApp()->getAppUrl() }}">
+  <meta name="panoapp-root" content="{{ resolve(\Pano\Pano::class)->rootApp()->getAppUrl() }}">
 
 
 
@@ -22,8 +22,8 @@
         @include($pano->currentApp()->headView)
     @endif
 
-<body>
-    <div id="pano-app"></div>
+<body >
+    <div id="pano-app" ></div>
 </body>
 
 </html>

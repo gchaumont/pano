@@ -1,0 +1,240 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+// Rest CSS
+@import 'reset';
+@import 'metrics';
+@import 'menu';
+@import 'globalsearch';
+
+
+$font-stack: "Avenir Next",
+-apple-system,
+BlinkMacSystemFont,
+"Segoe UI",
+Roboto,
+Oxygen-Sans,
+Ubuntu,
+Cantarell,
+"Helvetica Neue",
+sans-serif;
+
+:root {
+    --backgroundColor: white;
+    --backgroundColor: rgb(245,246,250);
+    --menuBackgroundColor: rgb(160, 162, 172);
+    --menuBackgroundColor: rgb(255, 255, 255);
+    --textInputBackground: rgb(255, 255, 255);
+    --navbarBackgroundColor: var(--menuBackgroundColor);
+    --cardBackgroundColor: var(--menuBackgroundColor);
+    --tableBackgroundColor: var(--menuBackgroundColor);
+
+
+
+    --interfaceTextColor: rgb(112,114,115);
+    --interfaceBorderColor: rgb(240,240,240);
+
+    --menuHoverBackground: rgb(243, 243, 248);
+
+    --textColor: black;
+    --stripedTableBackground: rgb(242, 242, 242);
+        --stripedTableBackground: var(--menuBackgroundColor);
+
+    --inputBorderColor: rgb(209 213 219);
+}
+
+@media(prefers-color-scheme: dark) {
+    :root {
+        --textColor: white;
+        --backgroundColor: rgb(30, 31, 36);
+        --backgroundColor: rgb(31,33,37);
+
+        --menuBackgroundColor: rgb(66, 67, 73);
+        --menuBackgroundColor: rgb(39, 40, 44);
+        --menuBackgroundColor: var(--backgroundColor);
+        --textInputBackground: rgb(39,40,44);
+        --cardBackgroundColor: rgb(39, 41, 45);
+
+
+        --interfaceTextColor: rgb(140,140,140);
+        --menuHoverBackground: rgb(46, 47, 53);
+        --interfaceBorderColor: rgb(46, 47, 53);
+
+
+
+        --navbarBackgroundColor: var(--menuBackgroundColor);
+
+
+        --stripedTableBackground: rgb(39, 41, 45);
+        --inputBorderColor: rgb(80, 83, 88);
+    }
+
+}
+
+
+:root {
+    color-scheme: light dark;
+}
+
+
+    a {
+        // color: cornflowerblue;
+        color: dodgerblue;
+        color: #37f;
+        text-decoration: none;
+    }
+
+html,
+body {
+    font-family: $font-stack;
+    font-weight: 400;
+    color: var(--textColor);
+    background-color: var(--backgroundColor);
+
+}
+
+.page-title {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+
+#mastgrid {
+    position: relative;
+    display: grid;
+    align-items: start;
+    max-width: 100vw;
+    min-height: 100vh;
+    grid-template-columns: minmax(30ch, 30ch) 1fr 1fr;
+    grid-template-rows: 3.5rem 1fr;
+    justify-items: stretch;
+    align-items: stretch;
+    grid-template-areas:
+        "home header header"
+        "menu main main"
+
+    ;
+
+    .home-nav {
+        grid-area: home;
+        background: var(--navbarBackgroundColor);
+        padding: 1rem 1rem .25rem 1rem;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        border-right: 1px solid var(--interfaceBorderColor)
+    }
+
+    .mastnav {
+        grid-area: header;
+        z-index: 9;
+        background: var(--navbarBackgroundColor);
+        border-bottom: 1px solid var(--interfaceBorderColor);
+        padding: 1rem 1rem .25rem 1rem;
+    }
+
+    .mastmenu {
+        grid-area: menu;
+        z-index: 8;
+        background: var(--menuBackgroundColor);
+        border-right: 1px solid var(--interfaceBorderColor)
+    }
+
+    .main {
+        grid-area: main;
+        padding: 1rem;
+    }
+}
+
+
+.app-name {
+    font-size: 1.75rem;
+    text-decoration: none;
+    color: var(--textColor)
+}
+
+.main-nav {
+    display: flex;
+    width: 100%;
+    padding: .5rem;
+
+}
+
+
+
+table {
+    display: table;
+    border-spacing: .2rem;
+    border-collapse: collapse;
+    border-width: 0px;
+    max-width: 100%;
+    // background: var(--tableBackgroundColor);
+
+
+
+    tr>th,
+    tr>td {
+        padding: 1rem 0 1rem 1rem;
+        // padding-bottom: 1rem;
+        // padding-top: 1rem;
+        // padding-left: 1rem;
+    }
+
+    tr .hovered {
+        visibility: hidden;
+    }
+
+    tr:hover .hovered {
+        visibility: visible;
+    }
+
+
+    &.fluid {
+        width: 100%;
+        // max-width: fill-available;
+    }
+
+    &.striped {
+        border: none;
+        border-collapse: collapse;
+
+        tbody tr:nth-child(even) td,
+        tbody tr:nth-child(even) th {
+            background-color: var(--stripedTableBackground);
+        }
+
+        tr td:first-child,
+        tr th:first-child {
+            padding-left: .75rem;
+            -moz-border-radius-topleft: .35rem;
+            -moz-border-radius-bottomleft: .35rem;
+            -webkit-border-top-left-radius: .35rem;
+            -webkit-border-bottom-left-radius: .35rem;
+
+        }
+
+        tr td:last-child,
+        tr th:last-child {
+            padding-right: .75rem;
+            -moz-border-radius-topright: .35rem;
+            -moz-border-radius-bottomright: .35rem;
+            -webkit-border-top-right-radius: .35rem;
+            -webkit-border-bottom-right-radius: .35rem;
+        }
+
+    }
+
+}
+
+
+
+
+
+.table-footer {
+    height: 3rem;
+    background: var(--menuBackgroundColor);
+    width: 100%;
+    padding: 1rem;
+
+
+
+}

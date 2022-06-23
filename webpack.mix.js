@@ -1,5 +1,7 @@
 const mix = require('laravel-mix');
 
+const tailwindcss = require('tailwindcss'); /* Add this line at the top */
+
 require('laravel-mix-bundle-analyzer');
 
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
@@ -19,10 +21,9 @@ let child_process = require('child_process');
 
 mix.js('resources/js/app.js', 'public')
     .sass('resources/sass/app.scss', '')
+   .options({
+        postCss: [ tailwindcss('./tailwind.config.js') ],
+    })
     .setPublicPath('public')
     .vue({ runtimeOnly: true })
     .version()
-
-
-
-

@@ -4,53 +4,64 @@ import PanoSkeleton from './components/PanoSkeleton'
 import AppHome from './components/AppHome'
 import ResourceSkeleton from './components/Resources/ResourceSkeleton'
 import ListResource from './components/Resources/ListResource'
-import ShowResource from './components/PanoApp'
+import Dashboard from './components/Dashboards/Dashboard'
+import ShowResource from './components/Resources/ShowResource'
 import EditResource from './components/PanoApp'
 import CreateResource from './components/PanoApp'
 
 
-export function resourceRoutes(path, resources) {
-    var keys = resources.join('|');
-
+export function resourceRoutes(resource, app, parent) {
     return {
         component: AppHome,
-        path: path + '/:resource(' + keys + ')',
+        path: resource.path,
+        name: resource.route,
+        props: { app, parent },
         children: [{
             component: ListResource,
             path: '',
-            props: true,
+            props: { resource },
+
         }, {
             component: ShowResource,
-            path: '{object}',
-            props: true,
-
+            path: ':object',
+            props: route => ({ resource, object: route.params.object }),
         }, {
             component: EditResource,
-            path: '{object}/edit', 
-            props: true,
-
+            path: ':object/edit',
+            props: { resource },
         }, {
             component: CreateResource,
             path: 'create',
-            props: true
+            props: { resource },
         }]
     }
 }
 
-export function appRoutes(path, app) {
+export function appRoutes(app, parent) {
+    var props = { app }
+    if (parent) {
+        props.parent = parent;
+    }
     return {
-        component: AppHome,
-        path: path,
-        props: {app:app}
+        redirect: app.homepage,
+        path: app.path,
+        name: app.route,
+        props: props
     }
 
 }
 
-export function dashboardRoutes(dashboards) {
-    var keys = dashboards.join('|');
+export function dashboardRoutes(dashboard, app, parent) {
     return {
-        component: PanoSkeleton,
-        path: '{resource(' + keys + ')}',
+        component: AppHome,
+        path: dashboard.path,
+        name: dashboard.route,
+        props: { app, parent },
+        children: [{
+            component: Dashboard,
+            path: '',
+            props: { dashboard },
+        }, ]
     }
 }
 

@@ -1,13 +1,12 @@
 <template>
-    <header>
-        <h1><router-link :to="$pano.root">{{$pano.name}}</router-link></h1>
+    <header id="navbar-title" ref="navbar-title" class="main-nav">
     </header>
-
 </template>
-<script>
-    export default {
-        mounted() {
-        }
+<script setup>
+const props = defineProps({
+    app: {
+        type: Object,
+        required: true,
     }
-
+})
 </script>

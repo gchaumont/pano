@@ -8,6 +8,7 @@ namespace Pano\Fields;
  class Slug extends Field
  {
      public string $separator = '_';
+
      public string $source;
 
      public function from(string $source): static

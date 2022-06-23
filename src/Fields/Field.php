@@ -2,11 +2,21 @@
 
 namespace Pano\Fields;
 
+use Elastico\Models\Builder\Builder;
+use Elastico\Models\DataAccessObject;
+use Elastico\Models\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Pano\Fields\Concerns\HasFormat;
+use Pano\Fields\Concerns\HasVisibility;
+use Pano\Query\Directives\Directive;
 
 abstract class Field
 {
+    use HasVisibility;
+    use HasFormat;
+
     protected mixed $value;
 
     protected string $field;
@@ -15,22 +25,20 @@ abstract class Field
 
     protected string $placeholder;
 
-    protected string $alignment;
+    protected $transform;
 
     protected bool $filterable;
+
+    protected bool $sortable = false;
 
     protected bool $required;
     protected bool $stacked = false;
     protected string $help;
     protected bool $readonly = false;
 
-    protected bool $visibleOnIndex;
-    protected bool $visibleOnDetail;
-    protected bool $visibleOnCreating;
-    protected bool $visibleOnUpdating;
-    protected bool $visibleOnPreview;
+    protected null|Directive $directive = null;
 
-    final public function __construct(
+    public function __construct(
         public string $name,
         null|string|callable $field = null,
     ) {
@@ -38,13 +46,19 @@ abstract class Field
             if (is_string($field)) {
                 $this->field = $field ?? Str::snake($name);
             } elseif (is_callable($field)) {
-                $this->value = $field();
+                // $this->value = $field();
+                $this->resolveUsing($field);
             } else {
                 throw new InvalidArgumentException('Invalid Field Parameter.');
             }
         } else {
             $this->field = Str::snake($name);
         }
+    }
+
+    public function getDirective(): ?Directive
+    {
+        return $this->directive;
     }
 
     public function field(): ?string
@@ -57,12 +71,9 @@ abstract class Field
         return new static(name: $name, field: $field);
     }
 
-    public function default(callable $value): static
+    public function default(mixed $value): static
     {
-        if (is_callable($value)) {
-            $value = $value();
-        }
-        $this->default = $value;
+        $this->default = is_callable($value) ? $value() : $value;
 
         return $this;
     }
@@ -74,11 +85,37 @@ abstract class Field
         return $this;
     }
 
-    public function sortable(): static
+    public function transform(callable $callblack): static
     {
-        $this->sortable = true;
+        $this->transform = $callblack;
 
         return $this;
+    }
+
+    public function applyTransform(array $object): mixed
+    {
+        if ($this->transform) {
+            $value = Arr::get($object, $this->field);
+            $call = $this->transform;
+
+            $value = $call($value);
+
+            Arr::set($object, $this->field, $value);
+        }
+
+        return $object;
+    }
+
+    public function sortable(bool $sortable = true): static
+    {
+        $this->sortable = $sortable;
+
+        return $this;
+    }
+
+    public function isSortable(): bool
+    {
+        return $this->sortable;
     }
 
     public function fillUsing(callable $callable): static
@@ -89,123 +126,6 @@ abstract class Field
         };
 
         return $this;
-    }
-
-    public function showOnIndex(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function showOnDetail(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function showOnCreating(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function showOnUpdating(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function showOnPreview(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function hideFromIndex(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function hideFromDetail(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function hideWhenCreating(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function hideWhenUpdating(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function onlyOnIndex(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function onlyOnDetail(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function onlyOnForms(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
-    }
-
-    public function exceptOnForms(callable $condition = null): static
-    {
-        if (!empty($condition)) {
-            $this->visibility = $condition();
-        } else {
-            $this->visibility = true;
-        }
     }
 
     public function creationRules(string|Rule ...$rules): static
@@ -246,16 +166,26 @@ abstract class Field
 
     public function required(bool|callable $required = true): static
     {
-        $this->required = is_callable($required) ? $required() : $required;
+        $this->required = $required;
 
         return $this;
     }
 
+    public function isRequired($request): bool
+    {
+        return is_callable($this->required) ? call_user_func($this->required, $request) : $required;
+    }
+
     public function nullable(bool|callable $nullable = true): static
     {
-        $this->nullable = is_callable($nullable) ? $nullable() : $nullable;
+        $this->nullable = $nullable;
 
         return $this;
+    }
+
+    public function isNullable($request): bool
+    {
+        return is_callable($this->nullable) ? call_user_func($nullable, $request) : $nullable;
     }
 
     public function nullValues(array|callable $nullValues): static
@@ -265,29 +195,62 @@ abstract class Field
         return $this;
     }
 
-    public function stacked(bool|callable $stacked = true): static
+    public function stacked(bool $stacked = true): static
     {
-        $this->stacked = is_callable($stacked) ? $stacked() : $stacked;
+        $this->stacked = $stacked;
 
         return $this;
     }
 
     public function filterable(bool|callable $filterable = true): static
     {
-        $this->filterable = is_callable($filterable) ? $filterable() : $filterable;
+        $this->filterable = $filterable;
 
         return $this;
+    }
+
+    public function applyFilter($request, $query, $value, $attribute): Builder
+    {
+        return is_callable($this->filterable) ? call_user_func($this->filterable, func_get_args()) : $query;
+    }
+
+    public function isFilterable(): bool
+    {
+        return !empty($this->filterable) && $this->filterable;
+    }
+
+    /**
+     * Prepare value to be sent to Front.
+     */
+    public function serialiseValue(DataAccessObject $object): mixed
+    {
+        // Apply user transform
+        if (!empty($this->resolveUsing)) {
+            $value = call_user_func($this->resolveUsing, $object);
+        } else {
+            // Get the value from the model
+            $value = $object->getFieldValue($this->field());
+        }
+
+        if (is_null($value) && isset($this->default)) {
+            $value = is_callable($this->default) ? call_user_func($this->default, $object) : $this->default;
+        }
+
+        // Apply user transform only for display (not input)
+        if (!empty($this->displayUsing)) {
+            return call_user_func($this->displayUsing, $value, $object);
+        }
+        // Apply field type specific transformation
+        return $this->formatValue($value);
+    }
+
+    public function formatValue(mixed $value): mixed
+    {
+        return $value;
     }
 
     public function dependsOn(array $fields, callable $closure): static
     {
-    }
-
-    public function textAlign(string|callable $alignment): static
-    {
-        $this->alignment = is_callable($alignment) ? $alignment() : $alignment;
-
-        return $this;
     }
 
     public function help(array $help): static
@@ -312,16 +275,21 @@ abstract class Field
      */
     public function displayUsing(callable $callable): static
     {
-        $this->resolveUsing = $callable;
+        $this->displayUsing = $callable;
 
         return $this;
     }
 
     public function readonly(bool|callable $readonly = true): static
     {
-        $this->readonly = is_callable($readonly) ? $readonly() : $readonly;
+        $this->readonly = $readonly;
 
         return $this;
+    }
+
+    public function isReadonly($request): bool
+    {
+        return is_callable($this->readonly) ? call_user_func($this->readonly, $request) : $readonly;
     }
 
     public function canSee(callable $canSee): static
@@ -336,12 +304,35 @@ abstract class Field
         // Checks the policy
     }
 
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    public function getKey(): string
+    {
+        $key = $this->field() ?? $this->getName();
+
+        return strtolower(Str::slug($key));
+    }
+
+    public function getType(): string
+    {
+        return defined(static::class.'::TYPE') ? static::TYPE.'-field' : strtolower(class_basename(static::class)).'-field';
+    }
+
     public function jsonConfig(): array
     {
-        return [
-            'name' => $this->name,
+        return array_filter([
+            'key' => $this->getKey(),
+            'type' => $this->getType(),
+            'name' => $this->getName(),
+            'help' => $this->help ?? null,
             'field' => $this->field(),
-            'sortable' => $this->sortable ?? false,
-        ];
+            'sortable' => $this->isSortable(),
+            'filterable' => $this->isFilterable(),
+            'align' => $this->textAlign ?? null,
+            'format' => $this->format ?? null,
+        ]);
     }
 }

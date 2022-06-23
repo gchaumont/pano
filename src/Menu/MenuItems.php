@@ -2,22 +2,20 @@
 
 namespace Pano\Menu;
 
-use Pano\Application;
+use Pano\Concerns\Linkable;
 
  class MenuItems
  {
+     use Linkable;
+
      public function __construct(
          public array $items,
      ) {
      }
 
-     public function routeMap(): array
+     public function getName(): string
      {
-         return [
-             'dashboards' => [
-                 dash::class => 'route.name',
-             ],
-         ];
+         return '';
      }
 
      public function collapsable(bool $collapsable = true): static
@@ -27,30 +25,34 @@ use Pano\Application;
          return $this;
      }
 
-     public function withConfig(Application $app, string $route): static
+     public function namespace(string $namespace): static
      {
-         $this->app = $app->getAppRoute();
-         $this->route = $route;
-
+         $this->namespace = $namespace;
          foreach ($this->items as $item) {
-             $item->withConfig(app: $app, route: $this->route());
+             $item->namespace($namespace);
          }
 
          return $this;
      }
 
-     public function route(): string
+     public function pathPrefix(string $pathPrefix): static
      {
-         return $this->route;
+         $this->pathPrefix = $pathPrefix;
+
+         foreach ($this->items as $item) {
+             $item->pathPrefix($this->getPath());
+         }
+
+         return $this;
      }
 
-     public function jsonConfig(Application $app): array
+     public function jsonConfig(): array
      {
          return [
              'type' => 'group',
-             'name' => $this->name->name,
+             'name' => $this->getName(),
              'collapsable' => $this->collapsable,
-             'items' => array_values(array_map(fn ($item) => $item->jsonConfig($app), $this->items)),
+             'items' => array_values(array_map(fn ($item) => $item->jsonConfig(), $this->items)),
          ];
      }
  }

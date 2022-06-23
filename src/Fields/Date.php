@@ -15,4 +15,13 @@ namespace Pano\Fields;
 
          return $this;
      }
+
+     public function formatValue(mixed $value): mixed
+     {
+         if ($value) {
+             return $value->format('Y-M-d');
+         }
+
+         return $value;
+     }
  }

@@ -3,6 +3,7 @@
 namespace Pano;
 
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Pano\Commands\ListApps;
 use Pano\Middleware\PanoMiddleware;
@@ -11,6 +12,10 @@ use Pano\Middleware\PanoMiddleware;
  {
      public function boot()
      {
+         // Route::bind('pano-application', fn ($value) => resolve(Pano::class)->resolveApp($value));
+
+         Route::bind('pano-resource', fn ($value) => resolve(Pano::class)->resolveApp(request()->route()->getName()));
+
          $this->app['view']->addNamespace('Pano', __DIR__.'/../resources/views');
 
          $this->app['view']->composer('Pano::pano', function ($view) {
@@ -23,7 +28,7 @@ use Pano\Middleware\PanoMiddleware;
 
          $this->publishes([
              __DIR__.'/../public' => public_path('vendor/pano'),
-         ]);
+         ], ['pano-assets']);
 
          $router->aliasMiddleware('pano', PanoMiddleware::class);
 

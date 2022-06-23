@@ -1,4 +1,4 @@
-import {resourceRoutes, dashboardRoutes, appRoutes} from "./router"
+import { resourceRoutes, dashboardRoutes, appRoutes } from "./router"
 
 export default function Pano(root) {
 
@@ -7,16 +7,19 @@ export default function Pano(root) {
     this.menu = [];
     this.resources = [];
 
-    if (!this.root.startsWith('/') && this.root.length>1) {
-        this.root = '/'+this.root;
+    this.rootApp ;
+
+    if (!this.root.startsWith('/') && this.root.length > 1) {
+        this.root = '/' + this.root;
     }
 
     this.boot = function(Router) {
-        fetch( this.root + '/api/config')
+        fetch(this.root + '/api/config')
             .then(response => response.json().then(config => {
 
-                this.menu.push(... config.menu)
-                this.configureRouter(config.routes, Router)
+                this.rootApp = config;
+                this.menu.push(...config.menu)
+                this.registerAppRoutes(config, Router)
                 this.name = config.name;
                 this.path = config.path;
                 this.route = config.route;
@@ -33,19 +36,25 @@ export default function Pano(root) {
     }
 
 
-    this.configureRouter = function(routes, Router) {
-        console.log(routes)
-        for (var i = routes.length - 1; i >= 0; i--) {
-            if (routes[i].type == 'Resources') {
-                Router.addRoute(resourceRoutes(routes[i].path, routes[i].keys))
-            } else if (routes[i].type == 'Dashboards') {
-                Router.addRoute(dashboardRoutes(routes[i].path))
-            } else if (routes[i].type == 'App') {
-                Router.addRoute(appRoutes(routes[i].path, routes[i].app))
-            }            
+    this.registerAppRoutes = function(config, Router, parent) {
+
+        Router.addRoute(appRoutes(config, parent))
+
+        for (var i = config.dashboards.length - 1; i >= 0; i--) {
+            Router.addRoute(dashboardRoutes(config.dashboards[i], config, parent));
         }
-            Router.replace(Router.currentRoute.value.fullPath)
+
+        for (var i = config.resources.length - 1; i >= 0; i--) {
+            Router.addRoute(resourceRoutes(config.resources[i], config, parent));
+        }
+
+        for (var i = config.apps.length - 1; i >= 0; i--) {
+            this.registerAppRoutes(config.apps[i], Router, config);
+        }
+
+        Router.replace(Router.currentRoute.value.fullPath)
     }
+
 
 
 }

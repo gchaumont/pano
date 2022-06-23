@@ -2,122 +2,140 @@
 
 namespace Pano\Menu;
 
-use Pano\Application;
-use Pano\Pano;
+use Illuminate\Support\Str;
+use Pano\Application\Application;
+use Pano\Concerns\Linkable;
 
- class MenuItem
- {
-     protected string $icon;
-     protected string $path;
+class MenuItem
+{
+    use Linkable;
 
-     protected bool $canSee;
+    protected null|string $icon = null;
+    protected string $path;
 
-     public function __construct(
-         public string $name,
-     ) {
-     }
+    protected bool $canSee;
 
-     public function path(string $path): static
-     {
-         $this->path = $path;
+    public function __construct(
+        string $name,
+    ) {
+        $this->name($name);
+    }
 
-         return $this;
-     }
+    // public function path(string $path): static
+    // {
+    //     $this->path = $path;
 
-     public function canSee(bool|callable $canSee): bool
-     {
-         $this->canSee = is_bool($canSee) ? $canSee : $canSee();
+    //     return $this;
+    // }
 
-         return $this;
-     }
+    public function canSee(bool|callable $canSee): bool
+    {
+        $this->canSee = is_bool($canSee) ? $canSee : $canSee();
 
-     public static function make(string $name, string $link = null)
-     {
-         $static = new static(name: $name);
-         if ($link) {
-             $static->path($link);
-         }
+        return $this;
+    }
 
-         return $static;
-     }
+    public static function make(string $name, string $link = null)
+    {
+        $static = new static(name: $name);
+        // if ($link) {
+        //     $static->path($link);
+        // }
 
-     public function icon(string $icon): static
-     {
-         $this->icon = $icon;
+        return $static;
+    }
 
-         return $this;
-     }
+    public function icon(string|null $icon): static
+    {
+        $this->icon = $icon;
 
-     public static function link(string $name, string $path): static
-     {
-     }
+        return $this;
+    }
 
-     public static function externalLink(string $name, string $path): static
-     {
-         // code...
-     }
+    public static function link(string $name, string $path): static
+    {
+    }
 
-     public static function application(string $app): static
-     {
-         $static = new static(name: $app);
-         $static->application = $app;
+    public static function externalLink(string $name, string $path): static
+    {
+        // code...
+    }
 
-         return $static;
-     }
+    /**
+     * Display a link to an application
+     * Items can be passed as options for the main parameter.
+     */
+    public static function application(string $app, array|callable $items = null): static
+    {
+        $static = new static(name: $app);
+        $static->application = $app;
 
-     public static function dashboard(string $dashboard): static
-     {
-         $this->dashboard = $dashboard;
+        return $static;
+    }
 
-         return $this;
-     }
+    public static function dashboard(string $dashboard): static
+    {
+        $static = new static(name: $dashboard);
+        $static->dashboard = $dashboard;
 
-     public static function resource(string $resource): static
-     {
-         $static = new static((new $resource())->name());
-         $static->resource = $resource;
+        return $static;
+    }
 
-         return $static;
-     }
+    public static function resource(string $resource): static
+    {
+        $static = new static('');
+        $static->resource = $resource;
 
-     public function url(Application $app): string
-     {
-         if (!empty($this->resource)) {
-             return $this->resource->url($app);
-         }
+        return $static;
+    }
 
-         return '';
-     }
+    public function namespace(string $namespace): static
+    {
+        $this->namespace = $namespace;
 
-     public function withConfig(Application $app, string $route): static
-     {
-         $this->app = $app->getAppRoute();
-         $this->route = $route;
+        return $this;
+    }
 
-         return $this;
-     }
+    public function getUriKey(): string
+    {
+        return '';
+    }
 
-     public function getApplication(): Application
-     {
-         return resolve(Pano::class)->resolveApp($this->app.'.'.$this->application);
-     }
+    public function pathPrefix(string $prefix): static
+    {
+        $this->pathPrefix = $prefix;
 
-     public function jsonConfig(Application $app): array
-     {
-         if (!empty($this->application)) {
-             $this->name = $this->getApplication()->appName();
-             $this->path = $this->getApplication()->getAppUrl();
-         } elseif ($this->resource) {
-             $this->name = (new $this->resource())->name();
-             $this->path = route($this->route.'.resources.index', ['resource' => (new $this->resource())->uriKey()], [], false);
-         }
+        if (!empty($this->application)) {
+            $this->getContainingApp()->application($this->application)->pathPrefix($this->getPath());
+        } elseif (!empty($this->resource)) {
+            $this->getContainingApp()->resource($this->resource)->pathPrefix($this->getPath());
+        } elseif (!empty($this->dashboard)) {
+        }
 
-         return [
-             'type' => 'item',
-             'format' => 'default',
-             'icon' => $this->icon ?? null,
-             'name' => $this->name,
-             'link' => $this->path,
-         ];
-     }
- }
+        return $this;
+    }
+
+    public function jsonConfig(): array
+    {
+        if (!empty($this->application)) {
+            $this->name($this->getContainingApp()->application($this->application)->getName());
+            $path = $this->getContainingApp()->application($this->application)->url();
+        } elseif (!empty($this->resource)) {
+            $resource = $this->getContainingApp()->resource($this->resource);
+            $this->name($resource->getName());
+            $path = $resource->url();
+        } elseif (!empty($this->dashboard)) {
+            $dashboard = $this->getContainingApp()->dashboard($this->dashboard);
+            $this->name($dashboard->getName());
+            $path = $dashboard->url();
+        }
+
+        return [
+            'type' => 'item',
+            'format' => 'default',
+            'icon' => empty($this->icon) ? null : ucfirst(Str::camel($this->icon.'-icon')),
+            'name' => $this->getName(),
+            'path' => $path,
+        ];
+    }
+}
