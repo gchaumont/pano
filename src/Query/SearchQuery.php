@@ -73,13 +73,14 @@ class SearchQuery
         return $this->getSearchExecutor()->search($query);
     }
 
-    public function suggest(string $query): array
+    public function suggest(string $query, int $index): array
     {
-        return $this->getSearchExecutor()->suggest($query);
+        return $this->getSearchExecutor()->suggest($query, $index);
     }
 
     public function getSearchExecutor(): SearchExecutor
     {
+        // Syntax Tree
         return new SearchExecutor(
             clone $this->builder,
             $this->patternDirectives,

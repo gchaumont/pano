@@ -27,7 +27,7 @@ class GroupByDirective extends PatternDirective
         return Nested::make()->path($this->key)->query($value);
     }
 
-    public function startPattern(): string
+    public function pattern(): string
     {
         return '/by /i';
     }

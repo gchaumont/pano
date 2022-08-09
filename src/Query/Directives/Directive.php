@@ -2,27 +2,79 @@
 
 namespace Pano\Query\Directives;
 
+use Elastico\Query\Builder;
+use Elastico\Query\Compound\Boolean;
 use Elastico\Query\FullText\MatchQuery;
 use Elastico\Query\Query;
-use Elastico\Query\Term\Term;
 use Pano\Query\Support\Regex;
 
+// Syntax Tree
 abstract class Directive
 {
-    protected bool $acceptsBooleanLogic = true;
+    public bool $negatable = false;
 
-    abstract public function startPattern(): string;
+    public array $_debug = [];
+    // start
+    // end
+    // handler (returns last directive)
+    // query
+    // suggest
 
-    public function handle(string $input): Query
+    protected Boolean $currentQuery;
+
+    protected null|Directive $parent = null;
+
+    protected Builder $root;
+
+    protected string $match;
+
+    protected array $nodes = [];
+
+    abstract public function pattern(): string;
+
+    public function handle(Directive $node, null|Directive $parent, mixed $root): void
     {
-        return $this->acceptsBooleanLogic
-            ? $this->handleBool($this, $input)
-            : $this->handleSingle($this, $input);
+    }
+
+    public function initialise(): void
+    {
+    }
+
+    /**
+     * Compile the syntax tree.
+     */
+    public function compile(object $root, Directive|null $parent = null): mixed
+    {
+        $this->root = $root;
+
+        $this->initialise();
+
+        foreach ($this->nodes as $node) {
+            $node->compile($root, $this);
+
+            $this->handle($node, $parent, $root);
+        }
+
+        return $root;
+    }
+
+    public function directives(): array
+    {
+        return [];
+    }
+
+    public function matches(string $query)
+    {
+        Regex::mb_preg_match($this->pattern(), $query, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+
+        return $matches;
     }
 
     public function appliesTo($query): bool
     {
-        $count = Regex::mb_preg_match($this->startPattern(), $query, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        // $query = ltrim($query);
+
+        $count = Regex::mb_preg_match($this->pattern(), $query, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 
         return ($matches[0][1] ?? null) === 0;
         if (0 === ($matches[1] ?? null)) {
@@ -41,37 +93,131 @@ abstract class Directive
         return !empty($matches);
     }
 
-    public function handleBool($directive, $input)
+    public function query($value): null|Query
     {
-        return $directive->query($input);
+        return null;
     }
 
-    public function handleSingle($directive, $input)
+    public function suggest($builder): array
     {
-        foreach ($directive->expects() as $expectation) {
-            if ($expectation->matches($input)) {
-                return $expectation->handle($input);
+        // if (1 == count($this->directives())) {
+        //     return $this->directives()[0]->suggest($builder, $this->match);
+        // }
+
+        return collect($this->directives())
+            ->flatMap(fn ($directive) => $directive->complete($builder))
+            // ->filter(fn ($d) => str_contains($d['text'], $this->match))
+            ->values()
+            ->all()
+        ;
+    }
+
+    public function complete($builder): iterable
+    {
+        return [$this->definition()];
+    }
+
+    public function definition(): array
+    {
+        return [
+            'type' => $this->getType(),
+            'text' => $this->getText(),
+            'description' => $this->getDescription(),
+            'start' => $this->_debug['index'] ?? null,
+            'end' => $this->_debug['length'] ?? null,
+        ];
+    }
+
+    public function getCurrentQuery(): Query
+    {
+        return $this->currentQuery ?? $this->parent?->getCurrentQuery() ?? $this->root->getQuery();
+    }
+
+    public function setCurrentQuery(Query $query): static
+    {
+        $this->currentQuery = $query;
+
+        return $this;
+    }
+
+    /**
+     * Build the syntax tree.
+     *
+     * @param mixed $index
+     */
+    public function build(string $input, int $index = 0): string
+    {
+        $rawInput = $input;
+        // $input = ltrim($input);
+        $rest = preg_replace($this->pattern(), '', $input, 1);
+        preg_match($this->pattern(), $input, $matches);
+        $this->match = $matches[0];
+        // $this->match = substr($input, 0, strpos($input, $rest));
+
+        $this->_debug = [
+            'id' => spl_object_id($this),
+            'match' => $this->match,
+            'input' => $input,
+            'rest' => $rest,
+            'internal_rest' => $rest,
+            'index' => $index,
+            'length' => strlen($this->match),
+            'pattern' => $this->pattern(),
+        ];
+
+        $rest = $this->buildChildren($rest, $index + $this->_debug['length']);
+
+        $this->_debug['total_length'] = $this->_debug['length'] + collect($this->nodes)->sum(fn ($n) => $n->_debug['total_length']);
+        $this->_debug['end_index'] = $this->_debug['index'] + $this->_debug['total_length'];
+
+        return $rest;
+    }
+
+    public function buildChildren(string $input, int $index): string
+    {
+        while (!$this->isComplete()) {
+            $directive = collect($this->directives())
+                ->push(new Whitespace())
+                ->first(fn ($d) => $d->appliesTo($input))
+            ;
+
+            if (!$directive) {
+                break;
             }
+            $len = collect($this->nodes)->sum(fn ($n) => $n->_debug['total_length']);
+
+            $this->nodes[] = $directive = clone $directive;
+
+            $directive->parent = $this;
+
+            $input = $directive->build($input, $index + $len);
+
+            $this->_debug['internal_rest'] = $input;
         }
+
+        return $input;
     }
 
-    public function expects(): array
+    /**
+     * The directive doesn't accept new input.
+     */
+    public function isComplete(): bool
     {
-        return [];
+        return empty($this->directives()) || collect($this->nodes)->contains(fn ($n) => !($n instanceof Whitespace));
     }
 
-    public function query($value): Query
+    public function last(): self
     {
-        return Term::make()->field($this->key)->value($value);
+        return collect($this->nodes)->last() ?? $this;
     }
 
-    public function endPattern(): string
+    public function directiveForIndex(int $index): self
     {
-        return '/\s+/';
+        return collect($this->nodes)
+            ->filter(fn ($directive) => $directive->_debug['index'] <= $index)
+            ->filter(fn ($directive) => $directive->_debug['end_index'] >= $index)
+            ->last()
+            ?->directiveForIndex($index)
+            ?? $this;
     }
-
-    // public function suggest(): array
-    // {
-    //     return $this->directives()->map(fn ($directive) => $directive->definition());
-    // }
 }

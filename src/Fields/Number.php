@@ -2,6 +2,9 @@
 
 namespace Pano\Fields;
 
+use Pano\Query\Directives\Directive;
+use Pano\Query\Directives\NumericFieldDirective;
+
  /**
   * Shows number form.
   */
@@ -16,6 +19,15 @@ namespace Pano\Fields;
      protected int|float $amount_step;
 
      protected string $alignment = 'right';
+
+     public function getDirective(): null|Directive
+     {
+         if (!empty($this->field)) {
+             return new NumericFieldDirective($this->field);
+         }
+
+         return null;
+     }
 
      public function formatValue(mixed $value): mixed
      {

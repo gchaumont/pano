@@ -16,8 +16,8 @@
 <script>
 export default {
     props: {
-        resource: {
-            type: Object,
+        path: {
+            type: String,
             required: true,
         }
     },
@@ -36,7 +36,7 @@ export default {
         suggest: function() {
             this.selected = -1;
             setTimeout(() => {
-                fetch(this.resource.path + "/suggest?" + new URLSearchParams({ search: this.search + '.', p: this.$refs.searchInput.selectionStart }), { headers: { 'Accept': 'application/json' } })
+                fetch(this.path + "/suggest?" + new URLSearchParams({ search: this.search + '.', p: this.$refs.searchInput.selectionStart }), { headers: { 'Accept': 'application/json' } })
                     .then(response => response.json().then(json => {
                         this.suggestions = json;
                     }))
@@ -46,28 +46,17 @@ export default {
             this.$refs.searchInput.focus()
             const suggestion = this.suggestions[this.selected];
 
-            var insert = suggestion.text;
-            if (suggestion.type == 'term') {
-                insert = insert + ' ';
-            }
-
-
-            var search = [
-                this.search.slice(0, this.$refs.searchInput.selectionStart),
-                insert,
-                this.search.slice(this.$refs.searchInput.selectionStart),
+            this.search = [
+                this.search.slice(0, suggestion.start),
+                suggestion.text,
+                this.search.slice(suggestion.end),
             ].join('')
-
-
-
-            this.search = search;
 
             if (suggestion.index) {
                 setTimeout(() => {
                     this.$refs.searchInput.setSelectionRange(suggestion.index, suggestion.index);
                 }, 0)
             }
-
         },
         activate: function(e) {
             if (e !== undefined && e.hasOwnProperty('key') && e.key == 'Enter') {
@@ -93,11 +82,11 @@ export default {
     mounted() {
         this.suggest();
         this.$watch(
-            () => this.search + this.resource.path,
+            () => this.search + this.path,
             () => this.suggest(), { immediate: true }
         );
         this.$watch(
-            () => this.resource.path,
+            () => this.path,
             () => this.search = '', { immediate: true }
         );
 
@@ -122,13 +111,13 @@ export default {
                 var endChar = ''
                 switch (startChar) {
                     case '(':
-                        endChar = ')'
+                        endChar = ' )'
                         break;
                     case '{':
-                        endChar = '}'
+                        endChar = ' }'
                         break;
                     case '"':
-                        endChar = '"'
+                        endChar = ' "'
                         break;
                 }
 

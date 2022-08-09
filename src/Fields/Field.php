@@ -2,6 +2,7 @@
 
 namespace Pano\Fields;
 
+use Closure;
 use Elastico\Models\Builder\Builder;
 use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
@@ -21,13 +22,15 @@ abstract class Field
 
     protected string $field;
 
+    protected Nested $nestedUnder;
+
     protected mixed $default;
 
     protected string $placeholder;
 
     protected $transform;
 
-    protected bool $filterable;
+    protected Closure|bool $filterable = true;
 
     protected bool $sortable = false;
 
@@ -48,6 +51,7 @@ abstract class Field
             } elseif (is_callable($field)) {
                 // $this->value = $field();
                 $this->resolveUsing($field);
+            // $this->sortable(false);
             } else {
                 throw new InvalidArgumentException('Invalid Field Parameter.');
             }
@@ -61,7 +65,7 @@ abstract class Field
         return $this->directive;
     }
 
-    public function field(): ?string
+    public function field(): null|array|string
     {
         return $this->field ?? null;
     }
@@ -214,7 +218,7 @@ abstract class Field
         return is_callable($this->filterable) ? call_user_func($this->filterable, func_get_args()) : $query;
     }
 
-    public function isFilterable(): bool
+    public function isFilterable($request): bool
     {
         return !empty($this->filterable) && $this->filterable;
     }
@@ -240,6 +244,7 @@ abstract class Field
         if (!empty($this->displayUsing)) {
             return call_user_func($this->displayUsing, $value, $object);
         }
+
         // Apply field type specific transformation
         return $this->formatValue($value);
     }
@@ -321,7 +326,7 @@ abstract class Field
         return defined(static::class.'::TYPE') ? static::TYPE.'-field' : strtolower(class_basename(static::class)).'-field';
     }
 
-    public function jsonConfig(): array
+    public function jsonConfig($request): array
     {
         return array_filter([
             'key' => $this->getKey(),
@@ -330,7 +335,7 @@ abstract class Field
             'help' => $this->help ?? null,
             'field' => $this->field(),
             'sortable' => $this->isSortable(),
-            'filterable' => $this->isFilterable(),
+            'filterable' => $this->isFilterable($request),
             'align' => $this->textAlign ?? null,
             'format' => $this->format ?? null,
         ]);

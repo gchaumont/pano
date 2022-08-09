@@ -2,32 +2,15 @@
 
 namespace Pano\Query\Directives;
 
+use Elastico\Query\Query;
+use Elastico\Query\Term\Prefix;
 use Elastico\Query\Term\Term;
 
-class FieldDirective extends PatternDirective
+class Phrase extends PatternDirective
 {
-    public null|string $path = null;
-
-    public function __construct(protected string $key)
-    {
-        // code...
-    }
-
-    public function path(string $path): static
-    {
-        $this->path = $path;
-
-        return $this;
-    }
-
     public function getType(): string
     {
         return 'field';
-    }
-
-    public function getText()
-    {
-        return $this->key;
     }
 
     public function getAlias(): array
@@ -37,27 +20,33 @@ class FieldDirective extends PatternDirective
 
     public function getDescription()
     {
-        return 'Filter results that contain "'.$this->key.'"';
+        return 'Filter results that contain "'.$this->field.'"';
     }
 
     public function directives(): array
     {
-        return [
-            new ExistsDirective(field: $this->key),
-            new ContainsDirective(
-                field: $this->key,
-                path: $this->path,
-                values: [
-                    new TokenOrPhrase(field: $this->key, path: $this->path),
-                ]
-            ),
-        ];
+        return $this->values;
+    }
+
+    public function query($value): Query
+    {
+        if (str_ends_with($value, '*')) {
+            return Prefix::make()->field($this->key)->value(substr($value, 0, -1));
+        }
+
+        return Term::make()->field($this->key)->value($value);
     }
 
     public function pattern(): string
     {
-        return "/{$this->key}/i";
+        return '/"([\w\s]+)"/i';
     }
+
+    public function isComplete(): bool
+    {
+        return true;
+    }
+
     // public function suggest($builder, $query): array
     // {
     //     return $builder->enumerate($this->key, string : $query, size: 10)

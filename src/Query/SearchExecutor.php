@@ -5,11 +5,16 @@ namespace Pano\Query;
 use Closure;
 use Elastico\Models\Builder\Builder;
 use Pano\Query\Directives\BaseDirective;
-use Pano\Query\Executors\BooleanQueryExecutor;
+use Pano\Query\Directives\BooleanDirective;
+use Pano\Query\Directives\Directive;
 
 class SearchExecutor
 {
     protected ?GroupDirective $groupDirective = null;
+
+    protected null|Directive $currentDirective = null;
+
+    protected Directive $tree;
 
     public function __construct(
         protected Builder $builder,
@@ -19,9 +24,23 @@ class SearchExecutor
     ) {
     }
 
+    public function setCurrentDirective(Directive $directive): static
+    {
+        $this->currentDirective = $directive;
+
+        return $this;
+    }
+
     public function search(string $query): SearchResults
     {
-        $this->applyQueryToBuilder($query);
+        $this->buildSyntaxTree($query);
+
+        $this->builder = $this->tree->compile($this->builder);
+        if (!request()->expectsJson()) {
+            dump($query);
+            dump($this->tree);
+            $this->builder->dd();
+        }
 
         if ($this->groupDirective) {
             $this->builder->size(0);
@@ -42,39 +61,50 @@ class SearchExecutor
         );
     }
 
-    public function suggest(string $query): array
+    public function suggest(string $query, int $index): array
     {
-        $builder = $this->applyQueryToBuilder($query);
-        $currentDirective = $builder->getCurrentDirective();
+        $this->buildSyntaxTree($query);
 
-        if ($currentDirective) {
-            return $currentDirective->suggest($this->builder, $builder->getCurrentValue());
-        }
+        $currentDirective = $this->tree->directiveForIndex($index);
 
-        $unparsed = ltrim($builder->getUnparsed());
+        $r = collect($currentDirective->suggest($this->builder))
+            ->map(function ($directive) use ($currentDirective) {
+                $directive['start'] ??= $currentDirective->_debug['index'] + $currentDirective->_debug['length'];
+                $directive['end'] ??= $currentDirective->_debug['index'] + $currentDirective->_debug['length'] + strlen($currentDirective->_debug['internal_rest']);
 
-        return collect($this->patternDirectives)
-            ->map(fn ($d) => [
-                'type' => $d->getType(),
-                'text' => $d->getText(),
-                'description' => $d->getDescription(),
-                'index' => strlen($query) + strlen($d->getText()),
-            ])
-            ->filter(fn ($p) => $unparsed ? str_contains($p['text'], $unparsed) : true)
-            ->sortByDesc(fn ($p) => str_starts_with($p['text'], $unparsed))
+                return $directive;
+            })
             ->values()
             ->all()
         ;
+        if (!request()->expectsJson()) {
+            dd([
+                'query' => $query,
+                'index' => $index,
+                'tree' => $this->tree,
+                'directiveForIndex' => $this->tree->directiveForIndex($index),
+                'directives' => $this->tree->directiveForIndex($index)->directives(),
+                'suggestions' => $r,
+                'builder' => $this->tree->compile($this->builder),
+            ]);
+        }
+
+        return $r;
     }
 
-    protected function applyQueryToBuilder(string $query)
+    public function getCurrentDirective(): null|Directive
     {
-        return new BooleanQueryExecutor(
-            string: $query,
+        return $this->currentDirective;
+    }
+
+    public function buildSyntaxTree(string $query): void
+    {
+        $this->tree = (new BooleanDirective(
             directives: $this->patternDirectives,
-            builder: $this->builder,
-            query: $this->builder->getQuery(),
-            end: ')',
-        );
+            start: null,
+            end: null
+        ));
+
+        $this->tree->build($query);
     }
 }

@@ -11,6 +11,13 @@ use Elastico\Models\Model;
 
      public function formatValue(mixed $object): mixed
      {
+         if (is_string($object)) {
+             return [
+                 'id' => $object,
+                 'title' => $object,
+                 'link' => $this->getResource()->linkTo($object),
+             ];
+         }
          if (!empty($object)) {
              return [
                  'id' => $object->get_id(),

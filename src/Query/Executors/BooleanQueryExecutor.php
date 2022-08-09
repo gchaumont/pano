@@ -10,13 +10,9 @@ use RuntimeException;
 
 class BooleanQueryExecutor
 {
-    protected null|string $unparsedQuery;
-
-    protected null|Directive $currentDirective = null;
-
-    protected null|string $currentValue = null;
-
     protected bool $boolState = true;
+
+    protected null|string $unparsedQuery;
 
     public function __construct(
         protected string $string,
@@ -53,21 +49,6 @@ class BooleanQueryExecutor
         }
     }
 
-    public function getCurrentDirective(): null|Directive
-    {
-        return $this->currentDirective;
-    }
-
-    public function getCurrentValue(): null|string
-    {
-        return $this->currentValue;
-    }
-
-    public function getUnparsed(): null|string
-    {
-        return $this->unparsedQuery;
-    }
-
     public function handlePatternDirectives(): bool
     {
         foreach ($this->directives as $directive) {
@@ -81,13 +62,6 @@ class BooleanQueryExecutor
         return false;
     }
 
-    public function handleBooleanEnd(): bool
-    {
-        return is_callable($this->end)
-                ? ($this->end)($this->unparsedQuery)
-                : str_starts_with($this->unparsedQuery, $this->end);
-    }
-
     public function handleBaseDirective(): bool
     {
         if (null === $this->baseDirective) {
@@ -97,6 +71,18 @@ class BooleanQueryExecutor
         $this->applyDirective($this->baseDirective, $this->unparsedQuery);
 
         return true;
+    }
+
+    public function getUnparsed(): null|string
+    {
+        return $this->unparsedQuery;
+    }
+
+    public function handleBooleanEnd(): bool
+    {
+        return is_callable($this->end)
+                ? ($this->end)($this->unparsedQuery)
+                : str_starts_with($this->unparsedQuery, $this->end);
     }
 
     protected function parseValue(string $value): string

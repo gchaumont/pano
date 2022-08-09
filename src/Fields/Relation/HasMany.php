@@ -2,11 +2,16 @@
 
 namespace Pano\Fields\Relation;
 
+use Closure;
 use Elastico\Models\DataAccessObject;
 
  class HasMany extends Relation
  {
      const TYPE = 'has-many';
+
+     public string $foreignKey;
+
+     public Closure|bool $visibleOnIndex = false;
 
      /**
       *  Enable display of default or custom metrics
@@ -41,7 +46,14 @@ use Elastico\Models\DataAccessObject;
 
      public function getForeignKey(): string
      {
-         return $this->field.'.'.$this->getResource()->model::getForeignKey();
+         return $this->foreignKey ?? $this->field.'.'.$this->getResource()->model::getForeignKey();
+     }
+
+     public function foreignKey(string $foreignKey): static
+     {
+         $this->foreignKey = $foreignKey;
+
+         return $this;
      }
 
      // public function serialiseValue(DataAccessObject $object): mixed
@@ -73,10 +85,11 @@ use Elastico\Models\DataAccessObject;
      //     dd($value);
      // }
 
-     public function jsonConfig(): array
+     public function jsonConfig($request): array
      {
          return [
-             ...parent::jsonConfig(),
+             ...parent::jsonConfig($request),
+             // 'resource' => $this->getResource(),
              // 'path' => $this->getResource()->url(),
          ];
      }

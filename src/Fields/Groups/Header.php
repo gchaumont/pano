@@ -2,7 +2,9 @@
 
 namespace Pano\Fields\Groups;
 
- class Header
+use Pano\Fields\Field;
+
+ class Header extends Field
  {
      /**
       * Don't show headers on indexes.

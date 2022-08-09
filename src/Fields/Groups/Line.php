@@ -2,10 +2,12 @@
 
 namespace Pano\Fields\Groups;
 
+use Pano\Fields\Field;
+
  /**
   * Defines how lines are presented within a Stack.
   */
- class Line
+ class Line extends Field
  {
      public string $showAs = 'base';
 

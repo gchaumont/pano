@@ -4,20 +4,11 @@ namespace Pano\Query\Directives;
 
 use Elastico\Query\Term\Term;
 
-class FieldDirective extends PatternDirective
+class DateFieldDirective extends FieldDirective
 {
-    public null|string $path = null;
-
     public function __construct(protected string $key)
     {
         // code...
-    }
-
-    public function path(string $path): static
-    {
-        $this->path = $path;
-
-        return $this;
     }
 
     public function getType(): string
@@ -43,14 +34,8 @@ class FieldDirective extends PatternDirective
     public function directives(): array
     {
         return [
+            new CompareDirective(field: $this->key, values: [new Date()]),
             new ExistsDirective(field: $this->key),
-            new ContainsDirective(
-                field: $this->key,
-                path: $this->path,
-                values: [
-                    new TokenOrPhrase(field: $this->key, path: $this->path),
-                ]
-            ),
         ];
     }
 

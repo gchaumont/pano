@@ -2,19 +2,41 @@
 
 namespace Pano\Query\Directives;
 
+use Elastico\Query\Compound\Boolean;
 use Elastico\Query\Joining\Nested;
-use Elastico\Query\Query;
 
-class NestedFieldDirective extends PatternDirective
+class NestedFieldDirective extends BooleanDirective
 {
     public function __construct(protected string $key, public array $directives = [])
     {
-        // code...
+        parent::__construct(
+            directives: $directives,
+            nested: false,
+            start: '{',
+            end: '}',
+            allow_single: false
+        );
+
+        foreach ($this->directives as $directive) {
+            $directive->path($this->key);
+        }
+    }
+
+    public function initialise(): void
+    {
+        if (empty($this->baseQuery)) {
+            $this->baseQuery = new Boolean();
+            $nestedQuery = (new Nested())->path($this->key)->query($this->baseQuery);
+
+            $this->getCurrentQuery()->filter($nestedQuery);
+            $this->setCurrentQuery(new Boolean());
+            $this->baseQuery->should($this->getCurrentQuery());
+        }
     }
 
     public function getText()
     {
-        return "{$this->key}:{}";
+        return "{$this->key}:{ ";
     }
 
     public function getDescription()
@@ -27,33 +49,8 @@ class NestedFieldDirective extends PatternDirective
         return 'nested';
     }
 
-    public function directives(): array
-    {
-        return $this->directives;
-    }
-
-    public function query($value): Query
-    {
-        return Nested::make()->path($this->key)->query($value);
-    }
-
-    public function startPattern(): string
+    public function pattern(): string
     {
         return "/{$this->key}:{/i";
-    }
-
-    public function endPattern(): string
-    {
-        return '}';
-    }
-
-    public function suggest(): array
-    {
-        return collect($this->directives())->map(fn ($d) => [
-            'type' => $d->getType(),
-            'text' => $d->getText(),
-            'description' => $d->getDescription(),
-            'index' => 5,
-        ])->all();
     }
 }

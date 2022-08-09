@@ -22,7 +22,7 @@ use Pano\Query\Directives\NestedFieldDirective;
      {
          return new NestedFieldDirective(
              $this->field,
-             directives: collect($this->fields)->map(fn ($field) => $field->getDirective())->filter()->values()->all()
+             directives: collect($this->fields)->map(fn ($field) => $field->getDirective())->filter()->values()->all(),
          );
      }
 
@@ -62,10 +62,10 @@ use Pano\Query\Directives\NestedFieldDirective;
          return $list;
      }
 
-     public function jsonConfig(): array
+     public function jsonConfig($request): array
      {
-         $config = parent::jsonConfig();
-         $config['fields'] = array_map(fn ($field) => $field->jsonConfig(), $this->fields);
+         $config = parent::jsonConfig($request);
+         $config['fields'] = array_map(fn ($field) => $field->jsonConfig($request), $this->fields);
          $config['max'] = $this->max ?? null;
 
          return $config;

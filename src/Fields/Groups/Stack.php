@@ -30,13 +30,13 @@ use Pano\Fields\Concerns\HasVisibility;
          return $this->key ?? Str::slug($this->name);
      }
 
-     public function jsonConfig(): array
+     public function jsonConfig($request): array
      {
          return [
              'key' => $this->getKey(),
              'type' => 'stack-field',
              'name' => $this->getName(),
-             'fields' => collect($this->fields)->keyBy(fn ($f) => $f->getKey())->map(fn ($f) => $f->jsonConfig())->all(),
+             'fields' => collect($this->fields)->keyBy(fn ($f) => $f->getKey())->map(fn ($f) => $f->jsonConfig($request))->all(),
          ];
      }
 
@@ -50,7 +50,7 @@ use Pano\Fields\Concerns\HasVisibility;
          return false;
      }
 
-     public function field(): array
+     public function field(): null|array|string
      {
          return collect($this->fields)->map(fn ($field) => $field->field())->all();
      }

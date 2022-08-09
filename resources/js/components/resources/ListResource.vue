@@ -1,23 +1,24 @@
 <template>
-    <div class="pr-3">
+    <div class="pr-3" v-if="state.definition">
         <header>
-            <h2 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{resource.name}}</h2>
+            <h2 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{state.definition.name}}</h2>
         </header>
         <section>
             <ul class="flex flex-row flex-wrap  gap-3 items-stretch  justify-start my-4">
-                <li v-for="metric in resource.metrics" class="flex-auto min-w-[30ch] max-w-[60ch]">
-                    <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="resource.path" :search="state.search" />
+                <li v-for="metric in state.definition.metrics" class="flex-auto min-w-[30ch] max-w-[60ch]">
+                    <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" />
                 </li>
             </ul>
         </section>
         <section style="position: relative;">
-            <model-search class="my-4" ref="searchbar" :resource="resource" @search="handleQuery"/>
+            <header class="flex flex-wrap gap-3 items-center text-slate-700  dark:text-slate-300">
+                <model-search class="my-4" ref="searchbar" :path="state.definition.path" @search="handleQuery"/> 
+                <p>{{state.total}} hits</p>
+            </header>
 
             <div class="min-h-screen" >
-                <data-table @toPage="toPage" @sortBy="sortBy" :resource="resource" :models="state.models" :total="state.total" />
+                <data-table @toPage="toPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" />
             </div>
-
-  
         </section>
     </div>
 </template>
@@ -33,6 +34,8 @@ const router = useRouter()
 
 const state = reactive({
     models: [],
+    fields: [],
+    definition : null,
     total: 0,
     page: 1,
     search: '',
@@ -50,8 +53,14 @@ const props = defineProps({
 
 function loadResource() {
     state.models = []
-    fetch(props.resource.path + "?" + new URLSearchParams({ search: state.search, page: state.page, sort: route.query.sort }), { headers: { 'Accept': 'application/json' } })
+    var path = props.resource.path;
+    if (!path.startsWith('/')) {
+        path = window.location.pathname +'/'+path;
+    }
+    fetch(path + "?" + new URLSearchParams({ search: state.search, page: state.page, sort: route.query.sort }), { headers: { 'Accept': 'application/json' } })
         .then(response => response.json().then(json => {
+            state.definition = json.resource
+            state.fields = json.fields
             state.models = json.hits
             state.total = json.total
         }))
@@ -84,6 +93,8 @@ function sortBy(sortKey) {
 }
 
 onMounted(() => {
+    state.definition = props.resource
+
     if (route.query.page) {
         state.page = Math.max(1, parseInt(route.query.page));
     }

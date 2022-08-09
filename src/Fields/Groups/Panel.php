@@ -2,7 +2,9 @@
 
 namespace Pano\Fields\Groups;
 
- class Panel
+use Pano\Fields\Field;
+
+ class Panel extends Field
  {
      protected int $limit;
 

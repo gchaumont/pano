@@ -4,13 +4,16 @@ namespace Pano\Resource;
 
 use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
+use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 use Pano\Concerns\Linkable;
+use Pano\Fields\Groups\Stack;
 use Pano\Metrics\Metric;
 
 abstract class Resource
 {
     use Linkable;
+
     public string $group;
 
     public null|string $icon = null;
@@ -118,8 +121,19 @@ abstract class Resource
 
     public function fieldsForIndex($request): array
     {
-        return collect($this->fields())
+        return $this->getFields()
             ->filter(fn ($field) => $field->isVisibleOnIndex($request))
+            ->values()
+            ->all()
+        ;
+    }
+
+    public function filterableFields($request): array
+    {
+        return $this->getFields()
+            ->map(fn ($field) => $field instanceof Stack ? $field->fields : $field)
+            ->flatten()
+            ->filter(fn ($field) => $field->isFilterable($request))
             ->values()
             ->all()
         ;
@@ -127,7 +141,7 @@ abstract class Resource
 
     public function fieldsForDetail($request): array
     {
-        return collect($this->fields())
+        return $this->getFields()
             ->filter(fn ($field) => $field->isVisibleOnDetail($request))
             ->values()
             ->all()
@@ -136,7 +150,7 @@ abstract class Resource
 
     public function fieldsForCreate($request): array
     {
-        return collect($this->fields())
+        return $this->getFields()
             ->filter(fn ($field) => $field->isVisibleOnCreate($request))
             ->values()
             ->all()
@@ -145,7 +159,7 @@ abstract class Resource
 
     public function fieldsForUpdate($request): array
     {
-        return collect($this->fields())
+        return $this->getFields()
             ->filter(fn ($field) => $field->isVisibleOnUpdate($request))
             ->values()
             ->all()
@@ -174,6 +188,16 @@ abstract class Resource
         return $metric;
     }
 
+    public function getRelated(string $relation)
+    {
+        return $this->getFields()->first(fn ($f) => $f->getKey() == $relation);
+    }
+
+    public function getFields(): BaseCollection
+    {
+        return collect($this->fields());
+    }
+
     public function getMetrics(): array
     {
         return $this->metrics ??= collect($this->metrics())->map(fn ($m) => $m->namespace($this->getRoute()))->all();
@@ -187,7 +211,7 @@ abstract class Resource
             'metrics' => array_map(fn ($metric) => $metric->jsonConfig(), $this->getMetrics()),
             'route' => $this->getRoute(),
             'path' => $this->url(),
-            'fields' => array_map(fn ($field) => $field->jsonConfig(), $this->fields()),
+            // 'fields' => array_map(fn ($field) => $field->jsonConfig(), $this->fields()),
         ];
     }
 }

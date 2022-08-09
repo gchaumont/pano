@@ -23,14 +23,9 @@ class SumDirective extends PatternDirective
         return (new Sum('sum'))->field($value);
     }
 
-    public function startPattern(): string
+    public function pattern(): string
     {
         return '/sum(/i';
-    }
-
-    public function endPattern(): string
-    {
-        return ')';
     }
 
     public function suggest(): array

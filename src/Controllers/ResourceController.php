@@ -4,6 +4,7 @@ namespace Pano\Controllers;
 
 use App\Http\Controllers\Controller;
 use Elastico\Query\FullText\MultiMatchQuery;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Pano\Application\Application;
 use Pano\Fields\Groups\Stack;
@@ -28,22 +29,14 @@ class ResourceController extends Controller
 
     public function suggest()
     {
-        $baseQuery = $this->getResource()->model::query();
-
-        $searchQuery = new SearchQuery($baseQuery);
-
-        $searchQuery->patternDirectives(...$this->getDirectives());
-
-        // $searchInput = str_pad(
-        //     string: request()->input('search') ?? '',
-        //     length: request()->input('p'),
-        // );
-
-        $searchInput = substr(request()->input('search') ?? '', 0, -1);
-
-        $searchInput = substr($searchInput, 0, request()->input('p') + 3);
-
-        return $searchQuery->suggest($searchInput);
+        return (new SearchQuery(
+            $this->getResource()->model::query()
+        ))
+            ->patternDirectives(
+                ...$this->getDirectives($this->getResource())
+            )
+            ->suggest(substr(request()->input('search') ?? '', 0, -1), request()->input('p'))
+        ;
     }
 
     public function index()
@@ -59,7 +52,6 @@ class ResourceController extends Controller
             ->map(fn ($field) => $field->field())
             ->flatten()
             ->filter()
-
             ->all()
         ;
 
@@ -118,27 +110,144 @@ class ResourceController extends Controller
         ;
         $searchQuery = new SearchQuery($builder);
 
-        $searchQuery->patternDirectives(...$this->getDirectives());
+        $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
 
-        $response = $searchQuery->search(request()->input('search') ?? '');
-        $hits = $response->hits();
+        try {
+            $response = $searchQuery->search(request()->input('search') ?? '');
+        } catch (\Throwable $e) {
+            return [
+                'resource' => $resource->jsonConfig(),
+                'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig()),
+                // 'metrics' => $response->aggregations(),
+                'error' => [
+                    'message' => $e->getMessage(),
+                ],
+            ];
+        }
 
-        $hits = $this->loadRelations(
-            $hits,
-            collect($resource->fieldsForIndex(request()))
-        );
-
-        // response($hits)->send();
-
-        $hits = collect($hits)->map(
-            fn ($hit) => $this->serialiseModel($hit, $resource->fieldsForIndex(request()))
-        )
-            ->all()
+        $hits = $this
+            ->loadRelations(
+                $response->hits(),
+                collect($resource->fieldsForIndex(request()))
+            )
+            ->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())))
         ;
 
         return [
-            'hits' => $hits,
+            'hits' => $hits->all(),
             'total' => $response->total(),
+            'resource' => $resource->jsonConfig(),
+            'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
+            // 'metrics' => $response->aggregations(),
+        ];
+    }
+
+    public function suggestRelation(string $resourceID, string $relation)
+    {
+        $baseResource = $this->getResource()->model::query();
+        $baseResource->getRelated($relation);
+        $resource = $baseResource->getContainingApp()->resource($related->resource);
+
+        return (new SearchQuery(
+            $resource
+        ))
+            ->patternDirectives(
+                ...$this->getDirectives($this->getResource())
+            )
+            ->suggest(substr(request()->input('search') ?? '', 0, -1), request()->input('p'))
+        ;
+    }
+
+    public function relation(string $resourceID, string $relation)
+    {
+        $baseResource = $this->getResource();
+
+        $related = $baseResource->getRelated($relation);
+
+        $resource = $baseResource->getContainingApp()->resource($related->resource);
+
+        $fields = collect($resource->fieldsForIndex(request()))
+            // ->filter(fn ($field) => $field->canSee())
+            ->map(fn ($field) => $field->field())
+            ->flatten()
+            ->filter()
+
+            ->all()
+        ;
+
+        $query = request()->query('search');
+
+        $sortInput = request()->input('sort');
+
+        $sortField = collect($resource->fieldsForIndex(request()))
+            ->filter(fn ($field) => $field->isSortable())
+            ->first(fn ($field) => $field->getKey() == trim($sortInput, '-'))
+        ;
+
+        $pageInput = request()->input('page');
+        $perPage = $resource->perPage();
+
+        // $metrics = 0 == request()->query('page') ? collect($resource->metrics()) : collect();
+        // response($related->getForeignKey())->send();
+        $builder = $resource->model::query()
+            ->select($fields)
+            ->where($related->getForeignKey(), $resourceID)
+            ->take($perPage)
+            ->when($sortField, fn ($q) => $q->orderBy($sortField->field(), str_starts_with($sortInput, '-') ? 'asc' : 'desc'))
+            ->when($pageInput, fn ($q) => $q->skip(($pageInput - 1) * 50))
+            // ->when($query, function ($q) use ($query, $resource) {
+            //     $terms = explode(' ', $query);
+            //     $fields = collect($resource->fieldsForIndex(request()))
+            //         // ->filter(fn ($field) => $field->isSearchable())
+            //     ;
+
+            //     foreach ($fields as $field) {
+            //         if ($field instanceof Stack) {
+            //             foreach ($field->fields as $field) {
+            //                 if ($field->field() && $resource->model::getFieldType($field->field())->isTextSearchable()) {
+            //                     foreach ($terms as $term) {
+            //                         $q->searchWildcard($field->field(), $term);
+            //                     }
+            //                 }
+            //             }
+            //         } else {
+            //             if ($field->field() && $resource->model::getFieldType($field->field())->isTextSearchable()) {
+            //                 foreach ($terms as $term) {
+            //                     $q->searchWildcard($field->field(), $term);
+            //                 }
+            //             }
+            //         }
+            //     }
+            // })
+            // ->when(
+            //     $query,
+            //     fn ($q) => $q->getQuery()->should(
+            //         (new MultiMatchQuery())->fields(collect($resource->fieldsForIndex(request()))->filter(fn ($f) => true || $f->isSearchable())->map(fn ($field) => $field->field())->all())->query($query)->type('bool_prefix')
+            //     )
+            // )
+
+            // ->addAggregations($metrics->map(fn ($metric) => $metric->getAggregation()))
+
+        ;
+        $searchQuery = new SearchQuery($builder);
+
+        $searchQuery->patternDirectives(...$this->getDirectives($resource));
+
+        $response = $searchQuery->search(request()->input('search') ?? '');
+
+        $hits = $this
+            ->loadRelations(
+                $response->hits(),
+                collect($resource->fieldsForIndex(request()))
+            )
+            ->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())))
+        ;
+
+        return [
+            'hits' => $hits->all(),
+            'total' => $response->total(),
+            'resource' => $related->getResource()->jsonConfig(),
+            'fields' => collect($related->getResource()->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
             // 'metrics' => $response->aggregations(),
         ];
     }
@@ -164,12 +273,15 @@ class ResourceController extends Controller
 
         $model = $resource->model::query()->select($selectFields)->find($model);
 
-        [$model] = $this->loadRelations(
+        $model = $this->loadRelations(
             [$model],
             collect($resource->fieldsForDetail(request()))
-        );
+        )->first();
 
-        return $this->serialiseModel($model, $fields);
+        return [
+            'model' => $this->serialiseModel($resource, $model, $fields),
+            'fields' => collect($this->getResource()->fieldsForDetail(request()))->map(fn ($f) => $f->jsonConfig(request())),
+        ];
     }
 
     public function store(Request $request)
@@ -189,11 +301,10 @@ class ResourceController extends Controller
         return resolve(Pano::class)->resolveFromRoute(request()->route()->getName());
     }
 
-    protected function getDirectives(): array
+    protected function getDirectives(Resource $resource): array
     {
-        return collect($this->getResource()->fieldsForIndex(request()))
-            ->map(fn ($field) => $field instanceof Stack ? $field->fields : $field)
-            ->flatten()
+        return collect($resource->filterableFields(request()))
+            // ->flatten()
             ->map(fn ($field) => $field->getDirective())
             ->filter()
             ->values()
@@ -201,7 +312,7 @@ class ResourceController extends Controller
         ;
     }
 
-    protected function loadRelations(iterable $hits, iterable $fields): array
+    protected function loadRelations(iterable $hits, iterable $fields): Collection
     {
         $hits = collect($hits);
 
@@ -235,22 +346,27 @@ class ResourceController extends Controller
                 } elseif ($relation instanceof Nested) {
                     foreach ($hits as $hit) {
                         if ($rel = $hit->getFieldValue($relation->field())) {
-                            $hit->setFieldValue($relation->field(), $this->loadRelations($rel, collect($relation->getFields())));
+                            $hit->setFieldValue(
+                                $relation->field(),
+                                $this->loadRelations($rel, collect($relation->getFields()))->all()
+                            );
                         }
                     }
                 }
             })
         ;
 
-        return $hits->all();
+        return $hits;
     }
 
-    protected function serialiseModel(mixed $resource, iterable $fields)
+    protected function serialiseModel(Resource $resource, mixed $hit, iterable $fields)
     {
         return [
-            'title' => $this->getResource()->getTitle($resource),
-            'link' => $this->getResource()->linkTo($resource->get_id()),
-            'fields' => collect($fields)->keyBy(fn ($field) => $field->getKey())->map(fn ($field) => $field->serialiseValue($resource)),
+            'title' => $resource->getTitle($hit),
+            'link' => $resource->linkTo($hit->get_id()),
+            'fields' => collect($fields)
+                ->keyBy(fn ($field) => $field->getKey())
+                ->map(fn ($field) => $field->serialiseValue($hit)),
         ]
         ;
     }

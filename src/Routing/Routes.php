@@ -84,6 +84,7 @@ class Routes
         ], function () {
             Route::controller(ResourceController::class)->group(function () {
                 Route::get('suggest', 'suggest')->name('suggest');
+                Route::get('metrics/{metric}', 'metric')->name('metric');
 
                 Route::get('', 'index')->name('index');
                 Route::post('', 'store')->name('store');
@@ -92,8 +93,8 @@ class Routes
                 Route::put('{object}', 'app')->name('update');
                 Route::delete('{object}', 'destroy')->name('destroy');
                 Route::get('{object}/edit', 'app')->name('edit');
-
-                Route::get('metrics/{metric}', [ResourceController::class, 'metric'])->name('metric');
+                Route::get('{object}/relations/{relation}', 'relation')->name('relation');
+                Route::get('{object}/relations/{relation}/suggest', 'suggest_relation')->name('suggest_relation');
             });
         });
     }

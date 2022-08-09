@@ -56,10 +56,10 @@ use Pano\Query\Directives\FieldDirective;
      {
      }
 
-     public function jsonConfig(): array
+     public function jsonConfig($request): array
      {
          return [
-             ...parent::jsonConfig(),
+             ...parent::jsonConfig($request),
              'map' => $this->field_map,
              'withIcons' => $this->with_icons,
          ];
