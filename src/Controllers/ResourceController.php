@@ -124,7 +124,7 @@ class ResourceController extends Controller
         } catch (\Throwable $e) {
             return [
                 'resource' => $resource->jsonConfig(),
-                'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig()),
+                'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
                 // 'metrics' => $response->aggregations(),
                 'error' => [
                     'message' => $e->getMessage(),
