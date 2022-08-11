@@ -97,6 +97,14 @@ class SearchExecutor
         return $this->currentDirective;
     }
 
+    public function applyToBuilder(string $query): Builder
+    {
+        $this->buildSyntaxTree($query);
+        $this->builder = $this->tree->compile($this->builder);
+
+        return $this->builder;
+    }
+
     public function buildSyntaxTree(string $query): void
     {
         $this->tree = (new BooleanDirective(

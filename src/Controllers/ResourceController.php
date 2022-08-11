@@ -21,8 +21,15 @@ class ResourceController extends Controller
     public function metric(string $metric)
     {
         $metric = $this->getResource()->getMetric($metric);
+        $builder = $this->getResource()->model::query()->select(0);
 
-        // return $metric->asJson(request());
+        $searchQuery = new SearchQuery($builder);
+
+        $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
+
+        // dd($searchQuery->applyQueryToBuilder(request()->input('search')));
+
+        return $metric->asJson(request(), $searchQuery->applyQueryToBuilder(request()->input('search') ?? ''));
 
         return Cache::remember('pano:metrics:'.$metric->getRouteKey(), $metric->cacheFor(), fn () => $metric->asJson(request()));
     }

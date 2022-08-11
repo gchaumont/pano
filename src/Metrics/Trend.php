@@ -217,6 +217,7 @@ use Pano\Pano;
          }
 
          $timezone = resolve(Pano::class)->resolveUserTimezone($request) ?? $request->timezone;
+
          $trend = $query->whereBetween(
              $dateField,
              $this->currentRange($request->range, $timeUnit, $timezone)

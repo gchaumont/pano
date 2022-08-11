@@ -6,6 +6,7 @@ use Elastico\Query\Builder;
 use Elastico\Query\Compound\Boolean;
 use Elastico\Query\FullText\MatchQuery;
 use Elastico\Query\Query;
+use Exception;
 use Pano\Query\Support\Regex;
 
 // Syntax Tree
@@ -182,6 +183,8 @@ abstract class Directive
             ;
 
             if (!$directive) {
+                // throw new Exception('Parsing Error for : '.$input);
+
                 break;
             }
             $len = collect($this->nodes)->sum(fn ($n) => $n->_debug['total_length']);

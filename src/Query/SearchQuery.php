@@ -2,7 +2,7 @@
 
 namespace Pano\Query;
 
-use Elastico\Models\Builder\Builder;
+use Elastico\Query\Builder;
 use Pano\Query\Directives\PatternDirective;
 
 class SearchQuery
@@ -76,6 +76,11 @@ class SearchQuery
     public function suggest(string $query, int $index): array
     {
         return $this->getSearchExecutor()->suggest($query, $index);
+    }
+
+    public function applyQueryToBuilder(string $query): Builder
+    {
+        return $this->getSearchExecutor()->applyToBuilder($query);
     }
 
     public function getSearchExecutor(): SearchExecutor

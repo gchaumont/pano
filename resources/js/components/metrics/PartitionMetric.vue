@@ -56,6 +56,11 @@ export default {
     },
     mounted() {
         this.loadMetric()
+
+               this.$watch(
+            () =>  this.search,
+            () => this.loadMetric(), { immediate: true }
+        );
     }
 }
 </script>

@@ -76,7 +76,7 @@ export default {
         this.selectedRange = this.metric.defaultRange;
 
         this.$watch(
-            () => this.selectedRange,
+            () => this.selectedRange + this.search,
             () => this.loadMetric(), { immediate: true }
         );
     }

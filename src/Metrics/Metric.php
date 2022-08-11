@@ -3,6 +3,7 @@
 namespace Pano\Metrics;
 
 use DateTime;
+use Elastico\Query\Builder;
 use Pano\Concerns\Linkable;
 use Pano\Metrics\Results\MetricResult;
 
@@ -15,11 +16,11 @@ use Pano\Metrics\Results\MetricResult;
 
      public int $precision = 2;
 
-     abstract public function calculate($request): MetricResult;
+     abstract public function calculate($request, Builder $builder = null): MetricResult;
 
-     public function asJson($request): array
+     public function asJson($request, Builder $builder = null): array
      {
-         return $this->calculate($request)->toJson();
+         return $this->calculate($request, $builder)->toJson();
      }
 
      public function make(): static

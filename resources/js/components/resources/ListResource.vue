@@ -12,12 +12,12 @@
         </section>
         <section style="position: relative;">
             <header class="flex flex-wrap gap-3 items-center text-slate-700  dark:text-slate-300">
-                <model-search class="my-4" ref="searchbar" :path="state.definition.path" @search="handleQuery"/> 
-                <p>{{state.total}} hits</p>
+                <model-search class="my-4" ref="searchbar" :path="state.definition.path" @search="handleQuery" :initialSearch="state.search" />
+                <p><span v-if="state.total == 10000">></span>
+                    {{state.total}} hits</p>
             </header>
-
-            <div class="min-h-screen" >
-                <data-table @toPage="toPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" />
+            <div class="min-h-screen">
+                <data-table @toPage="toPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" :page="state.page" :isLoading="state.isLoading" />
             </div>
         </section>
     </div>
@@ -35,10 +35,11 @@ const router = useRouter()
 const state = reactive({
     models: [],
     fields: [],
-    definition : null,
+    definition: null,
     total: 0,
     page: 1,
     search: '',
+    isLoading: false,
 })
 
 const searchbar = ref(null)
@@ -52,23 +53,36 @@ const props = defineProps({
 })
 
 function loadResource() {
-    state.models = []
+    state.isLoading = true
+    if (state.page == 1) {
+
+        state.models = []
+    }
     var path = props.resource.path;
     if (!path.startsWith('/')) {
-        path = window.location.pathname +'/'+path;
+        path = window.location.pathname + '/' + path;
     }
     fetch(path + "?" + new URLSearchParams({ search: state.search, page: state.page, sort: route.query.sort }), { headers: { 'Accept': 'application/json' } })
         .then(response => response.json().then(json => {
+            state.isLoading = false;
+
             state.definition = json.resource
             state.fields = json.fields
-            state.models = json.hits
+            if (state.page > 1) {
+                console.log('Pushing Hits')
+                state.models.push(...json.hits)
+            } else {
+                console.log('Initialising Hits')
+                state.models = json.hits
+            }
             state.total = json.total
         }))
 }
 
 function handleQuery(query) {
     state.search = query;
-    toPage(1),  
+    state.page = 1;
+    router.replace({ query: Object.assign({}, route.query, { search: state.search, page: state.page }) })
     loadResource()
 }
 
@@ -85,23 +99,28 @@ function getValue(value, field) {
 
 function toPage(page) {
     state.page = page;
-    router.replace({ query: Object.assign({}, route.query, { page: state.page }) , hash :'#'})
+    // router.replace({ query: Object.assign({}, route.query, { page: state.page }), hash: '#' })
 }
 
 function sortBy(sortKey) {
     router.replace({ query: Object.assign({}, route.query, { sort: sortKey }) })
 }
 
+function resetMetrics() {
+    state.definition.metrics = [];
+}
+
 onMounted(() => {
     state.definition = props.resource
+    state.search = route.query.search || '';
 
-    if (route.query.page) {
-        state.page = Math.max(1, parseInt(route.query.page));
-    }
+    // if (route.query.page) {
+    //     state.page = Math.max(1, parseInt(route.query.page));
+    // }
     loadResource()
     watch(
         () => props.resource,
-        () => { toPage(1), loadResource() }
+        () => { toPage(1), loadResource(), resetMetrics() }
     )
     watch(
         () => state.page,

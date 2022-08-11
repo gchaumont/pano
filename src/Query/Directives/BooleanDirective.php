@@ -132,6 +132,12 @@ use Elastico\Query\Compound\Boolean;
          return collect($this->directives)
              ->flatMap(fn ($directive) => $directive->complete($builder))
              ->filter(fn ($d) => str_contains($d['text'], $rest))
+             ->map(function ($d) {
+                 $d['start'] = $this->_debug['index'] + $this->_debug['total_length'];
+                 $d['end'] = $d['start'] + strlen($this->_debug['internal_rest']);
+
+                 return $d;
+             })
              ->values()
              ->all()
         ;

@@ -19,6 +19,10 @@ export default {
         path: {
             type: String,
             required: true,
+        }, 
+        initialSearch: {
+            type: String, 
+            required: false
         }
     },
     emits: ['search'],
@@ -43,7 +47,9 @@ export default {
             }, 2)
         },
         select: function() {
+
             this.$refs.searchInput.focus()
+
             const suggestion = this.suggestions[this.selected];
 
             this.search = [
@@ -80,7 +86,6 @@ export default {
         }
     },
     mounted() {
-        this.suggest();
         this.$watch(
             () => this.search + this.path,
             () => this.suggest(), { immediate: true }
@@ -89,6 +94,11 @@ export default {
             () => this.path,
             () => this.search = '', { immediate: true }
         );
+        this.search = this.initialSearch;
+        
+
+        this.suggest();
+
 
         this._keyListener = function(e) {
 
@@ -146,6 +156,7 @@ export default {
             }
             if (e.key === "Enter") {
                 e.preventDefault();
+                
                 if (this.active && this.selected >= 0) {
                     this.select();
                 } else {
@@ -174,6 +185,7 @@ export default {
 
         };
         document.addEventListener('keydown', this._keyListener.bind(this));
+
     }
 }
 </script>

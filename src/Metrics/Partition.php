@@ -9,6 +9,7 @@ use Elastico\Aggregations\Metric\Avg;
 use Elastico\Aggregations\Metric\Max;
 use Elastico\Aggregations\Metric\Min;
 use Elastico\Aggregations\Metric\Sum;
+use Elastico\Query\Builder;
 use Elastico\Query\MatchAll;
 use Pano\Metrics\Results\PartitionResult;
 use Pano\Pano;

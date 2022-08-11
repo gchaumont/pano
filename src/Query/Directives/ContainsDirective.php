@@ -28,15 +28,15 @@ class ContainsDirective extends BooleanDirective
                 //     (new Term())->field($this->field)->value(substr($node->match, 1, -1))
                 // );
                 $this->getCurrentQuery()->filter(
-                    (new MatchPhraseQuery())->field($this->field)->message(substr($node->match, 1, -1))
+                    (new MatchPhraseQuery())->field(implode('.', array_filter([$this->path, $this->field])))->message(substr($node->match, 1, -1))
                 );
             } elseif (str_ends_with($node->match, '*')) {
                 $this->getCurrentQuery()->filter(
-                    (new Prefix())->field($this->field)->value(substr($node->match, 0, -1))
+                    (new Prefix())->field(implode('.', array_filter([$this->path, $this->field])))->value(substr($node->match, 0, -1))
                 );
             } else {
                 $this->getCurrentQuery()->filter(
-                    (new Term())->field($this->field)->value($node->match)
+                    (new Term())->field(implode('.', array_filter([$this->path, $this->field])))->value($node->match)
                 );
             }
         }

@@ -13,6 +13,11 @@ class Number extends PatternDirective
         return 'field';
     }
 
+    public function complete($builder): iterable
+    {
+        return [];
+    }
+
     public function getAlias(): array
     {
         // code...

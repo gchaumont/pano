@@ -16,6 +16,15 @@ const app = createApp({
     render: () => h(PanoComponent)
 })
 
+app.directive('intersect', {
+    mounted(el, binding, vnode) {
+        const observer = new IntersectionObserver(([entry]) => binding.value(entry), { threshold: 0, });
+
+        observer.observe(el);
+    }
+})
+
+
 import * as heroicons from '@heroicons/vue/outline'
 
 for (const property in heroicons) {
@@ -23,6 +32,7 @@ for (const property in heroicons) {
     app.component(property, defineAsyncComponent(() => import( /* webpackMode: 'lazy', webpackChunkName: 'heroicons/[request]' */ `@heroicons/vue/outline`).then(m => m[property])))
 }
 
+app.component('loading-spinner', require('./components/support/LoadingSpinner').default);
 
 app.component('global-search', require('./components/search/GlobalSearch').default);
 
