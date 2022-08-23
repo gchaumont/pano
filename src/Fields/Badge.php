@@ -35,7 +35,7 @@ use Pano\Query\Directives\FieldDirective;
 
      public function map(array $fields): static
      {
-         $this->field_map = array_merge($fields, $this->field_map);
+         $this->field_map = $fields;
 
          return $this;
      }
