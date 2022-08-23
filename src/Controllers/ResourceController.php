@@ -27,11 +27,17 @@ class ResourceController extends Controller
 
         $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
 
-        // dd($searchQuery->applyQueryToBuilder(request()->input('search')));
+        $builder = $searchQuery->applyQueryToBuilder(request()->input('search') ?? '');
 
-        return $metric->asJson(request(), $searchQuery->applyQueryToBuilder(request()->input('search') ?? ''));
+        if (empty(request()->input('search'))) {
+            return Cache::remember(
+                'pano:metrics:'.$metric->getRouteKey(),
+                $metric->cacheFor(),
+                fn () => $metric->asJson(request(), $builder)
+            );
+        }
 
-        return Cache::remember('pano:metrics:'.$metric->getRouteKey(), $metric->cacheFor(), fn () => $metric->asJson(request()));
+        return $metric->asJson(request(), $builder);
     }
 
     public function suggest()

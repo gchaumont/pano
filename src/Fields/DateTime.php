@@ -24,7 +24,7 @@ use Pano\Query\Directives\Directive;
      public function formatValue(mixed $value): mixed
      {
          if ($value) {
-             return $value->format('Y-M-d h:m:s');
+             return $value->format('Y-M-d H:i:s');
          }
 
          return $value;

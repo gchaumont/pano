@@ -52,8 +52,11 @@ class MenuItem
         return $this;
     }
 
-    public static function link(string $name, string $path): static
+    public static function link(string $path): static
     {
+        $this->path = $path;
+
+        return $this;
     }
 
     public static function externalLink(string $name, string $path): static
