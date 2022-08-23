@@ -27,6 +27,19 @@ class MenuItem
 
     //     return $this;
     // }
+    public function path(string $path): static
+    {
+        $this->path = $path;
+
+        return $this;
+    }
+
+    public function route(string $name): static
+    {
+        $this->route = $name;
+
+        return $this;
+    }
 
     public function canSee(bool|callable $canSee): bool
     {
@@ -48,13 +61,6 @@ class MenuItem
     public function icon(string|null $icon): static
     {
         $this->icon = $icon;
-
-        return $this;
-    }
-
-    public static function link(string $path): static
-    {
-        $this->path = $path;
 
         return $this;
     }
@@ -131,6 +137,8 @@ class MenuItem
             $dashboard = $this->getContainingApp()->dashboard($this->dashboard);
             $this->name($dashboard->getName());
             $path = $dashboard->url();
+        } elseif (!empty($this->route)) {
+            $path = route($this->route);
         }
 
         return [
