@@ -4,10 +4,21 @@ namespace Pano\Fields\Relation;
 
 use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
+use Pano\Query\Directives\Directive;
+use Pano\Query\Directives\FieldDirective;
 
  class BelongsTo extends Relation
  {
      protected string $foreignKey;
+
+     public function getDirective(): null|Directive
+     {
+         if (!empty($this->getForeignKey())) {
+             return new FieldDirective($this->getForeignKey());
+         }
+
+         return null;
+     }
 
      public function formatValue(mixed $object): mixed
      {
