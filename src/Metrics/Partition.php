@@ -101,6 +101,6 @@ use Pano\Pano;
               ->all()
           ;
 
-          return (new PartitionResult())->partition($results);
+          return (new PartitionResult())->partition($results)->field($by);
       }
   }

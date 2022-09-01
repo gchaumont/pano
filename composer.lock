@@ -206,12 +206,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/gchaumont/elastico.git",
-                "reference": "8a63276fe2dedfd4a50bdac78f88be4837652fe1"
+                "reference": "867b650f5e78664f1fe7a7adf87616891d4b177b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gchaumont/elastico/zipball/8a63276fe2dedfd4a50bdac78f88be4837652fe1",
-                "reference": "8a63276fe2dedfd4a50bdac78f88be4837652fe1",
+                "url": "https://api.github.com/repos/gchaumont/elastico/zipball/867b650f5e78664f1fe7a7adf87616891d4b177b",
+                "reference": "867b650f5e78664f1fe7a7adf87616891d4b177b",
                 "shasum": ""
             },
             "require": {
@@ -251,7 +251,7 @@
                 "issues": "https://github.com/gchaumont/elastico/issues",
                 "source": "https://github.com/gchaumont/elastico/tree/main"
             },
-            "time": "2022-08-25T15:11:16+00:00"
+            "time": "2022-08-25T15:25:23+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",

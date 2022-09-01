@@ -94,7 +94,14 @@ export default {
             () => this.path,
             () => this.search = '', { immediate: true }
         );
+
         this.search = this.initialSearch;
+        
+        this.$watch(
+            () => this.$route.query.search,
+            () => { this.search = this.$route.query.search }
+        )
+
         
 
         this.suggest();

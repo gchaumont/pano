@@ -6,7 +6,7 @@
         <section>
             <ul class="flex flex-row flex-wrap  gap-3 items-stretch  justify-start my-4">
                 <li v-for="metric in state.definition.metrics" class="flex-auto min-w-[30ch] max-w-[60ch]">
-                    <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" />
+                    <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" @search="handleQuery"/>
                 </li>
             </ul>
         </section>
@@ -78,6 +78,7 @@ function loadResource() {
             state.total = json.total
         }))
 }
+
 
 function handleQuery(query) {
     state.search = query;

@@ -6,7 +6,10 @@
         <div class="flex flex-nowrap justify-evenly">
             <table class="mt-4 h-2 text-sm dark:text-gray-400 whitespace-nowrap">
                 <tr v-for="item in value?.partition">
-                    <td><span class="text-slate-600 dark:text-slate-300 font-semibold">{{item.name}} </span></td>
+                    <td>
+                        <a v-if="value.field" href="" @click.prevent="filter(item)" class="text-slate-600 dark:text-slate-300 font-semibold">{{item.name}} </a>
+                        <span v-else class="text-slate-600 dark:text-slate-300 font-semibold">{{item.name}} </span>
+                    </td>
                     <td class="pl-4 text-right text-slate-500 dark:text-slate-400"><span>{{value?.prefix}} {{item.value}} {{value?.suffix}} </span></td>
                 </tr>
             </table>
@@ -52,12 +55,15 @@ export default {
                         '#' + this.chartID, { series: this.value.partition }, { donut: true, donutWidth: 15, labelOffset: 15, chartPadding: 15 }
                     )
                 }))
+        },
+        filter: function (item) {
+            this.$emit('search', this.search+ " "+ this.value.field+":\""+item.name+"\"")
         }
     },
     mounted() {
         this.loadMetric()
 
-               this.$watch(
+        this.$watch(
             () =>  this.search,
             () => this.loadMetric(), { immediate: true }
         );

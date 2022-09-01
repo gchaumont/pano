@@ -13,9 +13,18 @@ namespace Pano\Metrics\Results;
 
       protected array $color;
 
+      protected null|string $field;
+
       public function partition(array $partition): static
       {
           $this->partition = $partition;
+
+          return $this;
+      }
+
+      public function field(string|null $field): static
+      {
+          $this->field = $field;
 
           return $this;
       }
@@ -47,10 +56,11 @@ namespace Pano\Metrics\Results;
 
       public function toJson(): array
       {
-          return [
+          return array_filter([
               'partition' => $this->partition,
               'prefix' => $this->prefix,
               'suffix' => $this->suffix,
-          ];
+              'field' => $this->field,
+          ]);
       }
   }
