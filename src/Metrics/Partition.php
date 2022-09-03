@@ -25,6 +25,8 @@ use Pano\Pano;
 
       protected string|null $suffix = null;
 
+      protected int $size = 5;
+
       public function count($request, $model, $by, callable $callback = null): PartitionResult
       {
           return $this->aggregateBy($request, $model, 'count', null, $by, $callback);
@@ -48,6 +50,13 @@ use Pano\Pano;
       public function min($request, $model, $field, $by, callable $callback = null): PartitionResult
       {
           return $this->aggregateBy($request, $model, 'min', $field, $by, $callback);
+      }
+
+      public function size(int $size): static
+      {
+          $this->size = $size;
+
+          return $this;
       }
 
       public function jsonConfig(): array
@@ -88,7 +97,7 @@ use Pano\Pano;
 
           $results = $query->take(0)
               ->addAggregation(
-                  (new Terms('terms'))->field($by)->size(5)->addAggregation($this->getAggregation($function, $field))
+                  (new Terms('terms'))->field($by)->size($this->size)->addAggregation($this->getAggregation($function, $field))
               )
               ->when(!empty($callback), fn ($q) => $callback($q))
               ->get()
