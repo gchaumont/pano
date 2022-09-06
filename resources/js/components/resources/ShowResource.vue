@@ -25,7 +25,7 @@
                 <li @click="selectedRelation = relation.key" class="mx-2 text-lg" v-bind:class="{'font-bold' : selectedRelation==relation.key}" v-for="relation in relations">{{relation.name}}</li>
             </ul>
 
-            <ListResource v-if="currentRelation" :resource="currentRelation" :showMetrics="false"/>
+            <ListResource v-if="currentRelation" :resource="currentRelation" :show_metrics="false"/>
             
         </section>
 
