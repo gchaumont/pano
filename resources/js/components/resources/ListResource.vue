@@ -53,7 +53,7 @@ const props = defineProps({
     show_metrics: {
         type: Boolean,
         required: false,
-        default: false
+        default: true
     }
 })
 
