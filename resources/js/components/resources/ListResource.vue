@@ -3,7 +3,7 @@
         <header>
             <h2 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{state.definition.name}}</h2>
         </header>
-        <section>
+        <section v-if="props.show_metrics">
             <ul class="flex flex-row flex-wrap  gap-3 items-stretch  justify-start my-4">
                 <li v-for="metric in state.definition.metrics" class="flex-auto min-w-[30ch] max-w-[60ch]">
                     <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" @search="handleQuery"/>
@@ -49,6 +49,11 @@ const props = defineProps({
     resource: {
         type: Object,
         required: true,
+    },
+    show_metrics: {
+        type: Boolean,
+        required: false,
+        default: false
     }
 })
 
