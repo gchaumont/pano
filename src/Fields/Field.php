@@ -4,7 +4,6 @@ namespace Pano\Fields;
 
 use Closure;
 use Elastico\Models\Builder\Builder;
-use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -225,15 +224,17 @@ abstract class Field
 
     /**
      * Prepare value to be sent to Front.
+     *
+     * @param mixed $object
      */
-    public function serialiseValue(DataAccessObject $object): mixed
+    public function serialiseValue(object $object): mixed
     {
         // Apply user transform
         if (!empty($this->resolveUsing)) {
             $value = call_user_func($this->resolveUsing, $object);
         } else {
             // Get the value from the model
-            $value = $object->getFieldValue($this->field());
+            $value = $object->getAttribute($this->field());
         }
 
         if (is_null($value) && isset($this->default)) {

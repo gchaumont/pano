@@ -4,8 +4,9 @@
             <h2 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{state.definition.name}}</h2>
         </header>
         <section v-if="props.show_metrics">
-            <ul class="flex flex-row flex-wrap  gap-3 items-stretch  justify-start my-4">
-                <li v-for="metric in state.definition.metrics" class="flex-auto min-w-[30ch] max-w-[60ch]">
+            <ul class="flex flex-row gap-3 items-stretch justify-start my-4 max-h-[25rem] overflow-y-hidden overflow-x-scroll">
+            <!-- <ul class="grid gap-4 grid-rows-[repeat(auto-fit,_minmax(0,_1fr))] grid-flow-row-dense overflow-x-scroll"> -->
+                <li v-for="metric in state.definition.metrics" class="flex-auto ">
                     <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" @search="handleQuery"/>
                 </li>
             </ul>
@@ -126,7 +127,7 @@ onMounted(() => {
     loadResource()
     watch(
         () => props.resource,
-        () => { toPage(1), loadResource(), resetMetrics() }
+        () => { toPage(1), loadResource(), resetMetrics(), state.search = '' }
     )
     watch(
         () => state.page,

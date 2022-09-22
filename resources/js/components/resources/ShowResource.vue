@@ -1,5 +1,6 @@
 <template>
     <h1 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{resource.name}}</h1>
+    <p v-if="error" class="text-slate-700 dark:text-slate-300 text-xl pt-6 ">{{error}}</p>
     <div class="p-3 pl-0" v-if="model">
         <section  class="bg-white dark:bg-slate-700 shadow overflow-hidden sm:rounded-lg">
             <header class="px-4 py-5 sm:px-6">
@@ -44,6 +45,7 @@ export default {
     data() {
         return {
             model: null,
+            error: null,
             fields: [],
             selectedRelation: null,
         }
@@ -61,12 +63,19 @@ export default {
     },
     methods: {
         loadResource: function() {
-            this.model = []
+            this.model = null
             fetch(this.resource.path + '/' + this.object + "?" + new URLSearchParams(), { headers: { 'Accept': 'application/json' } })
                 .then(response => response.json().then(json => {
-                    this.model = json.model
-                    this.fields = json.fields
-                    this.selectedRelation = this.relations[0]?.key
+                    if (response.ok) {
+                        this.error = null;
+                        this.model = json.model
+                        this.fields = json.fields
+                        this.selectedRelation = this.relations[0]?.key
+                    } else if (response.status ==  404) {
+                        this.error = "404 - Not Found";
+                    }  else {
+                        this.error = "500 - Error"
+                    }
                 }))
         },
     },

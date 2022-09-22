@@ -1,5 +1,5 @@
 <template>
-    <div class="basis-60 shrink-0">
+    <div class="basis-60 shrink-0 min-h-[15rem]">
         <header class="flex justify-between mb-2">
             <h5 class="text-sm text-slate-500 dark:text-slate-400 font-semibold">{{metric.name}}</h5>
             <select class="text-sm" v-if="metric.ranges?.length" v-model="selectedRange">
@@ -7,14 +7,13 @@
             </select>
         </header>
         <!-- <p>{{value?.prefix}}  {{value?.suffix}}</p> -->
-        <div :id="chartID" class="chartist-container"></div>
+        <!-- <div class="w-72"> -->
+        <div :id="chartID" class="h-full pt-4 min-w-[50ch]"></div>
+        <!-- </div> -->
     </div>
 </template>
 <style type="text/css">
-    .chartist-container {
-        padding-top:  1rem;
-        height:  100%;
-    }
+
 .ct-series-a .ct-line {
     /* Set the colour of this series line */
     stroke: orange;
@@ -27,8 +26,14 @@
 .ct-label {
     color: var(--textColor);
 }
-.ct-grids line  {
-  stroke: grey;
+
+.ct-label.ct-horizontal{
+    transform: rotate(-40deg);
+    white-space: nowrap;
+}
+
+.ct-grids line {
+    stroke: grey;
 }
 </style>
 <script>
@@ -61,11 +66,11 @@ export default {
                 .then(response => response.json().then(json => {
                     this.value = json
                     new Chartist.Line(
-                        '#' + this.chartID, 
-                        { series: [this.value.trend] }, 
-                        { showPoint: false, 
-                            chartPadding: 0,
-                            axisX: {showLabel: false}
+                        '#' + this.chartID, { series: [this.value.trend], labels: this.value.labels }, {
+                            showPoint: false,
+                            chartPadding:0,
+                            chartPadding: {left:15, right: 0, top: 10, bottom: 20},
+                            // axisX: { showLabel: false }
                         }
                         // {lineSmooth: true,   axisX: {showGrid: true}, axisY: {showGrid: true}}
                     )

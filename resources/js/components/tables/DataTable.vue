@@ -12,7 +12,7 @@
             <tr v-for="model, index in models" class="group border-b dark:border-slate-700">
                 <td class="px-3 py-2 text-slate-400 group-hover:dark:text-white group-hover:text-blue-700 ">
                     <router-link class="hovered" :to="model.link">View</router-link>
-                         <div  v-if="models.length>0 && index == Math.floor(3*(models.length/4)) " v-intersect="loadMore"  >
+                         <div  v-if="models.length>0 && index == models.length-5 " v-intersect="loadMore"  >
                     </div>
                 </td>
                 <template v-for="field, key in fields">

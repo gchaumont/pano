@@ -3,7 +3,6 @@
 namespace Pano\Fields;
 
 use Closure;
-use Elastico\Models\DataAccessObject;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\NestedFieldDirective;
 
@@ -48,7 +47,7 @@ use Pano\Query\Directives\NestedFieldDirective;
      /**
       * Prepare value to be sent to Front.
       */
-     public function serialiseValue(DataAccessObject $object): mixed
+     public function serialiseValue(object $object): mixed
      {
          $list = [];
          foreach ($object->getFieldValue($this->field()) ?? [] as $nested) {

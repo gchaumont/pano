@@ -33,16 +33,17 @@ export default {
             active: false,
             shouldDeactivate: false,
             selected: -1,
-            maxItems: 10,
+            maxItems: 0,
         }
     },
     methods: {
         suggest: function() {
             this.selected = -1;
             setTimeout(() => {
-                fetch(this.path + "/suggest?" + new URLSearchParams({ search: this.search + '.', p: this.$refs.searchInput.selectionStart }), { headers: { 'Accept': 'application/json' } })
+                fetch(this.path + "/suggest?" + new URLSearchParams({ search: '.'+ this.search + '.', p: this.$refs.searchInput.selectionStart }), { headers: { 'Accept': 'application/json' } })
                     .then(response => response.json().then(json => {
                         this.suggestions = json;
+                        this.maxItems = this.suggestions.length;
                     }))
             }, 2)
         },
@@ -102,10 +103,7 @@ export default {
             () => { this.search = this.$route.query.search }
         )
 
-        
-
         this.suggest();
-
 
         this._keyListener = function(e) {
 

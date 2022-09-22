@@ -21,6 +21,8 @@ use Pano\Pano;
 
      public string|null $defaultRange;
 
+     public string|null $dateFormat = 'LLL. yy';
+
      protected string|null $prefix = null;
 
      protected string|null $suffix = null;
@@ -187,6 +189,18 @@ use Pano\Pano;
          ];
      }
 
+     public function getDateFormat($range): string
+     {
+         return $this->dateFormat;
+     }
+
+     public function dateFormat(string $format): static
+     {
+         $this->dateFormat = $format;
+
+         return $this;
+     }
+
      protected function getAggregation(string $function, string $field): Aggregation
      {
          return match ($function) {
@@ -222,14 +236,15 @@ use Pano\Pano;
              $dateField,
              $this->currentRange($request->range, $timeUnit, $timezone)
          )->addAggregation(
-             (new DateHistogram('trend'))->field($dateField)->calendarInterval('1'.$timeUnit)->format('yyyy-MM-dd')
+             (new DateHistogram('trend'))->field($dateField)->calendarInterval('1'.$timeUnit)->format($this->getDateFormat($request->range))
                  ->when('count' !== $function, fn ($hist) => $hist->addAggregation($this->getAggregation($function, $field)))
          )
              ->take(0)
              ->get()
              ->aggregation('trend')
              ->buckets()
-             ->pluck('count' === $function ? 'doc_count' : 'agg.value')
+             ->keyBy(fn ($bucket) => $bucket['key_as_string'])
+             ->map(fn ($bucket) => 'count' === $function ? $bucket['doc_count'] : $bucket['agg']['value'])
              ->all()
          ;
 

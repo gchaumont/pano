@@ -2,7 +2,6 @@
 
 namespace Pano\Resource;
 
-use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
@@ -51,9 +50,9 @@ abstract class Resource
         return Str::plural(Str::headline(class_basename($this->model)));
     }
 
-    public function getTitle(DataAccessObject $object): string
+    public function getTitle($object): string
     {
-        return $object->{static::$title} ?? $object->get_id();
+        return $object->getAttribute(static::$title) ?? $object->getKey();
     }
 
     public function perPage(): int
@@ -168,7 +167,7 @@ abstract class Resource
 
     public function linkTo(string|Model $resource): string
     {
-        $resource = $resource instanceof Model ? $resource->get_id() : $resource;
+        $resource = $resource instanceof Model ? $resource->getKey() : $resource;
 
         return route($this->getRoute('show'), $resource, false);
     }

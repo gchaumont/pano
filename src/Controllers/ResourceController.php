@@ -3,6 +3,7 @@
 namespace Pano\Controllers;
 
 use App\Http\Controllers\Controller;
+use Elastico\Query\Builder;
 use Elastico\Query\FullText\MultiMatchQuery;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -48,7 +49,7 @@ class ResourceController extends Controller
             ->patternDirectives(
                 ...$this->getDirectives($this->getResource())
             )
-            ->suggest(substr(request()->input('search') ?? '', 0, -1), request()->input('p'))
+            ->suggest(substr(request()->input('search') ?? '', 1, -1), request()->input('p'))
         ;
     }
 
@@ -83,7 +84,7 @@ class ResourceController extends Controller
         // $metrics = 0 == request()->query('page') ? collect($resource->metrics()) : collect();
 
         $builder = $resource->model::query()
-            ->select($fields)
+            // ->select($fields)
             ->take($perPage)
             ->when($sortField, fn ($q) => $q->orderBy($sortField->field(), str_starts_with($sortInput, '-') ? 'asc' : 'desc'))
             ->when($pageInput, fn ($q) => $q->skip(($pageInput - 1) * 50))
@@ -121,34 +122,40 @@ class ResourceController extends Controller
             // ->addAggregations($metrics->map(fn ($metric) => $metric->getAggregation()))
 
         ;
-        $searchQuery = new SearchQuery($builder);
+        if ($builder instanceof Builder) {
+            $searchQuery = new SearchQuery($builder);
 
-        $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
+            $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
 
-        try {
-            $response = $searchQuery->search(request()->input('search') ?? '');
-        } catch (\Throwable $e) {
-            return [
-                'resource' => $resource->jsonConfig(),
-                'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
-                // 'metrics' => $response->aggregations(),
-                'error' => [
-                    'message' => $e->getMessage(),
-                ],
-            ];
+            try {
+                $response = $searchQuery->search(request()->input('search') ?? '');
+            } catch (\Throwable $e) {
+                return [
+                    'resource' => $resource->jsonConfig(),
+                    'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
+                    // 'metrics' => $response->aggregations(),
+                    'error' => [
+                        'message' => $e->getMessage(),
+                    ],
+                ];
+            }
+
+            $hits = $this
+                ->loadRelations(
+                    $response->hits(),
+                    collect($resource->fieldsForIndex(request()))
+                )
+
+        ;
+        } else {
+            $hits = $builder->get();
         }
 
-        $hits = $this
-            ->loadRelations(
-                $response->hits(),
-                collect($resource->fieldsForIndex(request()))
-            )
-            ->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())))
-        ;
+        $hits = $hits->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())));
 
         return [
             'hits' => $hits->all(),
-            'total' => $response->total(),
+            'total' => !empty($response) ? $response->total() : null,
             'resource' => $resource->jsonConfig(),
             'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
             // 'metrics' => $response->aggregations(),
@@ -167,7 +174,7 @@ class ResourceController extends Controller
             ->patternDirectives(
                 ...$this->getDirectives($this->getResource())
             )
-            ->suggest(substr(request()->input('search') ?? '', 0, -1), request()->input('p'))
+            ->suggest(substr(request()->input('search') ?? '', 1, -1), request()->input('p'))
         ;
     }
 
@@ -286,6 +293,10 @@ class ResourceController extends Controller
 
         $model = $resource->model::query()->select($selectFields)->find($model);
 
+        if (empty($model)) {
+            abort(404);
+        }
+
         $model = $this->loadRelations(
             [$model],
             collect($resource->fieldsForDetail(request()))
@@ -343,7 +354,7 @@ class ResourceController extends Controller
                             ->where('_id', $ids)
                             ->get()
                             ->hits()
-                            ->keyBy(fn ($hit) => $hit->get_id())
+                            ->keyBy(fn ($hit) => $hit->getKey())
                     ;
 
                         $hits = $hits->map(function ($hit) use ($relation, $related) {
@@ -376,7 +387,7 @@ class ResourceController extends Controller
     {
         return [
             'title' => $resource->getTitle($hit),
-            'link' => $resource->linkTo($hit->get_id()),
+            'link' => $resource->linkTo($hit->getKey()),
             'fields' => collect($fields)
                 ->keyBy(fn ($field) => $field->getKey())
                 ->map(fn ($field) => $field->serialiseValue($hit)),

@@ -31,7 +31,7 @@ use Pano\Query\Directives\FieldDirective;
          }
          if (!empty($object)) {
              return [
-                 'id' => $object->get_id(),
+                 'id' => $object->getKey(),
                  'title' => $this->getResource()->getTitle($object),
                  'link' => $this->getResource()->linkTo($object),
              ];

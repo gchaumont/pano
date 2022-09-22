@@ -65,13 +65,6 @@ export function dashboardRoutes(dashboard, app, parent) {
     }
 }
 
-
-
-
-// const routes = [{
-//     path: '/' + document.head.querySelector('meta[name="panoapp-root"]').content,
-//     component: PanoSkeleton,
-// }]
 const routes = [];
 
 const router = createRouter({
@@ -80,6 +73,9 @@ const router = createRouter({
     scrollBehavior(to, from, savedPosition) {
         if (savedPosition) {
             return savedPosition
+        }
+        if (from.path === to.path) {
+            return {}
         }
         if (to.hash) {
             return {

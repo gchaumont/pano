@@ -32,12 +32,6 @@ class SearchQuery
         return $this;
     }
 
-    public static function forClient(
-        Client $client
-    ): static {
-        return new static(new Builder($client));
-    }
-
     /**
      * This directive will be applied to the remainder of the search query
      * after all other directive have been applied and removed from the

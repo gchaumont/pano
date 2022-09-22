@@ -1,5 +1,5 @@
 <template>
-    <div >
+    <div class="min-h-[15rem] min-w-[25ch]">
         <header class="flex justify-between mb-2">
             <h5 class=" text-sm text-slate-500 dark:text-slate-400 font-semibold">{{metric.name}}</h5>
             <select class="text-sm" v-if="metric.ranges?.length" v-model="selectedRange">

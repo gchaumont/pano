@@ -1,10 +1,10 @@
 <template>
-    <div>
+    <div class="min-h-[15rem]">
         <header class="mb-2">
             <h5 class="text-sm text-slate-500 dark:text-slate-400 font-semibold">{{metric.name}}</h5>
         </header>
-        <div class="flex flex-nowrap justify-evenly">
-            <table class="mt-4 h-2 text-sm dark:text-gray-400 whitespace-nowrap">
+        <div class="flex flex-nowrap gap-9 justify-evenly">
+            <table class="mt-4 h-2 min-w-[20ch] text-sm dark:text-gray-400 whitespace-nowrap">
                 <tr v-for="item in value?.partition">
                     <td>
                         <a v-if="value.field" href="" @click.prevent="filter(item)" class="text-slate-600 dark:text-slate-300 font-semibold">{{item.name}} </a>
@@ -13,7 +13,10 @@
                     <td class="pl-4 text-right text-slate-500 dark:text-slate-400"><span>{{value?.prefix}} {{item.value}} {{value?.suffix}} </span></td>
                 </tr>
             </table>
-            <div :id="chartID"></div>
+            <div class="h-40 w-40">
+                <div :id="chartID"></div>
+                
+            </div>
         </div>
     </div>
 </template>
@@ -57,14 +60,14 @@ export default {
                 }))
         },
         filter: function (item) {
-            this.$emit('search', this.search+ " "+ this.value.field+":\""+item.name+"\"")
+            this.$emit('search', (this.search+ " "+ this.value.field+":\""+item.name+"\"").trim())
         }
     },
     mounted() {
         this.loadMetric()
 
         this.$watch(
-            () =>  this.search,
+            () => this.search,
             () => this.loadMetric(), { immediate: true }
         );
     }
