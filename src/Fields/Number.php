@@ -10,7 +10,7 @@ use Pano\Query\Directives\NumericFieldDirective;
   */
  class Number extends Field
  {
-     const TYPE = 'text';
+     const TYPE = 'number';
 
      protected null|string $textAlign = 'right';
 

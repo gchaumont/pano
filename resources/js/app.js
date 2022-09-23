@@ -38,6 +38,7 @@ app.component('global-search', require('./components/search/GlobalSearch').defau
 
 app.component('hidden-field', require('./components/fields/HiddenField').default);
 app.component('text-field', require('./components/fields/TextField').default);
+app.component('number-field', require('./components/fields/NumberField').default);
 app.component('badge-field', require('./components/fields/BadgeField').default);
 app.component('stack-field', require('./components/fields/StackField').default);
 app.component('date-field', require('./components/fields/DateField').default);

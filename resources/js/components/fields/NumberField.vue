@@ -1,5 +1,5 @@
 <template>
-    <p :class="fieldFormat + textAlign"> {{value}}</p>
+    <p :class="fieldFormat + textAlign + ' whitespace-nowrap'"> {{value}}</p>
 </template>
 <script>
 import Field from './Field';
