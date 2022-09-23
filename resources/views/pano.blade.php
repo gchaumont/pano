@@ -18,9 +18,9 @@
     {{-- <meta name="theme-color" content="rgb(0, 0, 0)" media="(prefers-color-scheme: dark)"> --}}
 
 
-    @if (!empty($pano->currentApp()->headView))
-        @include($pano->currentApp()->headView)
-    @endif
+    @foreach ($pano->getHeadViews() as $view)
+        @include($view)
+    @endforeach
 
 <body >
     <div id="pano-app" ></div>

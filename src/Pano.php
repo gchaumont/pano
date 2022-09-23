@@ -10,6 +10,12 @@ use Pano\Routing\Routes;
 
 class Pano
 {
+    /**
+     * Views to add to the head
+     * of a running Pano app.
+     */
+    private array $headViews;
+
     private array $applications = [];
 
     private string $currentApp;
@@ -147,11 +153,16 @@ class Pano
         return $this->applications();
     }
 
-    public function setCurrentApp(string $name): static
+    public function headView(string $view): static
     {
-        $this->currentApp = $name;
+        $this->headViews[] = $view;
 
         return $this;
+    }
+
+    public function getHeadViews(): array
+    {
+        return $this->headViews;
     }
 
     public function resolveUserTimezone(): null|string

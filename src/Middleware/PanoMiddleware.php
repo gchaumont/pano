@@ -13,9 +13,6 @@ use Pano\Pano;
              ->setRootApp($application)
          ;
 
-         // resolve(Pano::class)
-         //     ->setCurrentApp(resolve(Pano::class)->resolveApp(request()->route()->getName()))
-
          return $next($request);
      }
  }
