@@ -14,7 +14,7 @@ class Pano
      * Views to add to the head
      * of a running Pano app.
      */
-    private array $headViews;
+    private array $headViews = [];
 
     private array $applications = [];
 
