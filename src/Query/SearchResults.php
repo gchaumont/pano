@@ -2,6 +2,8 @@
 
 namespace Pano\Query;
 
+use Closure;
+
 class SearchResults
 {
     public function __construct(
@@ -15,6 +17,18 @@ class SearchResults
     public function hits()
     {
         return collect($this->hits);
+    }
+
+    public function all(): array
+    {
+        return $this->hits;
+    }
+
+    public function map(Closure $callback)
+    {
+        $this->hits = collect($this->hits)->map($callback)->all();
+
+        return $this;
     }
 
     public function total()

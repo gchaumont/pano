@@ -69,6 +69,7 @@ class ResourceController extends Controller
             ->all()
         ;
 
+        // response(collect($resource->fieldsForIndex(request()))->filter(fn ($field) => $field instanceof Relation))->send();
         $query = request()->query('search');
 
         $sortInput = request()->input('sort');
@@ -81,10 +82,16 @@ class ResourceController extends Controller
         $pageInput = request()->input('page');
         $perPage = $resource->perPage();
 
+        $relations = $resource->relationsForIndex(request());
+
         // $metrics = 0 == request()->query('page') ? collect($resource->metrics()) : collect();
 
         $builder = $resource->model::query()
             // ->select($fields)
+            ->with(
+                collect($relations)->map(fn ($r) => $r->getKey())->all()
+            )
+
             ->take($perPage)
             ->when($sortField, fn ($q) => $q->orderBy($sortField->field(), str_starts_with($sortInput, '-') ? 'asc' : 'desc'))
             ->when($pageInput, fn ($q) => $q->skip(($pageInput - 1) * 50))
@@ -128,7 +135,7 @@ class ResourceController extends Controller
             $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
 
             try {
-                $response = $searchQuery->search(request()->input('search') ?? '');
+                $hits = $searchQuery->search(request()->input('search') ?? '');
             } catch (\Throwable $e) {
                 return [
                     'resource' => $resource->jsonConfig(),
@@ -139,14 +146,6 @@ class ResourceController extends Controller
                     ],
                 ];
             }
-
-            $hits = $this
-                ->loadRelations(
-                    $response->hits(),
-                    collect($resource->fieldsForIndex(request()))
-                )
-
-        ;
         } else {
             $hits = $builder->get();
         }
@@ -182,11 +181,11 @@ class ResourceController extends Controller
     {
         $baseResource = $this->getResource();
 
-        $related = $baseResource->getRelated($relation);
+        $relation = $baseResource->getRelated($relation);
 
-        $resource = $baseResource->getContainingApp()->resource($related->resource);
+        $relatedResource = $baseResource->getContainingApp()->resource($relation->resource);
 
-        $fields = collect($resource->fieldsForIndex(request()))
+        $fields = collect($relatedResource->fieldsForIndex(request()))
             // ->filter(fn ($field) => $field->canSee())
             ->map(fn ($field) => $field->field())
             ->flatten()
@@ -199,19 +198,21 @@ class ResourceController extends Controller
 
         $sortInput = request()->input('sort');
 
-        $sortField = collect($resource->fieldsForIndex(request()))
+        $sortField = collect($relatedResource->fieldsForIndex(request()))
             ->filter(fn ($field) => $field->isSortable())
             ->first(fn ($field) => $field->getKey() == trim($sortInput, '-'))
         ;
 
         $pageInput = request()->input('page');
-        $perPage = $resource->perPage();
+        $perPage = $relatedResource->perPage();
 
-        // $metrics = 0 == request()->query('page') ? collect($resource->metrics()) : collect();
+        // $metrics = 0 == request()->query('page') ? collect($relatedResource->metrics()) : collect();
         // response($related->getForeignKey())->send();
-        $builder = $resource->model::query()
+        $builder = $relatedResource->model::query()
             ->select($fields)
-            ->where($related->getForeignKey(), $resourceID)
+            ->with(
+                collect($relatedResource->relationsForIndex(request()))->map(fn ($r) => $r->getKey())->all()
+            )
             ->take($perPage)
             ->when($sortField, fn ($q) => $q->orderBy($sortField->field(), str_starts_with($sortInput, '-') ? 'asc' : 'desc'))
             ->when($pageInput, fn ($q) => $q->skip(($pageInput - 1) * 50))
@@ -255,19 +256,14 @@ class ResourceController extends Controller
 
         $response = $searchQuery->search(request()->input('search') ?? '');
 
-        $hits = $this
-            ->loadRelations(
-                $response->hits(),
-                collect($resource->fieldsForIndex(request()))
-            )
-            ->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())))
+        $hits = $response->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())))
         ;
 
         return [
             'hits' => $hits->all(),
             'total' => $response->total(),
-            'resource' => $related->getResource()->jsonConfig(),
-            'fields' => collect($related->getResource()->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
+            'resource' => $relation->getResource()->jsonConfig(),
+            'fields' => collect($relation->getResource()->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
             // 'metrics' => $response->aggregations(),
         ];
     }
@@ -285,22 +281,24 @@ class ResourceController extends Controller
             // ->map(fn ($field) => $field->field())
             ->filter()
         ;
+
         $selectFields = $fields
             ->map(fn ($field) => $field->field())
             ->flatten()
             ->all()
         ;
 
-        $model = $resource->model::query()->select($selectFields)->find($model);
+        $relations = collect($resource->fieldsForDetail(request()));
+
+        $model = $resource->model::query()
+            ->select($selectFields)
+            ->with($relations)
+            ->find($model)
+        ;
 
         if (empty($model)) {
             abort(404);
         }
-
-        $model = $this->loadRelations(
-            [$model],
-            collect($resource->fieldsForDetail(request()))
-        )->first();
 
         return [
             'model' => $this->serialiseModel($resource, $model, $fields),
@@ -338,6 +336,7 @@ class ResourceController extends Controller
 
     protected function loadRelations(iterable $hits, iterable $fields): Collection
     {
+        return $hits->load($fields)->collect();
         $hits = collect($hits);
 
         $relations = collect($fields)->filter(fn ($field) => $field instanceof Relation || $field instanceof Nested);
@@ -347,7 +346,7 @@ class ResourceController extends Controller
         $relations = $relations
             ->each(function ($relation) use (&$hits) {
                 if ($relation instanceof Relation) {
-                    $ids = $hits->map(fn ($hit) => $hit->getFieldValue($relation->getForeignKey()))->filter();
+                    $ids = $hits->map(fn ($hit) => $hit->getAttribute($relation->getForeignKey()))->filter();
                     if ($ids->isNotEmpty()) {
                         $related = $relation->getModel()::query()
                             ->take($ids->count())
@@ -358,7 +357,7 @@ class ResourceController extends Controller
                     ;
 
                         $hits = $hits->map(function ($hit) use ($relation, $related) {
-                            if ($val = $hit->getFieldValue($relation->getForeignKey())) {
+                            if ($val = $hit->getAttribute($relation->getForeignKey())) {
                                 if ($related->get($val)) {
                                     $hit->setFieldValue($relation->field(), $related->get($val));
                                 }
@@ -369,7 +368,7 @@ class ResourceController extends Controller
                     }
                 } elseif ($relation instanceof Nested) {
                     foreach ($hits as $hit) {
-                        if ($rel = $hit->getFieldValue($relation->field())) {
+                        if ($rel = $hit->getAttribute($relation->field())) {
                             $hit->setFieldValue(
                                 $relation->field(),
                                 $this->loadRelations($rel, collect($relation->getFields()))->all()

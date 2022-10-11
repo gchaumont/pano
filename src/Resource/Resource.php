@@ -7,6 +7,7 @@ use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 use Pano\Concerns\Linkable;
 use Pano\Fields\Groups\Stack;
+use Pano\Fields\Relation\Relation;
 use Pano\Metrics\Metric;
 
 abstract class Resource
@@ -48,6 +49,13 @@ abstract class Resource
     public function getName(): string
     {
         return Str::plural(Str::headline(class_basename($this->model)));
+    }
+
+    public function getModel(): Model
+    {
+        $class = $this->model;
+
+        return new $class();
     }
 
     public function getTitle($object): string
@@ -116,6 +124,22 @@ abstract class Resource
     public static function redirectAfterDelete(PanoRequest $request)
     {
         return null;
+    }
+
+    public function getRelations(): BaseCollection
+    {
+        return $this->getFields()
+            ->filter(fn ($field) => $field instanceof Relation)
+        ;
+    }
+
+    public function relationsForIndex($request): array
+    {
+        return collect($this->fieldsForIndex($request))
+            ->filter(fn ($field) => $field instanceof Relation)
+            ->values()
+            ->all()
+        ;
     }
 
     public function fieldsForIndex($request): array
@@ -189,7 +213,9 @@ abstract class Resource
 
     public function getRelated(string $relation)
     {
-        return $this->getFields()->first(fn ($f) => $f->getKey() == $relation);
+        return $this->getRelations()
+            ->first(fn ($f) => $f->getKey() == $relation)
+        ;
     }
 
     public function getFields(): BaseCollection

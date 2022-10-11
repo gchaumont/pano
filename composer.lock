@@ -150,16 +150,16 @@
         },
         {
             "name": "elasticsearch/elasticsearch",
-            "version": "v8.4.2",
+            "version": "v8.4.3",
             "source": {
                 "type": "git",
                 "url": "git@github.com:elastic/elasticsearch-php.git",
-                "reference": "5d792069f227799885c349d76cc4b6eb33cdd178"
+                "reference": "078ac89240b4c02524a4881de33b0dd8d36e60d6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/5d792069f227799885c349d76cc4b6eb33cdd178",
-                "reference": "5d792069f227799885c349d76cc4b6eb33cdd178",
+                "url": "https://api.github.com/repos/elastic/elasticsearch-php/zipball/078ac89240b4c02524a4881de33b0dd8d36e60d6",
+                "reference": "078ac89240b4c02524a4881de33b0dd8d36e60d6",
                 "shasum": ""
             },
             "require": {
@@ -198,7 +198,7 @@
                 "elasticsearch",
                 "search"
             ],
-            "time": "2022-08-24T15:31:59+00:00"
+            "time": "2022-09-27T07:48:48+00:00"
         },
         {
             "name": "gchaumont/elastico",
@@ -206,12 +206,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/gchaumont/elastico.git",
-                "reference": "83260299d0897694de4fd8350048a0fd06bdac4d"
+                "reference": "ab69177919c8b8ddefa5c74d9911d9e26e98e4f3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gchaumont/elastico/zipball/83260299d0897694de4fd8350048a0fd06bdac4d",
-                "reference": "83260299d0897694de4fd8350048a0fd06bdac4d",
+                "url": "https://api.github.com/repos/gchaumont/elastico/zipball/ab69177919c8b8ddefa5c74d9911d9e26e98e4f3",
+                "reference": "ab69177919c8b8ddefa5c74d9911d9e26e98e4f3",
                 "shasum": ""
             },
             "require": {
@@ -251,7 +251,7 @@
                 "issues": "https://github.com/gchaumont/elastico/issues",
                 "source": "https://github.com/gchaumont/elastico/tree/main"
             },
-            "time": "2022-09-20T21:52:04+00:00"
+            "time": "2022-10-11T13:54:40+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -586,7 +586,7 @@
         },
         {
             "name": "illuminate/collections",
-            "version": "v9.31.0",
+            "version": "v9.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/collections.git",
@@ -641,7 +641,7 @@
         },
         {
             "name": "illuminate/conditionable",
-            "version": "v9.31.0",
+            "version": "v9.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/conditionable.git",
@@ -687,7 +687,7 @@
         },
         {
             "name": "illuminate/contracts",
-            "version": "v9.31.0",
+            "version": "v9.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
@@ -735,7 +735,7 @@
         },
         {
             "name": "illuminate/macroable",
-            "version": "v9.31.0",
+            "version": "v9.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/macroable.git",
@@ -781,16 +781,16 @@
         },
         {
             "name": "illuminate/support",
-            "version": "v9.31.0",
+            "version": "v9.34.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/support.git",
-                "reference": "720d5ce69156a3d76ee42b79ca5636f3b5010e15"
+                "reference": "c5eeb30bbeb1f505938be61cb70ef614451ee446"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/support/zipball/720d5ce69156a3d76ee42b79ca5636f3b5010e15",
-                "reference": "720d5ce69156a3d76ee42b79ca5636f3b5010e15",
+                "url": "https://api.github.com/repos/illuminate/support/zipball/c5eeb30bbeb1f505938be61cb70ef614451ee446",
+                "reference": "c5eeb30bbeb1f505938be61cb70ef614451ee446",
                 "shasum": ""
             },
             "require": {
@@ -801,7 +801,7 @@
                 "illuminate/conditionable": "^9.0",
                 "illuminate/contracts": "^9.0",
                 "illuminate/macroable": "^9.0",
-                "nesbot/carbon": "^2.53.1",
+                "nesbot/carbon": "^2.62.1",
                 "php": "^8.0.2",
                 "voku/portable-ascii": "^2.0"
             },
@@ -847,7 +847,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2022-09-19T14:27:45+00:00"
+            "time": "2022-10-03T14:55:35+00:00"
         },
         {
             "name": "nesbot/carbon",

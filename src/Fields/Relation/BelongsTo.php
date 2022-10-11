@@ -42,7 +42,9 @@ use Pano\Query\Directives\FieldDirective;
 
      public function getForeignKey(): string
      {
-         return $this->foreignKey ?? $this->field.'.'.$this->getResource()->model::getForeignKey();
+         $class = $this->getResource()->model;
+
+         return $this->foreignKey ?? $this->field.'.'.(new $class())->getForeignKey();
      }
 
      public function foreignKey(string $key): static
@@ -57,7 +59,7 @@ use Pano\Query\Directives\FieldDirective;
      //     return $this->getResource()->getTitle($object->{$this->field});
 
      //     return $object;
-     //     $value = $object->getFieldValue($this->getForeignKey());
+     //     $value = $object->getAttribute($this->getForeignKey());
 
      //     // $class = $object->getClassForRelation($this->field) ?? $this->model;
      //     // response($this->resource)->send();

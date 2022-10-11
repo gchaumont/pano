@@ -50,7 +50,7 @@ use Pano\Query\Directives\NestedFieldDirective;
      public function serialiseValue(object $object): mixed
      {
          $list = [];
-         foreach ($object->getFieldValue($this->field()) ?? [] as $nested) {
+         foreach ($object->getAttribute($this->field()) ?? [] as $nested) {
              $entity = [];
              foreach ($this->fields as $field) {
                  $entity[] = $field->serialiseValue($nested);
