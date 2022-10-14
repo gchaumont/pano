@@ -242,6 +242,17 @@ abstract class Resource
         return $this->metrics ??= collect($this->metrics())->map(fn ($m) => $m->namespace($this->getRoute()))->all();
     }
 
+    public function getDirectives($request): array
+    {
+        return collect($this->filterableFields(request()))
+            // ->flatten()
+            ->map(fn ($field) => $field->getDirective())
+            ->filter()
+            ->values()
+            ->all()
+        ;
+    }
+
     public function jsonConfig(): array
     {
         return [

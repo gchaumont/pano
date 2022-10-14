@@ -27,7 +27,7 @@ class ResourceController extends Controller
 
         $searchQuery = new SearchQuery($builder);
 
-        $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
+        $searchQuery->patternDirectives(...$this->getResource()->getDirectives(request()));
 
         $builder = $searchQuery->applyQueryToBuilder(request()->input('search') ?? '');
 
@@ -48,7 +48,7 @@ class ResourceController extends Controller
             $this->getResource()->model::query()
         ))
             ->patternDirectives(
-                ...$this->getDirectives($this->getResource())
+                ...$this->getResource()->getDirectives(request())
             )
             ->suggest(substr(request()->input('search') ?? '', 1, -1), request()->input('p'))
         ;
@@ -91,11 +91,10 @@ class ResourceController extends Controller
 
         $relations = $resource->relationsForIndex(request());
 
-        // response($fields)->send();
-
-        $builder = $resource->query()
+        $hits = $resource->query()
             ->entities(
                 fields: $fields,
+                query: request()->input('search') ?? '',
                 // filters: $filters,
                 // sorting: $sortField,
                 limit: $perPage,
@@ -140,31 +139,11 @@ class ResourceController extends Controller
             // )
         ;
 
-        if ($builder instanceof Builder) {
-            $searchQuery = new SearchQuery($builder);
-
-            $searchQuery->patternDirectives(...$this->getDirectives($this->getResource()));
-
-            try {
-                $hits = $searchQuery->search(request()->input('search') ?? '');
-            } catch (\Throwable $e) {
-                return [
-                    'resource' => $resource->jsonConfig(),
-                    'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
-                    'error' => [
-                        'message' => $e->getMessage(),
-                    ],
-                ];
-            }
-        } else {
-            $hits = $builder;
-        }
-
-        $hits = $hits->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())));
-
         return [
-            'hits' => $hits->all(),
-            'total' => !empty($response) ? $response->total() : null,
+            'hits' => $hits
+                ->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())))
+                ->all(),
+            'total' => $hits->total(),
             'resource' => $resource->jsonConfig(),
             'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
             // 'metrics' => $response->aggregations(),
@@ -181,7 +160,7 @@ class ResourceController extends Controller
             $resource
         ))
             ->patternDirectives(
-                ...$this->getDirectives($this->getResource())
+                ...$this->getResource()->getDirectives(request())
             )
             ->suggest(substr(request()->input('search') ?? '', 1, -1), request()->input('p'))
         ;
@@ -349,17 +328,6 @@ class ResourceController extends Controller
     protected function getResource(): Resource
     {
         return resolve(Pano::class)->resolveFromRoute(request()->route()->getName());
-    }
-
-    protected function getDirectives(Resource $resource): array
-    {
-        return collect($resource->filterableFields(request()))
-            // ->flatten()
-            ->map(fn ($field) => $field->getDirective())
-            ->filter()
-            ->values()
-            ->all()
-        ;
     }
 
     protected function loadRelations(iterable $hits, iterable $fields): Collection

@@ -34,7 +34,7 @@ class EloquentQueryHandler extends ResourceQueryHandler
         );
     }
 
-    public function entities(array $fields, int $limit, int $skip): QueryResult
+    public function entities(array $fields, int $limit, int $skip, ?string $query): QueryResult
     {
         $model = $this->resource->model;
         $modelInstance = new $model();
