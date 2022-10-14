@@ -43,7 +43,8 @@ app.component('badge-field', require('./components/fields/BadgeField').default);
 app.component('stack-field', require('./components/fields/StackField').default);
 app.component('date-field', require('./components/fields/DateField').default);
 app.component('nested-field', require('./components/fields/NestedField').default);
-app.component('relation-field', require('./components/fields/RelationField').default);
+// app.component('relation-field', require('./components/fields/RelationField').default);
+app.component('relates-to-one-field', require('./components/fields/RelationField').default);
 
 
 app.component('pano-field-table-header', require('./components/fields/TableHeader').default);

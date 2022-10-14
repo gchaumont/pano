@@ -4,6 +4,8 @@ namespace Pano\Fields\Relation;
 
 use Pano\Fields\Field;
 use Pano\Pano;
+use Pano\Query\Handlers\ResourceQueryHandler;
+use Pano\Resource\Resource;
 
  abstract class Relation extends Field
  {
@@ -12,6 +14,18 @@ use Pano\Pano;
      public string $resource;
 
      public null|string $appPath = null;
+
+     /**
+      * Method invoked by system when eager loading
+      * a relation on a collection of models.
+      */
+     abstract public function load(iterable $models): iterable;
+
+     /**
+      * Method invoked by the system when querying
+      * a relation to a specific model.
+      */
+     abstract public function query(Resource $resource, string $key): ResourceQueryHandler;
 
      public function resource(string $resource, string $appPath = null): static
      {

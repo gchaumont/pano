@@ -2,20 +2,24 @@
 
 namespace Pano\Fields;
 
-use Closure;
-use Elastico\Models\Builder\Builder;
 use Elastico\Models\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Pano\Fields\Concerns\HasFilters;
 use Pano\Fields\Concerns\HasFormat;
 use Pano\Fields\Concerns\HasVisibility;
-use Pano\Query\Directives\Directive;
 
+/**
+ * Represents an object attribute and provides
+ * information on how to access, filter,
+ * display and sort the property.
+ */
 abstract class Field
 {
     use HasVisibility;
     use HasFormat;
+    use HasFilters;
 
     protected mixed $value;
 
@@ -29,16 +33,12 @@ abstract class Field
 
     protected $transform;
 
-    protected Closure|bool $filterable = true;
-
     protected bool $sortable = false;
 
     protected bool $required;
     protected bool $stacked = false;
     protected string $help;
     protected bool $readonly = false;
-
-    protected null|Directive $directive = null;
 
     public function __construct(
         public string $name,
@@ -57,11 +57,6 @@ abstract class Field
         } else {
             $this->field = Str::snake($name);
         }
-    }
-
-    public function getDirective(): ?Directive
-    {
-        return $this->directive;
     }
 
     public function field(): null|array|string
@@ -205,23 +200,6 @@ abstract class Field
         return $this;
     }
 
-    public function filterable(bool|callable $filterable = true): static
-    {
-        $this->filterable = $filterable;
-
-        return $this;
-    }
-
-    public function applyFilter($request, $query, $value, $attribute): Builder
-    {
-        return is_callable($this->filterable) ? call_user_func($this->filterable, func_get_args()) : $query;
-    }
-
-    public function isFilterable($request): bool
-    {
-        return !empty($this->filterable) && $this->filterable;
-    }
-
     /**
      * Prepare value to be sent to Front.
      *
@@ -296,18 +274,6 @@ abstract class Field
     public function isReadonly($request): bool
     {
         return is_callable($this->readonly) ? call_user_func($this->readonly, $request) : $readonly;
-    }
-
-    public function canSee(callable $canSee): static
-    {
-        $this->canSee = $canSee;
-
-        return $this;
-    }
-
-    public function canSeeWhen(string $action, object $authorizable): static
-    {
-        // Checks the policy
     }
 
     public function getName(): string

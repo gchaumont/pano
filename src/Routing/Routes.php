@@ -87,12 +87,12 @@ class Routes
                 Route::get('metrics/{metric}', 'metric')->name('metric');
 
                 Route::get('', 'index')->name('index');
-                Route::post('', 'store')->name('store');
-                Route::get('create', 'app')->name('create');
+                // Route::post('', 'store')->name('store');
+                // Route::get('create', 'app')->name('create');
                 Route::get('{object}', 'show')->name('show');
-                Route::put('{object}', 'app')->name('update');
-                Route::delete('{object}', 'destroy')->name('destroy');
-                Route::get('{object}/edit', 'app')->name('edit');
+                // Route::put('{object}', 'app')->name('update');
+                // Route::delete('{object}', 'destroy')->name('destroy');
+                // Route::get('{object}/edit', 'app')->name('edit');
                 Route::get('{object}/relations/{relation}', 'relation')->name('relation');
                 Route::get('{object}/relations/{relation}/suggest', 'suggest_relation')->name('suggest_relation');
             });

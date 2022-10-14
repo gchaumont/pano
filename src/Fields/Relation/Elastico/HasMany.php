@@ -1,17 +1,34 @@
 <?php
 
-namespace Pano\Fields\Relation;
+namespace Pano\Fields\Relation\Elastico;
 
 use Closure;
 use Elastico\Models\DataAccessObject;
+use Pano\Fields\Relation\RelatesToMany;
+use Pano\Query\Handlers\ResourceQueryHandler;
+use Pano\Resource\Resource;
 
- class HasMany extends Relation
+ class HasMany extends RelatesToMany
  {
      const TYPE = 'has-many';
 
      public string $foreignKey;
 
      public Closure|bool $visibleOnIndex = false;
+
+     public function load(iterable $objects): iterable
+     {
+         return $objects->load($this->field());
+     }
+
+     public function query(Resource $resource, string $key): ResourceQueryHandler
+     {
+         $class = $resource->model;
+
+         return (new $class())->setKey($key)->queryRelated($this->field());
+
+         return $resource->model::query()->where();
+     }
 
      /**
       *  Enable display of default or custom metrics

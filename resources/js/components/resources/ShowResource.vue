@@ -81,7 +81,7 @@ export default {
     },
     computed: {
         relations: function () {
-            return this.fields.filter((f) => f.type == 'has-many-field');
+            return this.fields.filter((f) => f.type == 'relates-to-many-field');
         }, 
         currentRelation: function () {
             if (this.selectedRelation) {

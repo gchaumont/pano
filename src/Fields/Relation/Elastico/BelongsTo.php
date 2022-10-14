@@ -1,15 +1,31 @@
 <?php
 
-namespace Pano\Fields\Relation;
+namespace Pano\Fields\Relation\Elastico;
 
 use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
+use Pano\Fields\Relation\RelatesToOne;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\FieldDirective;
+use Pano\Query\Handlers\ResourceQueryHandler;
+use Pano\Resource\Resource;
 
- class BelongsTo extends Relation
+ class BelongsTo extends RelatesToOne
  {
      protected string $foreignKey;
+
+     public function load(iterable $models): iterable
+     {
+         return $models->load($this->field());
+     }
+
+     public function query(Resource $resource, string $key): ResourceQueryHandler
+     {
+         $class = $resource->model;
+
+         return (new $class())->setKey($key)->{$this->field()}();
+         // return $resource;
+     }
 
      public function getDirective(): null|Directive
      {
@@ -76,10 +92,4 @@ use Pano\Query\Directives\FieldDirective;
      {
          return [];
      }
-
-     // public function formatValue(mixed $value): mixed
-     // {
-     //     response(json_encode($value))->send();
-     //     dd($value);
-     // }
  }

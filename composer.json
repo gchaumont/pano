@@ -15,7 +15,6 @@
         "illuminate/collections": "^9.11",
         "illuminate/support": "^9.11"
     },
-  
     "autoload":
     {
         "psr-4":

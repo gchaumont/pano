@@ -9,12 +9,20 @@ use Pano\Concerns\Linkable;
 use Pano\Fields\Groups\Stack;
 use Pano\Fields\Relation\Relation;
 use Pano\Metrics\Metric;
+use Pano\Query\Handlers\ElasticoQueryHandler;
+use Pano\Query\Handlers\EloquentQueryHandler;
+use Pano\Query\Handlers\ResourceQueryHandler;
 
 abstract class Resource
 {
     use Linkable;
 
+    // public string $queryHandler = EloquentQueryHandler::class;
+    public string $queryHandler = ElasticoQueryHandler::class;
+
     public string $group;
+    public bool $showColumnBorders = true;
+    public string $tableStyle = 'tight';
 
     public null|string $icon = null;
 
@@ -23,8 +31,6 @@ abstract class Resource
      * Columns that should be searched.
      */
     public array $search = ['id'];
-
-    public string $tableStyle = 'tight';
 
     // Polling
     public bool $polling = true;
@@ -37,14 +43,19 @@ abstract class Resource
 
     public $showPollingToggle = true;
 
-    public bool $showColumnBorders = true;
-
     // Eager load relations
     public array $with = [];
 
     protected string $model;
 
     protected int $perPage = 50;
+
+    public function query(): ResourceQueryHandler
+    {
+        $class = $this->queryHandler;
+
+        return new $class(resource: $this);
+    }
 
     public function getName(): string
     {
@@ -189,11 +200,14 @@ abstract class Resource
         ;
     }
 
-    public function linkTo(string|Model $resource): string
+    public function linkTo(string|object $resource): string
     {
         $resource = $resource instanceof Model ? $resource->getKey() : $resource;
+        // $resource = $resource instanceof EloquentModel ? $resource->getKey() : $resource;
+        // response($this->getRoute('show'))->send();
+        $resource = is_object($resource) ? $resource->getKey() : $resource;
 
-        return route($this->getRoute('show'), $resource, false);
+        return route($this->getRoute('show'), ['object' => $resource], false);
     }
 
     public function getRoute($endpoint = 'index'): string
