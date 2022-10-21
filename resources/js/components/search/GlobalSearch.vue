@@ -4,7 +4,7 @@
             <transition enter-active-class="duration-150 ease-in-out " enter-from-class="transform opacity-0 scale-95" leave-active-class="duration-150 ease-in-out" enter-to-class="opacity-100 scale-100" leave-from-class="opacity-100 scale-100" leave-to-class="transform opacity-0 scale-95" >
                 <div v-show="active" :class="{'mt-24 bg-white dark:bg-slate-800 min-w-55ch rounded-lg text-slate-300  ' : true, '' : !active} ">
                     <div class="flex items-center p-4 px-6 ">
-                        <SearchIcon class="h-6 w-6 text-slate-400" />
+                        <MagnifyingGlassIcon class="h-6 w-6 text-slate-400" />
                         <input id="glob-search-input" class="w-full pl-3 text-slate-700 dark:text-slate-400 border-0 outline-none bg-transparent   text-lg placeholder:text-slate-500 dark:placeholder:text-slate-400" type="text" v-model="query" placeholder="Search..." autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterKeyHint="search">
                         <button type="reset" class="shadow-sm text-2xs rounded-lg font-semibold text-slate-600 border border-slate-100 hover:border-slate-200 dark:border-none dark:text-slate-400 dark:bg-slate-600  dark:hover:text-slate-300   px-1.5 py-1.5" label="Cancel">ESC</button>
                     </div>
@@ -32,9 +32,9 @@
 }
 </style>
 <script>
-import { SearchIcon } from '@heroicons/vue/solid'
+import { MagnifyingGlassIcon } from '@heroicons/vue/24/solid'
 export default {
-    components: { SearchIcon },
+    components: { MagnifyingGlassIcon },
     props: {
         app: {
             type: Object,

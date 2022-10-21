@@ -9,7 +9,6 @@ use Pano\Concerns\Linkable;
 use Pano\Fields\Groups\Stack;
 use Pano\Fields\Relation\Relation;
 use Pano\Metrics\Metric;
-use Pano\Query\Handlers\ElasticoQueryHandler;
 use Pano\Query\Handlers\EloquentQueryHandler;
 use Pano\Query\Handlers\ResourceQueryHandler;
 
@@ -18,7 +17,7 @@ abstract class Resource
     use Linkable;
 
     // public string $queryHandler = EloquentQueryHandler::class;
-    public string $queryHandler = ElasticoQueryHandler::class;
+    public string $queryHandler = ResourceQueryHandler::class;
 
     public string $group;
     public bool $showColumnBorders = true;

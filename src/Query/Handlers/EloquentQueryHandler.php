@@ -3,6 +3,7 @@
 namespace Pano\Query\Handlers;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Pano\Fields\Field;
 use Pano\Fields\Relation\Relation;
 use Pano\Query\QueryResult;
 
@@ -29,29 +30,51 @@ class EloquentQueryHandler extends ResourceQueryHandler
         $fields = collect($fields)->map(fn ($field) => $field->field())->all();
 
         return $this->result(
-            hits: $hits = $this->getQuery()->select($fields)->findMany($ids)->all(),
+            hits: $hits = $this->getQuery()
+                // ->select($fields)
+                ->findMany($ids)
+                ->all(),
             total: count($hits)
         );
     }
 
-    public function entities(array $fields, int $limit, int $skip, ?string $query): QueryResult
-    {
+    public function entities(
+        array $fields,
+        int $limit,
+        int $skip,
+        ?string $query,
+        ?Field $sorting = null,
+        bool $order = true,
+    ): QueryResult {
         $model = $this->resource->model;
         $modelInstance = new $model();
 
-        $query = $this->getQuery()->select(
-            collect($fields)
-                ->map(fn ($field) => $modelInstance->getTable().'.'.$field->field())
-                // ->pipe(fn ($r) => response($r)->send())
-                ->all()
-        )
+        $relations = collect($fields)
+            ->filter(fn ($field) => $field instanceof Relation)
+            ->values()
+        ;
+
+        $query = $this->getQuery()
+            // ->select(
+            //     collect($fields)
+            //         ->filter(fn ($field) => !($field instanceof Relation))
+            //         ->map(fn ($field) => $modelInstance->getTable().'.'.$field->field())
+            //         ->all()
+            // )
             ->take($limit)
             ->skip($skip)
+            ->with($relations->map(fn ($r) => $r->field())->all())
         ;
+
+        $total = $query->count();
+
+        if (!empty($sorting)) {
+            $query->orderBy($sorting->field(), $order ? 'asc' : 'desc');
+        }
 
         return $this->result(
             hits: $query->get()->all(),
-            total: $query->count()
+            total: $total
         );
     }
 }

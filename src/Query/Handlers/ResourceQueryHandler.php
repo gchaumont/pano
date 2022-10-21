@@ -2,6 +2,7 @@
 
 namespace Pano\Query\Handlers;
 
+use Pano\Fields\Field;
 use Pano\Fields\Relation\Relation;
 use Pano\Query\QueryResult;
 use Pano\Resource\Resource;
@@ -16,7 +17,14 @@ abstract class ResourceQueryHandler
 
     abstract public function related(Relation $relation, string $key): static;
 
-    abstract public function entities(array $fields, int $limit, int $skip, ?string $query): QueryResult;
+    abstract public function entities(
+        array $fields,
+        int $limit,
+        int $skip,
+        ?string $query,
+        ?Field $sorting = null,
+        bool $order = true, // true = asc, false = desc
+    ): QueryResult;
     // abstract public function entities(array $fields, array $filters, array $sorting): QueryResult;
 
     abstract public function idQuery(array $ids, array $fields): QueryResult;

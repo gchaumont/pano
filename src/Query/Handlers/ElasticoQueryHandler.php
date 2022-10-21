@@ -2,6 +2,7 @@
 
 namespace Pano\Query\Handlers;
 
+use Pano\Fields\Field;
 use Pano\Fields\Relation\Relation;
 use Pano\Query\QueryResult;
 use Pano\Query\SearchQuery;
@@ -12,8 +13,14 @@ class ElasticoQueryHandler extends ResourceQueryHandler
     {
     }
 
-    public function entities(array $fields, int $limit, int $skip, ?string $query): QueryResult
-    {
+    public function entities(
+        array $fields,
+        int $limit,
+        int $skip,
+        ?string $query,
+        ?Field $sorting = null,
+        bool $order = true,
+    ): QueryResult {
         $builder = $this->resource->model::query()
             // ->select(collect($fields)->map(fn ($f) => $f->field()))
 
@@ -24,6 +31,12 @@ class ElasticoQueryHandler extends ResourceQueryHandler
         $searchQuery->patternDirectives(...$this->resource->getDirectives(request()));
 
         $builder = $searchQuery->applyQueryToBuilder(request()->input('search') ?? '');
+
+        $total = $builder->count();
+
+        if (!empty($sorting)) {
+            $builder->orderBy($sorting->field(), $order ? 'asc' : 'desc');
+        }
 
         // try {
         //     $hits = $searchQuery->search(request()->input('search') ?? '');
@@ -38,7 +51,7 @@ class ElasticoQueryHandler extends ResourceQueryHandler
         // }
 
         return $this->result(
-            total: $builder->count(),
+            total: $total,
             hits: $builder
                 ->take($limit)
                 ->skip($skip)

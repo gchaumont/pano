@@ -70,7 +70,7 @@ class ResourceController extends Controller
         $fields = collect($resource->fieldsForIndex(request()))
             // ->filter(fn ($field) => $field->canSee())
             // ->map(fn ($field) => $field->field())
-            ->filter(fn ($field) => !($field instanceof Relation))
+            // ->filter(fn ($field) => !($field instanceof Relation))
             // ->flatten()
             // ->filter()
             ->all()
@@ -89,14 +89,13 @@ class ResourceController extends Controller
         $pageInput = request()->input('page');
         $perPage = $resource->perPage();
 
-        $relations = $resource->relationsForIndex(request());
-
         $hits = $resource->query()
             ->entities(
                 fields: $fields,
                 query: request()->input('search') ?? '',
                 // filters: $filters,
-                // sorting: $sortField,
+                sorting: $sortField,
+                order: str_starts_with($sortInput, '-'),
                 limit: $perPage,
                 skip: (($pageInput ?? 1) - 1) * $perPage,
             )
@@ -138,6 +137,11 @@ class ResourceController extends Controller
             //     )
             // )
         ;
+
+        // $relations = $resource->relationsForIndex(request());
+        // foreach ($relations as $relation) {
+        //     $relation->load($hits);
+        // }
 
         return [
             'hits' => $hits
@@ -202,6 +206,7 @@ class ResourceController extends Controller
         $builder = $relation->query(resource: $baseResource, key: $resourceID)
             ->entities(
                 fields: $fields,
+                query: request()->input('search') ?? '',
                 limit: $perPage,
                 skip: (($pageInput ?? 1) - 1) * $perPage,
             )

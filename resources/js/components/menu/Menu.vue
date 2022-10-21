@@ -13,7 +13,7 @@
     </div>
 </template>
 <script setup>
-    import {ArrowLeftIcon} from '@heroicons/vue/solid';
+    import {ArrowLeftIcon} from '@heroicons/vue/24/solid';
 const props = defineProps({
     components: {ArrowLeftIcon},
     app: {

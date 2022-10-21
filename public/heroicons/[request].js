@@ -1,0 +1,1 @@
+(self.webpackChunk=self.webpackChunk||[]).push([[639],{365:e=>{let o=new Proxy({},{get:(e,o)=>{if("__esModule"===o)return{};throw new Error(`You're trying to import \`@heroicons/vue/outline/${o}\` from Heroicons v1 but have installed Heroicons v2. Install \`@heroicons/vue@v1\` to resolve this error.`)}});e.exports=o}}]);

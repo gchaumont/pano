@@ -206,12 +206,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/gchaumont/elastico.git",
-                "reference": "ab69177919c8b8ddefa5c74d9911d9e26e98e4f3"
+                "reference": "b024f6050f14ffd692f529ce2b3706ec4e0f5709"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gchaumont/elastico/zipball/ab69177919c8b8ddefa5c74d9911d9e26e98e4f3",
-                "reference": "ab69177919c8b8ddefa5c74d9911d9e26e98e4f3",
+                "url": "https://api.github.com/repos/gchaumont/elastico/zipball/b024f6050f14ffd692f529ce2b3706ec4e0f5709",
+                "reference": "b024f6050f14ffd692f529ce2b3706ec4e0f5709",
                 "shasum": ""
             },
             "require": {
@@ -251,7 +251,7 @@
                 "issues": "https://github.com/gchaumont/elastico/issues",
                 "source": "https://github.com/gchaumont/elastico/tree/main"
             },
-            "time": "2022-10-11T13:54:40+00:00"
+            "time": "2022-10-14T13:42:50+00:00"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -586,16 +586,16 @@
         },
         {
             "name": "illuminate/collections",
-            "version": "v9.34.0",
+            "version": "v9.35.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/collections.git",
-                "reference": "a533ba3fce4e288a42f6287e1b9a685cdbc14f9f"
+                "reference": "32e3cd051cf1d12c1e7d5f7bb5a52d0dae8b7a8b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/collections/zipball/a533ba3fce4e288a42f6287e1b9a685cdbc14f9f",
-                "reference": "a533ba3fce4e288a42f6287e1b9a685cdbc14f9f",
+                "url": "https://api.github.com/repos/illuminate/collections/zipball/32e3cd051cf1d12c1e7d5f7bb5a52d0dae8b7a8b",
+                "reference": "32e3cd051cf1d12c1e7d5f7bb5a52d0dae8b7a8b",
                 "shasum": ""
             },
             "require": {
@@ -637,11 +637,11 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2022-09-16T14:22:26+00:00"
+            "time": "2022-10-06T14:13:23+00:00"
         },
         {
             "name": "illuminate/conditionable",
-            "version": "v9.34.0",
+            "version": "v9.35.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/conditionable.git",
@@ -687,7 +687,7 @@
         },
         {
             "name": "illuminate/contracts",
-            "version": "v9.34.0",
+            "version": "v9.35.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/contracts.git",
@@ -735,7 +735,7 @@
         },
         {
             "name": "illuminate/macroable",
-            "version": "v9.34.0",
+            "version": "v9.35.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/macroable.git",
@@ -781,16 +781,16 @@
         },
         {
             "name": "illuminate/support",
-            "version": "v9.34.0",
+            "version": "v9.35.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/illuminate/support.git",
-                "reference": "c5eeb30bbeb1f505938be61cb70ef614451ee446"
+                "reference": "1ca5ac4d81a9c1ad976686283c4dde80dab29333"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/illuminate/support/zipball/c5eeb30bbeb1f505938be61cb70ef614451ee446",
-                "reference": "c5eeb30bbeb1f505938be61cb70ef614451ee446",
+                "url": "https://api.github.com/repos/illuminate/support/zipball/1ca5ac4d81a9c1ad976686283c4dde80dab29333",
+                "reference": "1ca5ac4d81a9c1ad976686283c4dde80dab29333",
                 "shasum": ""
             },
             "require": {
@@ -847,7 +847,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2022-10-03T14:55:35+00:00"
+            "time": "2022-10-11T13:44:57+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -1912,16 +1912,16 @@
         },
         {
             "name": "symfony/translation",
-            "version": "v6.1.4",
+            "version": "v6.1.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation.git",
-                "reference": "45d0f5bb8df7255651ca91c122fab604e776af03"
+                "reference": "e6cd330e5a072518f88d65148f3f165541807494"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation/zipball/45d0f5bb8df7255651ca91c122fab604e776af03",
-                "reference": "45d0f5bb8df7255651ca91c122fab604e776af03",
+                "url": "https://api.github.com/repos/symfony/translation/zipball/e6cd330e5a072518f88d65148f3f165541807494",
+                "reference": "e6cd330e5a072518f88d65148f3f165541807494",
                 "shasum": ""
             },
             "require": {
@@ -1988,7 +1988,7 @@
             "description": "Provides tools to internationalize your application",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/translation/tree/v6.1.4"
+                "source": "https://github.com/symfony/translation/tree/v6.1.6"
             },
             "funding": [
                 {
@@ -2004,7 +2004,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2022-08-02T16:17:38+00:00"
+            "time": "2022-10-07T08:04:03+00:00"
         },
         {
             "name": "symfony/translation-contracts",

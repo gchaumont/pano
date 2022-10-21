@@ -25,11 +25,11 @@ app.directive('intersect', {
 })
 
 
-import * as heroicons from '@heroicons/vue/outline'
+import * as heroicons from '@heroicons/vue/24/outline'
 
 for (const property in heroicons) {
         // app.component(property, heroicons[property]);
-    app.component(property, defineAsyncComponent(() => import( /* webpackMode: 'lazy', webpackChunkName: 'heroicons/[request]' */ `@heroicons/vue/outline`).then(m => m[property])))
+    app.component(property, defineAsyncComponent(() => import( /* webpackMode: 'lazy', webpackChunkName: 'heroicons/[request]' */ `@heroicons/vue/24/outline`).then(m => m[property])))
 }
 
 app.component('loading-spinner', require('./components/support/LoadingSpinner').default);

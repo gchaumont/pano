@@ -16,7 +16,7 @@
     </th>
 </template>
 <script>
-import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/solid'
+import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/vue/24/solid'
 
 export default {
     components :{ ChevronDownIcon, ChevronUpIcon},
