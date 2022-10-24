@@ -209,6 +209,8 @@ class ResourceController extends Controller
                 query: request()->input('search') ?? '',
                 limit: $perPage,
                 skip: (($pageInput ?? 1) - 1) * $perPage,
+                sorting: $sortField,
+                order: str_starts_with($sortInput, '-'),
             )
             // ->select($fields)
             // ->with(
