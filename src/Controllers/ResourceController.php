@@ -314,7 +314,8 @@ class ResourceController extends Controller
 
         return [
             'model' => $this->serialiseModel($resource, $model, $fields),
-            'fields' => $fields->map(fn ($f) => $f->jsonConfig(request())),
+            'fields' => $fields
+                ->map(fn ($f) => $f->jsonConfig(request())),
         ];
     }
 
@@ -387,6 +388,7 @@ class ResourceController extends Controller
     {
         return [
             'title' => $resource->getTitle($hit),
+            'subtitle' => $resource->getSubtitle($hit),
             'link' => $resource->linkTo($hit->getKey()),
             'fields' => collect($fields)
                 ->keyBy(fn ($field) => $field->getKey())

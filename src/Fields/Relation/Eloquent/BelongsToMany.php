@@ -52,6 +52,7 @@ use Pano\Resource\Resource;
                  'id' => $object->getKey(),
                  'title' => $this->getResource()->getTitle($object),
                  'link' => $this->getResource()->linkTo($object),
+                 'subtitle' => $this->getResource()->getSubtitle($object),
              ];
          }
 

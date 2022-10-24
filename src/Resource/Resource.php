@@ -26,6 +26,8 @@ abstract class Resource
     public null|string $icon = null;
 
     public static string $title = 'name';
+
+    public static null|string $subtitle = null;
     /**
      * Columns that should be searched.
      */
@@ -71,6 +73,15 @@ abstract class Resource
     public function getTitle($object): string
     {
         return $object->getAttribute(static::$title) ?? $object->getKey();
+    }
+
+    public function getSubtitle($object): ?string
+    {
+        if (!empty(static::$subtitle)) {
+            return $object->getAttribute(static::$subtitle);
+        }
+
+        return null;
     }
 
     public function perPage(): int

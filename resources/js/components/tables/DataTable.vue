@@ -24,7 +24,7 @@
             </tr>
         </tbody>
     </table>
-        <div v-if="isLoading" class="flex justify-center items-center h-60">
+        <div v-if="isLoading" class="flex justify-center items-center h-[50vh]">
             <loading-spinner   />
         </div>
 

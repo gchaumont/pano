@@ -8,7 +8,7 @@
                 <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">details</p>
             </header>
             <dl class="border-t border-gray-200 dark:border-gray-500">
-                <template v-for="field, key in fields">
+                <template v-for="field, key in simpleFields">
                     <div class="dark:even:bg-slate-700 dark:odd:bg-slate-800 even:bg-slate-50 odd:bg-white px-4 py-5 sm:grid sm:grid-cols-4 sm:gap-4 sm:px-6" v-if="field.type != 'hidden-field'">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{field.name}}</dt>
                         <dd class="mt-1  sm:mt-0 sm:col-span-3 ">
@@ -82,7 +82,10 @@ export default {
     computed: {
         relations: function () {
             return this.fields.filter((f) => f.type == 'relates-to-many-field');
-        }, 
+        },
+        simpleFields: function () {
+            return this.fields.filter((f) => f.type != 'relates-to-many-field');
+        },
         currentRelation: function () {
             if (this.selectedRelation) {
                 var relation = this.relations.find(r => r.key == this.selectedRelation)

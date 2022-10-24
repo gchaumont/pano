@@ -11,6 +11,13 @@ class ElasticoQueryHandler extends ResourceQueryHandler
 {
     public function related(Relation $relation, string $key): static
     {
+        $object = $this->resource->model::query()->find($key);
+
+        $this->resource = $relation->getResource();
+
+        $this->query = $object->queryRelated($relation->field());
+
+        return $this;
     }
 
     public function entities(
@@ -21,7 +28,7 @@ class ElasticoQueryHandler extends ResourceQueryHandler
         ?Field $sorting = null,
         bool $order = true,
     ): QueryResult {
-        $builder = $this->resource->model::query()
+        $builder = $this->query ?? $this->resource->model::query()
             // ->select(collect($fields)->map(fn ($f) => $f->field()))
 
         ;

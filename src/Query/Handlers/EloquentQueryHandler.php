@@ -54,7 +54,10 @@ class EloquentQueryHandler extends ResourceQueryHandler
             ->values()
         ;
 
-        $query = $this->getQuery()
+        $query = $this->getQuery();
+
+        $total = $query->count();
+        $query
             // ->select(
             //     collect($fields)
             //         ->filter(fn ($field) => !($field instanceof Relation))
@@ -65,8 +68,6 @@ class EloquentQueryHandler extends ResourceQueryHandler
             ->skip($skip)
             ->with($relations->map(fn ($r) => $r->field())->all())
         ;
-
-        $total = $query->count();
 
         if (!empty($sorting)) {
             $query->orderBy($sorting->field(), $order ? 'asc' : 'desc');

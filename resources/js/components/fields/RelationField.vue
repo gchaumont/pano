@@ -1,5 +1,8 @@
 <template>
-    <router-link class="link" v-if="value" :to="value.link">{{value.title}}</router-link>
+    <router-link class="link" v-if="value" :to="value.link">
+    {{value.title}}
+    <br><small v-if="value.subtitle">{{value.subtitle}}</small>
+</router-link>
 </template>
 <script>
 import Field from './Field';

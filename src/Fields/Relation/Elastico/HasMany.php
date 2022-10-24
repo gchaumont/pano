@@ -5,12 +5,13 @@ namespace Pano\Fields\Relation\Elastico;
 use Closure;
 use Elastico\Models\DataAccessObject;
 use Pano\Fields\Relation\RelatesToMany;
+use Pano\Query\Handlers\ElasticoQueryHandler;
 use Pano\Query\Handlers\ResourceQueryHandler;
 use Pano\Resource\Resource;
 
  class HasMany extends RelatesToMany
  {
-     const TYPE = 'has-many';
+     const TYPE = 'relates-to-many';
 
      public string $foreignKey;
 
@@ -24,6 +25,8 @@ use Pano\Resource\Resource;
      public function query(Resource $resource, string $key): ResourceQueryHandler
      {
          $class = $resource->model;
+
+         return (new ElasticoQueryHandler($resource))->related(relation: $this, key: $key);
 
          return (new $class())->setKey($key)->queryRelated($this->field());
 
