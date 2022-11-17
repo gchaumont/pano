@@ -60,7 +60,7 @@ export default {
                 }))
         },
         filter: function (item) {
-            this.$emit('search', (this.search+ " "+ this.value.field+":\""+item.name+"\"").trim())
+            this.$emit('search', (this.search+ " "+ this.value.field+":\""+(item.id || item.name)+"\"").trim())
         }
     },
     mounted() {

@@ -98,6 +98,7 @@ use Pano\Pano;
               // 'MTD' => 'Month To Date',
               // 'QTD' => 'Quarter To Date',
               // 'YTD' => 'Year To Date',
+              // 'ALL' => 'All time',
           ];
       }
 
@@ -177,21 +178,30 @@ use Pano\Pano;
 
           $range = $request->input('range') ?? array_key_first($this->ranges());
 
-          $result = $this->result(
-              round((clone $query)->whereBetween(
-                  $dateColumn ?? $query->getModel()->getCreatedAtColumn(),
-                  $this->currentRange($range, $timezone)
-              )->when(!empty($callback), fn ($q) => $callback($q))
-                  ->{$function}($column), $this->precision)
-          );
-          if ($prevRange = $this->previousRange($range, $timezone)) {
-              $previousValue = round((clone $query)->whereBetween(
-                  $dateColumn ?? $query->getModel()->getCreatedAtColumn(),
-                  $prevRange
-              )->when(!empty($callback), fn ($q) => $callback($q))
-                  ->{$function}($column), $this->precision);
+          if ('ALL' !== $range) {
+              $result = $this->result(
+                  round((clone $query)->whereBetween(
+                      $dateColumn ?? $query->getModel()->getCreatedAtColumn(),
+                      $this->currentRange($range, $timezone)
+                  )->when(!empty($callback), fn ($q) => $callback($q))
+                      ->{$function}($column), $this->precision)
+              );
+              if ($prevRange = $this->previousRange($range, $timezone)) {
+                  $previousValue = round((clone $query)->whereBetween(
+                      $dateColumn ?? $query->getModel()->getCreatedAtColumn(),
+                      $prevRange
+                  )->when(!empty($callback), fn ($q) => $callback($q))
+                      ->{$function}($column), $this->precision);
 
-              $result->previous($previousValue);
+                  $result->previous($previousValue);
+              }
+          } else {
+              $result = $this->result(
+                  round((clone $query)
+                      ->when(!empty($callback), fn ($q) => $callback($q))
+                      ->{$function}($column), $this->precision)
+              )
+              ;
           }
 
           return $result;

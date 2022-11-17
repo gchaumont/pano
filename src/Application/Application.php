@@ -2,20 +2,14 @@
 
 namespace Pano\Application;
 
-use Illuminate\Container\Container;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Str;
 use Pano\Concerns\Linkable;
 use Pano\Dashboards\Dashboard;
 use Pano\Menu\MenuGroup;
 use Pano\Menu\MenuItem;
 use Pano\Menu\MenuItems;
 use Pano\Pano;
-use Pano\Resource\AutoResource;
 use Pano\Resource\Resource;
-use Pano\Routing\Routes;
-use ReflectionClass;
 
 abstract class Application
 {
@@ -169,62 +163,15 @@ abstract class Application
         $this->boot();
 
         return [
-            // 'routes' => Routes::jsonRoutes($this),
             'name' => $this->getName(),
             'homepage' => $this->homepage(),
             'path' => $this->getAppUrl(),
             'route' => $this->getRoute(),
-            // 'key' => $this->uriKey(),
             'menu' => collect($this->menu->items)->map(fn ($menu) => $menu->jsonConfig())->values()->all(),
             'resources' => $this->resources->map(fn ($resource) => $resource->jsonConfig())->values()->all(),
             'dashboards' => $this->dashboards->map(fn ($dashboard) => $dashboard->jsonConfig())->all(),
             'apps' => $this->applications->map(fn ($app) => $app->jsonConfig())->values()->all(),
         ];
-    }
-
-    public function resourcesForFolderModels(string $folder): array
-    {
-        throw new \Exception('Currently not available due to unique resource class requirement');
-
-        return array_map(
-            fn ($model) => $this->generateResourceForModel($model),
-            $this->allModelsFromFolder($folder)
-        );
-    }
-
-    public function generateResourceForModel(string $model): Resource
-    {
-        return new AutoResource(model: $model);
-    }
-
-    public function allModelsFromFolder(string $folder): array
-    {
-        return collect(File::allFiles(app_path($folder)))
-            ->map(function ($item) use ($folder) {
-                $path = $item->getRelativePathName();
-
-                $folder = explode('/', $folder);
-                $folder = array_map(fn ($bit) => ucfirst($bit), $folder);
-                $folder = implode('/', $folder);
-                $path = trim($folder.'/'.$path, '/');
-
-                return sprintf(
-                    '%s%s',
-                    Container::getInstance()->getNamespace(),
-                    strtr(substr($path, 0, strrpos($path, '.')), '/', '\\')
-                );
-            })
-            ->filter(function ($class) {
-                // $valid = str_starts_with($class, 'App\\');
-
-                // if ($valid && class_exists($class)) {
-                // response($class)->send();
-                $reflection = new ReflectionClass($class);
-
-                return !$reflection->isAbstract(); //&&  $reflection->isSubclassOf(Model::class)
-                 // }
-            })->all()
-         ;
     }
 
     public function boot(): static
@@ -239,7 +186,6 @@ abstract class Application
 
         $this->applications = collect($this->applications())
             ->map(fn ($app) => $app->namespace($this->getRoute()))
-
         ;
 
         $this->menu = (new MenuItems(items: $this->mainMenu()))->namespace($this->getRoute())->pathPrefix('');
@@ -248,12 +194,4 @@ abstract class Application
 
         return $this;
     }
-
-    // private static function keyByClassOrID(array $objects): array
-    // {
-    //     return collect($objects)
-    //         ->keyBy(fn ($object, $key) => is_numeric($key) ? get_class($object) : $key)
-    //         ->all()
-    //      ;
-    // }
 }

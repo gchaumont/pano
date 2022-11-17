@@ -59,4 +59,20 @@ use Pano\Fields\Concerns\HasVisibility;
      {
          return collect($this->fields)->keyBy(fn ($f) => $f->getKey())->map(fn ($field) => $field->serialiseValue($resource))->all();
      }
+
+     public function fields(): array
+     {
+         return $this->fields;
+     }
+
+     public function namespace(string $namespace): static
+     {
+         $this->fields = collect($this->fields)
+             ->map(fn ($field) => $field->namespace($namespace))
+             ->all()
+         ;
+         $this->namespace = $namespace;
+
+         return $this;
+     }
  }

@@ -1,5 +1,5 @@
 <template>        
-    <table class="w-full sm:rounded-lg text-sm text-left text-slate-500 dark:text-slate-400" style="position: relative">
+    <table class="w-full sm:rounded-lg text-sm max-w-full text-left text-slate-500 dark:text-slate-400" >
         <thead class="text-xs text-slate-700 uppercase bg-slate-50 dark:bg-slate-700 dark:text-slate-400">
             <tr>
                 <pano-field-table-header />
@@ -12,7 +12,7 @@
             <tr v-for="model, index in models" class="group border-b dark:border-slate-700">
                 <td class="px-3 py-2 text-slate-400 group-hover:dark:text-white group-hover:text-blue-700 ">
                     <router-link class="hovered" :to="model.link">View</router-link>
-                         <div  v-if="models.length>0 && index == models.length-5 " v-intersect="loadMore"  >
+                         <div  v-if="models.length>0 && index > models.length-50 " v-intersect="loadMore"  >
                     </div>
                 </td>
                 <template v-for="field, key in fields">
@@ -27,10 +27,6 @@
         <div v-if="isLoading" class="flex justify-center items-center h-[50vh]">
             <loading-spinner   />
         </div>
-
-    <!-- <div class="w-full my-2 z-0 flex  sticky bottom-0">
-        <pano-table-footer :pages="Math.floor(total/50)" :current="props.page" @topage="toPage" />
-    </div> -->
 </template>
 <script setup>
 import { reactive, onMounted, watch, ref } from 'vue'
@@ -39,10 +35,11 @@ import { reactive, onMounted, watch, ref } from 'vue'
 const state = reactive({
     sort: null,
     order: null,
+    emitting: null,
 })
 
 
-const emit = defineEmits(['toPage', 'sortBy'])
+const emit = defineEmits(['nextPage', 'sortBy'])
 
 
 const props = defineProps({
@@ -65,22 +62,18 @@ const props = defineProps({
     isLoading: {
         type: Boolean,
         required: true,
-    }
+    }, 
 })
 
-function toPage(page) {
-    emit('toPage', page);
-}
-
 function loadMore(intersect) {
-
+    if (state.emitting ==  true) {
+        return 
+    } 
+    state.emitting = true;
     if (intersect.intersectionRatio == 1 && props.isLoading == false) {
-        emit('toPage', props.page + 1)
+        emit('nextPage')
     }
-    // if (intersect.intersectionRatio < 1 && intersect.intersectionRatio > 0) {
-    //     console.log('loading more')
-    //     emit(props.page + 1)
-    // }
+    setTimeout(() => state.emitting = false, 200);
 }
 
 function sortBy(sortKey) {

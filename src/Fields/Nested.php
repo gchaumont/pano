@@ -69,4 +69,16 @@ use Pano\Query\Directives\NestedFieldDirective;
 
          return $config;
      }
+
+     public function namespace(string $namespace): static
+     {
+         $this->fields = collect($this->fields)
+             ->map(fn ($field) => $field->namespace($namespace))
+             ->all()
+         ;
+
+         $this->namespace = $namespace;
+
+         return $this;
+     }
  }

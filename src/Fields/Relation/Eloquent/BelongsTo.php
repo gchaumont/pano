@@ -4,6 +4,7 @@ namespace Pano\Fields\Relation\Eloquent;
 
 use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
+use Illuminate\Database\Eloquent\Collection;
 use Pano\Fields\Relation\RelatesToOne;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\FieldDirective;
@@ -12,9 +13,9 @@ use Pano\Resource\Resource;
 
  class BelongsTo extends RelatesToOne
  {
-     public function load(iterable $models): iterable
+     public function load(array $models): array
      {
-         return $models->load($this->field());
+         return Collection::make($models)->load($this->field())->all();
      }
 
      public function query(Resource $resource, string $key): ResourceQueryHandler

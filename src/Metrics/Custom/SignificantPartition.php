@@ -1,23 +1,24 @@
 <?php
 
-namespace Pano\Metrics;
+namespace Pano\Metrics\Custom;
 
 use Elastico\Aggregations\Aggregation;
 use Elastico\Aggregations\Bucket\Filter;
-use Elastico\Aggregations\Bucket\Terms;
+use Elastico\Aggregations\Bucket\SignificantTerms;
 use Elastico\Aggregations\Metric\Avg;
 use Elastico\Aggregations\Metric\Max;
 use Elastico\Aggregations\Metric\Min;
 use Elastico\Aggregations\Metric\Sum;
 use Elastico\Query\Builder;
 use Elastico\Query\MatchAll;
+use Pano\Metrics\Partition;
 use Pano\Metrics\Results\PartitionResult;
 use Pano\Pano;
 
   /**
    *  Metric.
    */
-  abstract class Partition extends Metric
+  abstract class SignificantPartition extends Partition
   {
       const TYPE = 'partition';
 
@@ -26,6 +27,8 @@ use Pano\Pano;
       protected string|null $suffix = null;
 
       protected int $size = 5;
+
+      protected string $type = 'gnd';
 
       public function count($request, $model, $by, callable $callback = null): PartitionResult
       {
@@ -55,6 +58,13 @@ use Pano\Pano;
       public function size(int $size): static
       {
           $this->size = $size;
+
+          return $this;
+      }
+
+      public function type(string $type): static
+      {
+          $this->type = $type;
 
           return $this;
       }
@@ -97,7 +107,13 @@ use Pano\Pano;
 
           $results = $query->take(0)
               ->addAggregation(
-                  (new Terms('terms'))->field($by)->size($this->size)->addAggregation($this->getAggregation($function, $field))
+                  (new SignificantTerms('terms'))
+                      ->type($this->type)
+                      ->field($by)
+                      ->size($this->size)
+                      ->addAggregation(
+                          $this->getAggregation($function, $field)
+                      )
               )
               ->when(!empty($callback), fn ($q) => $callback($q))
               ->get()
@@ -105,7 +121,6 @@ use Pano\Pano;
               ->buckets()
               ->map(fn ($bucket) => [
                   'name' => $bucket['key'],
-                  'id' => $bucket['key'],
                   'value' => 'count' == $function ? $bucket['doc_count'] : $bucket['agg']['value'],
               ])
               ->all()

@@ -157,6 +157,29 @@ abstract class Resource
     public function relationsForIndex($request): array
     {
         return collect($this->fieldsForIndex($request))
+            ->flatMap(function ($field) {
+                if ($field instanceof Stack || $field instanceof Nested) {
+                    return $field->fields();
+                }
+
+                return [$field];
+            })
+            ->filter(fn ($field) => $field instanceof Relation)
+            ->values()
+            ->all()
+        ;
+    }
+
+    public function relationsForDetail($request): array
+    {
+        return collect($this->fieldsForDetail($request))
+            ->flatMap(function ($field) {
+                if ($field instanceof Stack || $field instanceof Nested) {
+                    return $field->fields();
+                }
+
+                return [$field];
+            })
             ->filter(fn ($field) => $field instanceof Relation)
             ->values()
             ->all()
@@ -244,7 +267,9 @@ abstract class Resource
 
     public function getFields(): BaseCollection
     {
-        return collect($this->fields());
+        return collect($this->fields())
+            ->map(fn ($field) => $field->namespace($this->getNamespace()))
+        ;
     }
 
     public function getMetrics(): array

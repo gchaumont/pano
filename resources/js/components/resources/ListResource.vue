@@ -3,22 +3,21 @@
         <header>
             <h2 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{state.definition.name}}</h2>
         </header>
-        <section v-if="props.show_metrics">
-            <ul class="flex flex-row gap-3 items-stretch justify-start my-4 max-h-[25rem] overflow-y-hidden overflow-x-scroll">
-            <!-- <ul class="grid gap-4 grid-rows-[repeat(auto-fit,_minmax(0,_1fr))] grid-flow-row-dense overflow-x-scroll"> -->
+        <section v-if="props.show_metrics" class="max-w-full overflow-x-scroll overflow-y-hidden">
+            <ul class="flex flex-row gap-3 items-stretch justify-start my-4 max-h-[25rem]">
                 <li v-for="metric in state.definition.metrics" class="flex-auto ">
                     <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" @search="handleQuery"/>
                 </li>
             </ul>
         </section>
-        <section style="position: relative;">
+        <section style="position: relative; ">
             <header class="flex flex-wrap gap-3 items-center text-slate-700  dark:text-slate-300">
                 <model-search class="my-4" ref="searchbar" :path="state.definition.path" @search="handleQuery" :initialSearch="state.search" />
                 <p><span v-if="state.total == 10000">></span>
-                    {{state.total}} hits</p>
+                    {{(state.total).toLocaleString('de-CH')}} hits</p>
             </header>
-            <div class="min-h-screen">
-                <data-table @toPage="toPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" :page="state.page" :isLoading="state.isLoading" />
+            <div class="min-h-screen overflow-x-scroll">
+                <data-table @nextPage="nextPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" :page="state.page" :isLoading="state.isLoading" />
             </div>
         </section>
     </div>
@@ -104,8 +103,14 @@ function getValue(value, field) {
     }
 }
 
+
 function toPage(page) {
     state.page = page;
+    // router.replace({ query: Object.assign({}, route.query, { page: state.page }), hash: '#' })
+}
+
+function nextPage() {
+    state.page++;
     // router.replace({ query: Object.assign({}, route.query, { page: state.page }), hash: '#' })
 }
 

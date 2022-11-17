@@ -138,16 +138,18 @@ class ResourceController extends Controller
             // )
         ;
 
-        // $relations = $resource->relationsForIndex(request());
-        // foreach ($relations as $relation) {
-        //     $relation->load($hits);
-        // }
+        $relations = $resource->relationsForIndex(request());
+        $total = $hits->total();
+        $hits = $hits->all();
+        foreach ($relations as $relation) {
+            $hits = $relation->load($hits);
+        }
 
         return [
-            'hits' => $hits
+            'hits' => collect($hits)
                 ->map(fn ($hit) => $this->serialiseModel($resource, $hit, $resource->fieldsForIndex(request())))
                 ->all(),
-            'total' => $hits->total(),
+            'total' => $total,
             'resource' => $resource->jsonConfig(),
             'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
             // 'metrics' => $response->aggregations(),
@@ -176,7 +178,8 @@ class ResourceController extends Controller
 
         $relation = $baseResource->getRelated($relation);
 
-        $relatedResource = $baseResource->getContainingApp()->resource($relation->resource);
+        // $relatedResource = $baseResource->getContainingApp()->resource($relation->resource);
+        $relatedResource = $relation->getResource();
 
         $fields = collect($relatedResource->fieldsForIndex(request()))
             // ->filter(fn ($field) => $field->canSee())
@@ -263,19 +266,24 @@ class ResourceController extends Controller
 
             $response = $searchQuery->search(request()->input('search') ?? '');
 
-            $hits = $response->map(fn ($hit) => $this->serialiseModel($relatedResource, $hit, $relatedResource->fieldsForIndex(request())));
+            $hits = $response->all();
             $total = $response->total();
         } else {
             $hits = $builder->all();
             $total = $builder->total();
-            $hits = collect($hits)->map(fn ($hit) => $this->serialiseModel($relatedResource, $hit, $relatedResource->fieldsForIndex(request())))->all();
         }
+
+        foreach ($relatedResource->relationsForIndex(request()) as $relation) {
+            $hits = $relation->load($hits);
+        }
+
+        $hits = collect($hits)->map(fn ($hit) => $this->serialiseModel($relatedResource, $hit, $relatedResource->fieldsForIndex(request())));
 
         return [
             'hits' => $hits,
             'total' => $total,
-            'resource' => $relation->getResource()->jsonConfig(),
-            'fields' => collect($relation->getResource()->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
+            'resource' => $relatedResource->jsonConfig(),
+            'fields' => collect($relatedResource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
             // 'metrics' => $response->aggregations(),
         ];
     }
@@ -294,7 +302,7 @@ class ResourceController extends Controller
             // ->map(fn ($field) => $field->field())
         ;
 
-        $relations = collect($resource->fieldsForDetail(request()))
+        $relations = collect($resource->relationsForDetail(request()))
             // ->filter(fn ($r) => $r instanceof Relation)
             ->values()
             // ->with($relations->map(fn ($rel) => $rel->field())->all())
@@ -312,6 +320,10 @@ class ResourceController extends Controller
 
         if (empty($model)) {
             abort(404);
+        }
+
+        foreach ($relations as $relation) {
+            [$model] = $relation->load([$model]);
         }
 
         return [

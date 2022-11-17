@@ -11,7 +11,7 @@ use Pano\Query\Directives\FieldDirective;
 
      protected bool|string $true_value = true;
 
-     protected bool|string $false_value = true;
+     protected bool|string $false_value = false;
 
      public function getDirective(): null|Directive
      {

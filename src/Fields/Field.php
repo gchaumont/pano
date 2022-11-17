@@ -307,4 +307,11 @@ abstract class Field
             'format' => $this->format ?? null,
         ]);
     }
+
+    public function namespace(string $namespace): static
+    {
+        $this->namespace = $namespace;
+
+        return $this;
+    }
 }

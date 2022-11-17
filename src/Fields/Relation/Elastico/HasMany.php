@@ -4,6 +4,7 @@ namespace Pano\Fields\Relation\Elastico;
 
 use Closure;
 use Elastico\Models\DataAccessObject;
+use Elastico\Query\Response\Collection;
 use Pano\Fields\Relation\RelatesToMany;
 use Pano\Query\Handlers\ElasticoQueryHandler;
 use Pano\Query\Handlers\ResourceQueryHandler;
@@ -17,9 +18,9 @@ use Pano\Resource\Resource;
 
      public Closure|bool $visibleOnIndex = false;
 
-     public function load(iterable $objects): iterable
+     public function load(array $objects): array
      {
-         return $objects->load($this->field());
+         return Collection::make($objects)->load($this->field())->all();
      }
 
      public function query(Resource $resource, string $key): ResourceQueryHandler

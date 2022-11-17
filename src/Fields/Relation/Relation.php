@@ -19,7 +19,7 @@ use Pano\Resource\Resource;
       * Method invoked by system when eager loading
       * a relation on a collection of models.
       */
-     abstract public function load(iterable $models): iterable;
+     abstract public function load(array $models): array;
 
      /**
       * Method invoked by the system when querying
@@ -40,6 +40,8 @@ use Pano\Resource\Resource;
          if ($this->appPath) {
              return resolve(Pano::class)->resolveApp($this->appPath)->resource($this->resource);
          }
+
+         return resolve(Pano::class)->resolveApp($this->namespace)->resource($this->resource);
 
          return resolve(Pano::class)->currentApp()->resource($this->resource);
      }

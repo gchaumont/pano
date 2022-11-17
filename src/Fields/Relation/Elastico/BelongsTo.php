@@ -4,6 +4,8 @@ namespace Pano\Fields\Relation\Elastico;
 
 use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
+use Elastico\Query\Response\Collection;
+use Elastico\Query\Response\Response;
 use Pano\Fields\Relation\RelatesToOne;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\FieldDirective;
@@ -14,9 +16,9 @@ use Pano\Resource\Resource;
  {
      protected string $foreignKey;
 
-     public function load(iterable $models): iterable
+     public function load(array $models): array
      {
-         return $models->load($this->field());
+         return Collection::make($models)->load($this->field())->all();
      }
 
      public function query(Resource $resource, string $key): ResourceQueryHandler
@@ -24,13 +26,12 @@ use Pano\Resource\Resource;
          $class = $resource->model;
 
          return (new $class())->setKey($key)->{$this->field()}();
-         // return $resource;
      }
 
      public function getDirective(): null|Directive
      {
-         if (!empty($this->getForeignKey())) {
-             return new FieldDirective($this->getForeignKey());
+         if (!empty($this->field())) {
+             return new FieldDirective($this->field());
          }
 
          return null;

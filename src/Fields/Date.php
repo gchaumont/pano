@@ -3,6 +3,7 @@
 namespace Pano\Fields;
 
 use DateTime;
+use DateTimeImmutable;
 use Pano\Query\Directives\DateFieldDirective;
 use Pano\Query\Directives\Directive;
 
@@ -31,10 +32,14 @@ use Pano\Query\Directives\Directive;
 
      public function formatValue(mixed $value): mixed
      {
-         if ($value instanceof DateTime) {
-             return $value->format('Y-M-d');
+         if ($value instanceof DateTime || $value instanceof DateTimeImmutable) {
+             return [
+                 'raw' => $value->format('Y-M-d'),
+                 'date' => $value->format('Y M d'),
+                 'time' => null,
+             ];
          }
 
-         return $value;
+         return ['raw' => $value];
      }
  }
