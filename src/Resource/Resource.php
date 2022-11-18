@@ -6,6 +6,7 @@ use Elastico\Models\Model;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 use Pano\Concerns\Linkable;
+use Pano\Fields\Field;
 use Pano\Fields\Groups\Stack;
 use Pano\Fields\Relation\Relation;
 use Pano\Metrics\Metric;
@@ -46,6 +47,10 @@ abstract class Resource
 
     // Eager load relations
     public array $with = [];
+
+    public bool $default_order = true;
+
+    public null|string $default_sort_field = null;
 
     protected string $model;
 
@@ -145,6 +150,19 @@ abstract class Resource
     public static function redirectAfterDelete(PanoRequest $request)
     {
         return null;
+    }
+
+    public function defaultSortField(): null|Field
+    {
+        return $this->fieldsForIndex()
+            ->filter(fn ($field) => $field->getKey() == $this->default_sort_field)
+            ->first()
+        ;
+    }
+
+    public function defaultOrder(): null|bool
+    {
+        return $this->default_order;
     }
 
     public function getRelations(): BaseCollection
