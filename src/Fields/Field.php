@@ -207,13 +207,7 @@ abstract class Field
      */
     public function serialiseValue(object $object): mixed
     {
-        // Apply user transform
-        if (!empty($this->resolveUsing)) {
-            $value = call_user_func($this->resolveUsing, $object);
-        } else {
-            // Get the value from the model
-            $value = $object->getAttribute($this->field());
-        }
+        $value = $this->resolveValue($object);
 
         if (is_null($value) && isset($this->default)) {
             $value = is_callable($this->default) ? call_user_func($this->default, $object) : $this->default;
@@ -313,5 +307,15 @@ abstract class Field
         $this->namespace = $namespace;
 
         return $this;
+    }
+
+    protected function resolveValue(object $object): mixed
+    {
+        // Apply user transform
+        if (!empty($this->resolveUsing)) {
+            return call_user_func($this->resolveUsing, $object);
+        }
+        // Get the value from the model
+        return $object->getAttribute($this->field());
     }
 }

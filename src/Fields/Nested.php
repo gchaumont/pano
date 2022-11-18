@@ -7,7 +7,7 @@ use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\NestedFieldDirective;
 
  /**
-  * Shows Text form.
+  * Shows Nested data.
   */
  class Nested extends Field
  {
@@ -19,10 +19,14 @@ use Pano\Query\Directives\NestedFieldDirective;
 
      public function getDirective(): null|Directive
      {
-         return new NestedFieldDirective(
-             $this->field,
-             directives: collect($this->fields)->map(fn ($field) => $field->getDirective())->filter()->values()->all(),
-         );
+         if (!empty($this->field)) {
+             return new NestedFieldDirective(
+                 $this->field,
+                 directives: collect($this->fields)->map(fn ($field) => $field->getDirective())->filter()->values()->all(),
+             );
+         }
+
+         return null;
      }
 
      public function fields(array $fields): static
@@ -50,7 +54,7 @@ use Pano\Query\Directives\NestedFieldDirective;
      public function serialiseValue(object $object): mixed
      {
          $list = [];
-         foreach ($object->getAttribute($this->field()) ?? [] as $nested) {
+         foreach ($this->resolveValue($object) ?? [] as $nested) {
              $entity = [];
              foreach ($this->fields as $field) {
                  $entity[] = $field->serialiseValue($nested);
