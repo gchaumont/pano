@@ -152,9 +152,9 @@ abstract class Resource
         return null;
     }
 
-    public function defaultSortField(): null|Field
+    public function defaultSortField($request): null|Field
     {
-        return $this->fieldsForIndex()
+        return collect($this->fieldsForIndex($request))
             ->filter(fn ($field) => $field->getKey() == $this->default_sort_field)
             ->first()
         ;

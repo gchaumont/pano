@@ -86,7 +86,7 @@ class ResourceController extends Controller
             ->first(fn ($field) => $field->getKey() == trim($sortInput, '-'))
         ;
 
-        $sortField ??= $resource->defaultSortField();
+        $sortField ??= $resource->defaultSortField(request());
 
         $pageInput = request()->input('page');
         $perPage = $resource->perPage();
@@ -202,7 +202,7 @@ class ResourceController extends Controller
             ->first(fn ($field) => $field->getKey() == trim($sortInput, '-'))
         ;
 
-        $sortField ??= $relatedResource->defaultSortField();
+        $sortField ??= $relatedResource->defaultSortField(request());
 
         $pageInput = request()->input('page');
         $perPage = $relatedResource->perPage();
