@@ -43,6 +43,7 @@ class PanoServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->app->scoped('pano', fn (): ContextManager => new ContextManager());
+        $this->app->singleton('pano', fn (): ContextManager => new ContextManager());
+        // $this->app->scoped('pano', fn (): ContextManager => new ContextManager());
     }
 }
