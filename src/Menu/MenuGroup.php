@@ -2,44 +2,28 @@
 
 namespace Pano\Menu;
 
+use Illuminate\Support\Collection;
+
 class MenuGroup extends MenuItems
 {
+    public string $component = 'MenuGroup';
+
+    public Collection $items;
+
+    public readonly MenuItem $item;
+
     protected bool $collapsable = true;
 
     public function __construct(
-        public readonly MenuItem $item,
-        public array $items,
+        string|MenuItem $name,
+        iterable $items,
     ) {
+        $this->items = collect($items);
+        $this->item = is_string($name) ? MenuItem::make($name) : $name;
     }
 
     public function getName(): string
     {
         return $this->item->getName();
-    }
-
-    public function collapsable(bool $collapsable = true): static
-    {
-        $this->collapsable = $collapsable;
-
-        return $this;
-    }
-
-    public static function make(string|MenuItem $name, array $items): static
-    {
-        if (is_string($name)) {
-            $name = MenuItem::make($name);
-        }
-
-        return new static(item : $name, items: $items);
-    }
-
-    public function jsonConfig(): array
-    {
-        return [
-            'type' => 'group',
-            'name' => $this->getName(),
-            'collapsable' => $this->collapsable,
-            'items' => array_values(array_map(fn ($item) => $item->jsonConfig(), $this->items)),
-        ];
     }
 }

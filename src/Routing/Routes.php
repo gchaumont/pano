@@ -3,8 +3,6 @@
 namespace Pano\Routing;
 
 use Illuminate\Support\Facades\Route;
-use Pano\Application\Application;
-use Pano\Controllers\ApplicationController;
 use Pano\Controllers\DashboardController;
 use Pano\Controllers\ResourceController;
 use Pano\Dashboards\Dashboard;
@@ -13,26 +11,6 @@ use Pano\Resource\Resource;
 
 class Routes
 {
-    public static function application(Application $app): void
-    {
-        Route::group([
-            'as' => $app->getRouteKey(),
-            'prefix' => $app->getPath(),
-        ], function () use ($app) {
-            Route::get('', [ApplicationController::class, 'home'])->name('');
-
-            Route::group(['as' => ':'], function () use ($app) {
-                $app->resources->each(fn ($resource) => static::resource($resource));
-
-                $app->dashboards->each(fn ($dash) => static::dashboard($dash));
-            });
-
-            Route::group(['as' => '.'], function () use ($app) {
-                $app->applications->each(fn ($app) => static::application($app));
-            });
-        });
-    }
-
     public static function menuMap(MenuItems $menuItems, string $path = ''): array
     {
         $map = [];
@@ -66,21 +44,23 @@ class Routes
 
     protected static function dashboard(Dashboard $dashboard): void
     {
+        return;
         Route::group([
             'prefix' => $dashboard->getPath(),
-            'as' => 'dashboards.',
+            'as' => $dashboard->getRoute(),
         ], function () use ($dashboard) {
-            Route::get('', [DashboardController::class, 'show'])->name($dashboard->getRouteKey())
+            Route::get('', [DashboardController::class, 'show'])->name('')
             ;
-            Route::get('metrics/{metric}', [DashboardController::class, 'metric'])->name($dashboard->getRouteKey().'.metric');
+            Route::get('metrics/{metric}', [DashboardController::class, 'metric'])->name($dashboard->getRoute().'.metric');
         });
     }
 
     protected static function resource(Resource $resource): void
     {
+        return;
         Route::group([
             'prefix' => $resource->getPath(),
-            'as' => 'resources.'.$resource->getRouteKey().'.',
+            'as' => $resource->getRoute().'.',
         ], function () {
             Route::controller(ResourceController::class)->group(function () {
                 Route::get('suggest', 'suggest')->name('suggest');

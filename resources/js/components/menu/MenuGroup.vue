@@ -1,21 +1,23 @@
 <template>
-    <div class="mt-6">
-        <p class="text-gray-500 uppercase font-bold text-xs mb-2">{{config.name}}</p>
-        <ul  class="menu-group-items">
+    <div>
+        <p class="mt-6 text-gray-300 font-medium text-sm mb-2" v-if="!collapsed">{{config.name}}</p>
+        <ul class="menu-group-items ">
             <li v-for="item in config.items">
-                <component :is="'pano-menu-'+item.type" :config="item" />
+                <component :is="'pano-menu-'+item.type" :config="item" :collapsed="collapsed" />
             </li>
         </ul>
     </div>
 </template>
-<script>
-export default {
-    props: {
+<script setup>
+    const props = defineProps({
         config: {
             type: Object,
             required: true,
+        },
+        collapsed: {
+            type: Boolean,
+            required: false,
+            default: false
         }
-    }
-
-}
+    })
 </script>

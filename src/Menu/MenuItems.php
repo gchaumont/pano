@@ -2,57 +2,46 @@
 
 namespace Pano\Menu;
 
-use Pano\Concerns\Linkable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use Pano\Components\Component;
 
- class MenuItems
- {
-     use Linkable;
+class MenuItems extends Component
+{
+    public Collection $items;
 
-     public function __construct(
-         public array $items,
-     ) {
-     }
+    public string $component = 'MenuItems';
 
-     public function getName(): string
-     {
-         return '';
-     }
+    public function __construct(
+        iterable $items,
+    ) {
+        $this->items = collect($items);
+    }
 
-     public function collapsable(bool $collapsable = true): static
-     {
-         $this->collapsable = $collapsable;
+    public function getId(): string
+    {
+        return $this->id ??= (Str::slug(class_basename(static::class)).'-'.Str::random(5));
+    }
 
-         return $this;
-     }
+    public function collapsable(bool $collapsable = true): static
+    {
+        $this->collapsable = $collapsable;
 
-     public function namespace(string $namespace): static
-     {
-         $this->namespace = $namespace;
-         foreach ($this->items as $item) {
-             $item->namespace($namespace);
-         }
+        return $this;
+    }
 
-         return $this;
-     }
+    public function getChildren(): Collection
+    {
+        return $this->items;
+    }
 
-     public function pathPrefix(string $pathPrefix): static
-     {
-         $this->pathPrefix = $pathPrefix;
-
-         foreach ($this->items as $item) {
-             $item->pathPrefix($this->getPath());
-         }
-
-         return $this;
-     }
-
-     public function jsonConfig(): array
-     {
-         return [
-             'type' => 'group',
-             'name' => $this->getName(),
-             'collapsable' => $this->collapsable,
-             'items' => array_values(array_map(fn ($item) => $item->jsonConfig(), $this->items)),
-         ];
-     }
- }
+    public function config(): array
+    {
+        return [
+            'type' => 'group',
+            'name' => $this->getName(),
+            'collapsable' => $this->collapsable,
+            'items' => $this->items->map(fn ($i) => $i->config())->values(),
+        ];
+    }
+}

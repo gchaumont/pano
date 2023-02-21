@@ -1,63 +1,87 @@
 <template>
-    <!-- class="flex flex-row gap-2 min-h-screen " -->
-    <div id="mastgrid">
-        <aside class="sticky top-0 h-full p-2">
-            <h1>
-                <router-link class="text-slate-700 dark:text-slate-300 ml-2 mt-2 text-3xl" :to="app.path">{{app.name}}</router-link>
-            </h1>
-            <pano-menu :app="app" :config="app.menu" :parent="parent" />
-        </aside>
+    <div id="mastgrid" :class="[theme.bg, 'block sm:grid']">
+        <nav id="sidebar" class="flex">
+            <pano-menu v-if="!app.isRoot" :header="root" :menu="root.menu" :class="theme.rootMenu" :collapsed="!app.isRoot" />
+            <pano-menu :header="app" :menu="app.menu" :class="theme.menu" />
+        </nav>
+        <!-- <pano-navbar id="mastnav" :app="app" /> -->
         <main class="flex-1">
-            <pano-navbar class="mastnav" :app="app" />
             <router-view v-slot="{ Component }">
                 <keep-alive>
                     <component :is="Component" />
                 </keep-alive>
             </router-view>
         </main>
-        <global-search :app="$pano.rootApp" />
+        <!-- <global-search :app="root" /> -->
+        <global-search :items="getAppItems(root)" />
     </div>
 </template>
 <style type="text/scss" lang="scss">
     #mastgrid {
-        display: grid;
+        // display: grid;
         align-items: start;
         max-width: 100vw;
         min-height: 100vh;
         grid-template-columns: minmax(30ch, 30ch) 1fr 1fr;
-        grid-template-rows: 3.5rem 1fr;
+        // grid-template-rows: 3.5rem 1fr;
         justify-items: stretch;
         align-items: stretch;
         grid-template-areas:
-            "home main main"
-            "menu main main";
-
+            // "sidebar header header"
+            "sidebar main main";
     ;
 
-     .mastnav {
+    #mastnav {
         grid-area: header;
+    }
+    #sidebar {
+        grid-area:sidebar;
     }
     main {
         grid-area: main;
-        }
-    }
-
-
-</style>
-<script>
-export default {
-    props: {
-        app: {
-            type: Object,
-            required: true,
-        },
-        parent: {
-            type: Object,
-            required: false,
-        },
-    },
-    mounted() {
-
     }
 }
+</style>
+<script setup>
+import { provide } from 'vue'
+
+const props = defineProps({
+    app: {
+        type: Object,
+        required: true,
+    },
+    root: {
+        type: Object,
+        required: false,
+    },
+})
+
+
+const getAppItems = function(app) {
+    return [app, ...app.dashboards, ...app.resources, ...app.apps.map(app => getAppItems(app)).flat()]
+}
+
+
+const theme = {
+    "rootMenu" : "bg-sky-900 dark:bg-black",
+    "menu" :"bg-sky-800 dark:bg-slate-800/60",
+    "navbar" : "bg-slate-100 dark:bg-gray-900",
+    "bg" : "bg-slate-100 dark:bg-gray-900",
+    "cardBg" : "bg-white dark:bg-slate-800/90",
+    "tableHeader" :"bg-slate-50 dark:bg-slate-700 dark:text-slate-200",
+    "tableBody" : "bg-white dark:bg-slate-800 dark:text-slate-200 text-zinc-500 ",
+    "tableRow" : "border-slate-200 dark:border-slate-700 hover:bg-sky-100/20 dark:hover:bg-sky-900/30 ",
+    "txtAccent" : "text-sky-400 dark:text-sky-500",
+    "accentColor" : 'rgb(56, 189, 248)',// 'rgb(14, 165, 233)', // light 
+    "accentColorTransparent" : 'rgba(56, 189, 248, .2)',// 'rgb(14, 165, 233)', // light 
+
+}
+
+const setupTheme = function(name) {
+    // if (theme == 'zinc') {
+    //     tablebg = 'bg-red-500';
+    // }
+    provide('theme', theme)
+}
+setupTheme(props.root.name);
 </script>

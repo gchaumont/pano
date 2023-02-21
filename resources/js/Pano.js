@@ -1,60 +1,145 @@
-import { resourceRoutes, dashboardRoutes, appRoutes } from "./router"
+import { reactive, provide, computed, ref } from 'vue'
+import { resourceRoutes, appRoutes } from "./router"
+import Wrapper from '@/components/support/Wrapper.vue'
+import {useRoute} from 'vue-router'
 
-export default function Pano(root) {
+function wrapRoute(page) {
+    // return {
+    //     name: page.name,
+    //     path: page.path,
+    //     alias: page.alias || [],
+    //     component: Wrapper,
+    //     props: { component: page.component, props: page.props },
+    //     children: page.children?.map(child => wrapRoute(child)),
+    //     meta: page.meta,
+    //     redirect: page.redirect
+    // }
+    var record = Object.assign(page, {
+        props: { component: page.component, props: page.props },
+        children: page.children?.map(child => wrapRoute(child)),
+        component: Wrapper,
+    });
 
-    this.root = root;
+    return record
+}
 
-    this.menu = [];
-    this.resources = [];
 
-    this.rootApp ;
+const rootApp = ref(null);
+const currentApp = ref(null);
 
-    if (!this.root.startsWith('/') && this.root.length > 1) {
-        this.root = '/' + this.root;
+const pano = reactive(new Pano(
+    JSON.parse(document.head.querySelector('meta[name="pano-config"]').content),
+));
+
+export function usePano() {
+    return pano
+}
+
+export function setRootApp(App) {
+    rootApp.value = App;
+}
+export function setCurrentApp(App) {
+    currentApp.value = App;
+}
+
+export function resolveProps(props) {
+    var route = useRoute()
+
+    // resolve the data and possible endpoints from props and bind it to the component
+
+    if (props) {
+        for (var prop in props) {
+                var currentProp = props[prop];
+            if (currentProp.hasOwnProperty('@type')) {
+                if (currentProp['@type'] == 'QueryParameter') {
+                    props[currentProp['name']] =  route.params[currentProp['parameter']]
+                }
+            }
+        }
     }
 
-    this.boot = function(Router) {
-        fetch(this.root + '/api/config')
-            .then(response => response.json().then(config => {
+    return props;
 
-                this.rootApp = config;
-                this.menu.push(...config.menu)
-                this.registerAppRoutes(config, Router)
-                this.name = config.name;
-                this.path = config.path;
-                this.route = config.route;
+}
 
-                this.resources.push(...config.resources);
-                this.dashboards = config.dashboards;
-                this.apps = config.apps;
-            }))
-    }
+export const getRootApp = computed(() => rootApp.value)
+export const getCurrentApp = computed(() => currentApp.value)
 
+export default function Pano(config) {
 
-    this.getResource = function(key) {
-        return this.resources.find(r => r.key == key)
-    }
+    this.config = reactive(config);
 
-
-    this.registerAppRoutes = function(config, Router, parent) {
-
-        Router.addRoute(appRoutes(config, parent))
-
-        for (var i = config.dashboards.length - 1; i >= 0; i--) {
-            Router.addRoute(dashboardRoutes(config.dashboards[i], config, parent));
+    this.useRouter = Router => {
+        for (var i = this.config.length - 1; i >= 0; i--) {
+            this.registerConfig(this.config[i], Router);
+            // Router.addRoute(wrapRoute(config[i]))
         }
 
-        for (var i = config.resources.length - 1; i >= 0; i--) {
-            Router.addRoute(resourceRoutes(config.resources[i], config, parent));
-        }
-
-        for (var i = config.apps.length - 1; i >= 0; i--) {
-            this.registerAppRoutes(config.apps[i], Router, config);
-        }
-
-        Router.replace(Router.currentRoute.value.fullPath)
+        // Router.beforeEach((to, from) => {
+        //     if (to.meta.app) {
+        //         setRootApp(to.meta.rootApp)
+        //         setCurrentApp(to.meta.app)
+        //     }
+        //     return true
+        // })
     }
 
 
+    this.registerConfig = (config, Router) => {
+        if (config['@type'] == 'Application') {
+            this.registerApplication(config, Router)
+        } else if (config['@type'] == 'Page') {
+            this.registerPage(config, Router)
+        }
+    }
 
+
+    this.registerApplication = (config, Router, root = null) => {
+        // console.log(config);
+        if (root == null) {
+            root = config;
+        }
+
+
+
+        appRoutes(config, root).forEach(route => Router.addRoute(route))
+        
+
+        // for (var i = config.dashboards.length - 1; i >= 0; i--) {
+        //     Router.addRoute(dashboardRoutes(config.dashboards[i], config, root));
+        // }
+
+        // for (var i = config.resources.length - 1; i >= 0; i--) {
+        //     Router.addRoute(resourceRoutes(config.resources[i], config, root));
+        // }
+
+        // for (var i = config.apps.length - 1; i >= 0; i--) {
+        //     this.registerApplication(config.apps[i], Router, root);
+        // }
+    }
+
+    this.registerPage = (config, Router) => {
+
+    }
+
+
+    // this.menu = [];
+    // this.resources = [];
+
+
+    // this.boot = Router => {
+    //     this.menu.push(...config.menu)
+    //     this.name = config.name;
+    //     this.path = config.path;
+    //     this.route = config.route;
+
+    //     this.resources = config.resources;
+    //     this.dashboards = config.dashboards;
+    //     this.apps = config.apps;
+
+    //     this.registerAppRoutes(config, Router)
+    // }
+
+
+    // this.getResource = (key) => this.resources.find(r => r.key == key)
 }

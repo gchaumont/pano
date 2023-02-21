@@ -1,30 +1,40 @@
 <template>
-    <router-link active-class="bg-slate-300  !text-slate-900 dark:bg-slate-800 dark:!text-slate-300"  class="flex items-center p-2 text-base font-normal text-slate-700 my-0.5 hover:text-slate-900 rounded-lg dark:text-slate-400 hover:bg-slate-300  dark:hover:bg-slate-800 dark:hover:text-slate-300"  v-if="config.path && !isAbsolute" :to="config.path">
-        <component :is="config.icon" v-if="config.icon" class="h-5 w-5" />
-        <span class="ml-3">{{config.name}}</span>
-    </router-link>
-    <a  v-if="config.path && isAbsolute" :href="config.path" class="flex items-center p-2 text-base font-normal text-slate-700 my-0.5 hover:text-slate-900 rounded-lg dark:text-slate-400 hover:bg-slate-300  dark:hover:bg-slate-800 dark:hover:text-slate-300">
-        <component :is="config.icon" v-if="config.icon" class="h-5 w-5" />
-        <span class="ml-3">{{config.name}}</span>
+    <a v-if="config.path && isAbsolute" :href="config.path" :class="linkClass">
+        <component :is="config.icon" v-if="config.icon" :class="iconClass" />
+        <span >{{config.name}}</span>
     </a>
+    <router-link v-else :to="config.path" :active-class="linkActiveClass" :class="linkClass" v-slot="{isActive}">
+        <component :is="config.icon" v-if="config.icon" :class="[isActive && !config.inactive ? 'text-gray-100 group-hover:text-gray-200 dark:text-gray-300 dark:hover:text-gray-300' : 'text-gray-300 dark:group-hover:text-gray-300 group-hover:text-gray-200', iconClass]" />
+        <span v-if="!collapsed">{{config.name}}</span>
+    </router-link>
 </template>
-<script>
-export default {
-    props: {
-        config: {
-            type: Object,
-            required: true,
-        }
+<script setup>
+import { computed, inject } from 'vue'
+
+const theme = inject('theme');
+const props = defineProps({
+    config: {
+        type: Object,
+        required: true,
     },
-    mounted() {
-
+    collapsed: {
+        type: Boolean,
+        required: false,
+        default: false
     }, 
-    computed: {
-        isAbsolute: function() {
-            var regex = new RegExp('^(?:[a-z]+:)?//', 'i')
-            return regex.test(this.config.path);
-        }
-    }
+ 
+})
+const isAbsolute = computed(() => {
+    var regex = new RegExp('^(?:[a-z]+:)?//', 'i')
+    return regex.test(props.config.path);
+})
 
-}
+const iconClass = "flex-shrink-0 h-6 w-6 mr-2"
+
+const linkClass = " px-2 py-1.5 mb-1 text-gray-200 hover:bg-gray-300/10  border border-transparent  group flex gap-2 items-center  text-sm font-medium rounded-md dark:hover:bg-sky-800/20 dark:text-gray-300 dark:hover:border-sky-700/30 dark:hover:text-sky-100 hover:text-gray-200"
+
+const linkActiveClass =  computed(() => props.config.inactive ? '' : 'dark:!text-sky-100 bg-gray-300/20 hover:!bg-gray-300/20 !text-gray-100 dark:!bg-sky-800/30 dark:border-sky-700/40 dark:hover:!border-sky-700/40 dark:!text-gray-200 dark:hover:!bg-sky-800/30')
+
+
+
 </script>

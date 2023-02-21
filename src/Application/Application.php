@@ -3,37 +3,68 @@
 namespace Pano\Application;
 
 use Illuminate\Support\Collection;
-use Pano\Concerns\Linkable;
+use Illuminate\Support\Str;
 use Pano\Dashboards\Dashboard;
+use Pano\Facades\Pano;
 use Pano\Menu\MenuGroup;
 use Pano\Menu\MenuItem;
 use Pano\Menu\MenuItems;
-use Pano\Pano;
+use Pano\Pages\Page;
 use Pano\Resource\Resource;
+use Pano\Routes\RouteRecord;
 
-abstract class Application
+abstract class Application extends Page
 {
-    use Linkable;
-
-    public Collection $applications;
+    const CONTEXT_SEPARATOR = '.';
 
     public Collection $resources;
 
     public Collection $dashboards;
 
-    public readonly string $id;
+    public Collection $applications;
+
+    public string $component = 'PanoApplication';
 
     protected string $routePrefix;
+
+    protected MenuItems $menu;
+
+    protected null|string $homepage = null;
+
+    protected string $logo;
 
     final public function __construct(
         null|string $id = null,
         string $name = null,
-        protected null|string $homepage = null,
     ) {
         if ($name) {
             $this->name($name);
         }
-        $this->id = $id ?? static::class;
+        $this->id($id ?? Str::slug(class_basename(static::class)));
+        $this->route($this->getId());
+    }
+
+    public static function make(...$args): static
+    {
+        return new static(...$args);
+    }
+
+    public function getIcon(): ?string
+    {
+        return !empty($this->icon) ? $this->icon.'-icon' : null;
+    }
+
+    public function getLogo(): ?string
+    {
+        return !empty($this->logo) ? $this->logo : null;
+    }
+
+    public function getProps(): array
+    {
+        return [
+            'app' => $this->config(),
+            // 'menu' => $this->getMenu(),
+        ];
     }
 
     public function dashboards(): array
@@ -51,100 +82,112 @@ abstract class Application
         return [];
     }
 
-    public function resource(string $resource): Resource
+    public function getDashboard(string $dashboard): Dashboard
     {
-        $class = $this->resources->first(fn ($r) => $r->getKey() == $resource);
+        $dashboard = Str::start($dashboard, 'dashboards:');
 
-        if (empty($class)) {
-            throw new \Exception("The resource [{$resource}] was not found in [{$this->getName()}]");
-        }
-
-        return $class;
+        return $this->getDashboards()->get($dashboard)
+        ?? throw new \Exception("The dashboard [{$dashboard}] was not found in [{$this->getLocation()}]");
     }
 
-    public function dashboard(string $dashboard): Dashboard
+    public function getResource(string $resource): Resource
     {
-        $class = $this->dashboards->first(fn ($r) => $r->getKey() == $dashboard);
+        $resource = Str::start($resource, 'resources:');
 
-        if (empty($class)) {
-            throw new \Exception("The dashboard [{$dashboard}] was not found in [{$this->getName()}]");
-        }
-
-        return $class;
+        return $this->getResources()->get($resource)
+        ?? throw new \Exception("The resource [{$resource}] was not found in [{$this->getLocation()}]");
     }
 
-    public function application(string $app): Application
+    public function getApp(string $application): Application
     {
-        if (str_contains($app, ':')) {
-            $app = substr($app, 0, strpos($app, ':'));
-
-            return $this->application($app)->application(substr($app, strpos($app, ':') + 1));
-        }
-
-        $application = $this->applications->first(fn ($r) => $r->getRouteKey() == $app);
-
-        if (empty($application)) {
-            throw new \Exception("The application '{$app}' is not registered in the app ".($this->routePrefix ?? null));
-        }
-
-        return $application;
+        return $this->getApplications()->get($application)
+        ?? throw new \Exception("The application [{$application}] was not found in [{$this->getLocation()}]");
     }
 
     public function homepage(): string
     {
-        return $this->homepage ?? $this->dashboards->first()?->url() ?? $this->resources->first()?->url();
+        return $this->homepage ?? $this->getDashboards()->first()?->url() ?? $this->getResources()->first()?->url() ?? '';
     }
 
-    public function route(string $resource = null, string $identifier = null)
+    public function getResources(): Collection
     {
-        if (empty($resource) && empty($identifier)) {
-            return route($this->getRoute(), [], false);
+        return $this->resources ??= collect($this->resources())->keyBy(fn ($r) => $r->getId());
+    }
+
+    public function getDashboards(): Collection
+    {
+        return $this->dashboards ??= collect($this->dashboards())->keyBy(fn ($r) => $r->getId());
+    }
+
+    public function getApplications(): Collection
+    {
+        return $this->applications ??= collect($this->applications())->keyBy(fn ($r) => $r->getId());
+    }
+
+    public function getMenu(): MenuItems
+    {
+        if (isset($this->menu)) {
+            return $this->menu;
+        }
+        $this->menu = new MenuItems($this->menu());
+        if ($this->getApplication()) {
+            $this->menu->items->prepend(
+                MenuItem::make($this->getApplication()->getName())
+                    ->path(fn ($app) => $this->getApplication()->url())
+                    ->icon('chevron-left')
+                    ->inactive(true)
+            );
         }
 
-        return route(
-            $this->getRoute().'.'.$this->getResource($resource)->folderPath(),
-            array_filter([
-                'identifier' => $identifier,
-            ]),
-            false
-        );
+        return $this->menu;
     }
 
-    public function getAppUrl(): string
-    {
-        return resolve(Pano::class)->route($this->getRoute());
-    }
+    // public function link(string $resource = null, string $identifier = null)
+    // {
+    //     if (empty($resource) && empty($identifier)) {
+    //         return route($this->getRoute(), [], false);
+    //     }
+
+    //     return route(
+    //         $this->getRoute().'.'.$this->getResource($resource)->folderPath(),
+    //         array_filter([
+    //             'identifier' => $identifier,
+    //         ]),
+    //         false
+    //     );
+    // }
 
     /**
      * Default Menus.
      */
-    public function mainMenu(): array
+    public function menu(): array
     {
         $menu = collect();
 
-        if (!empty($this->dashboards())) {
+        if ($this->getDashboards()->isNotEmpty()) {
             $menu->push(
                 MenuGroup::make(
                     name: MenuItem::make('Dashboards')->icon('dashboard'),
-                    items: $this->dashboards->map(fn ($dashboard) => MenuItem::dashboard($dashboard->getKey()))->all()
+                    items: $this->getDashboards()->map(fn ($dashboard) => MenuItem::dashboard($dashboard->getId()))->all()
                 )
                     ->collapsable()
             );
         }
-        if (!empty($this->resources())) {
+        if ($this->getResources()->isNotEmpty()) {
             $menu->push(
                 MenuGroup::make(
                     name: MenuItem::make('Resources')->icon('object'),
-                    items: $this->resources->map(fn ($resource) => MenuItem::resource($resource->getKey())->icon($resource->icon ?? null))->all()
+                    items: $this->getResources()
+                        ->map(fn ($resource) => MenuItem::resource($resource->getId()))->all()
                 )
                     ->collapsable()
             );
         }
-        if (!empty($this->applications())) {
+        if ($this->getApplications()->isNotEmpty()) {
             $menu->push(
                 MenuGroup::make(
                     name: MenuItem::make('Applications'),
-                    items: collect($this->applications)->map(fn ($application) => MenuItem::application($application->getKey()))->all()
+                    items: $this->getApplications()->map(fn ($application) => MenuItem::application($application->getId()))->all()
                 )
                     ->collapsable()
             );
@@ -153,45 +196,94 @@ abstract class Application
         return $menu->all();
     }
 
-    public function getApplications(): array
+    // public function url(): string
+    // {
+    //     return $this->homepage();
+    // }
+
+    public function getPages(): Collection
     {
-        return $this->applications->all();
+        return collect($this->pages())
+            // ->concat($this->getApplications())
+            // ->concat($this->getResources())
+            // ->concat($this->getDashboards())
+        ;
     }
 
-    final public function jsonConfig(): array
+    /**
+     * Provide a set of Settings that will be made available
+     * in the global settings panel and in the application menu footer.
+     */
+    public function settings(): ApplicationSettings
     {
-        $this->boot();
+    }
 
+    final public function config(): array
+    {
         return [
             'name' => $this->getName(),
+            'isRoot' => empty($this->getApplication()),
             'homepage' => $this->homepage(),
-            'path' => $this->getAppUrl(),
+            'path' => $this->url(),
             'route' => $this->getRoute(),
-            'menu' => collect($this->menu->items)->map(fn ($menu) => $menu->jsonConfig())->values()->all(),
-            'resources' => $this->resources->map(fn ($resource) => $resource->jsonConfig())->values()->all(),
-            'dashboards' => $this->dashboards->map(fn ($dashboard) => $dashboard->jsonConfig())->all(),
-            'apps' => $this->applications->map(fn ($app) => $app->jsonConfig())->values()->all(),
+            // 'routes' => $this->getRoutes(),
+            'menu' => $this->getMenu()->items->map(fn (MenuItem|MenuGroup $menu) => $menu->config())->values()->all(),
+            'resources' => $this->getResources()->map(fn ($resource) => $resource->config())->values()->all(),
+            'dashboards' => $this->getDashboards()->map(fn ($dashboard) => $dashboard->config())->values()->all(),
+            'apps' => $this->getApplications()->map(fn ($app) => $app->definition())->values()->all(),
+            'root' => Pano::rootApp()->url(),
+            'location' => $this->getLocation(),
+            'icon' => $this->getIcon(),
+            'logo' => $this->getLogo(),
+            // 'settings'
         ];
     }
 
-    public function boot(): static
+    public function definition()
     {
-        $this->resources = collect($this->resources())
-            ->map(fn ($resource) => $resource->namespace($this->getRoute()))
-        ;
-
-        $this->dashboards = collect($this->dashboards())
-            ->map(fn ($dashboard) => $dashboard->namespace($this->getRoute()))
-        ;
-
-        $this->applications = collect($this->applications())
-            ->map(fn ($app) => $app->namespace($this->getRoute()))
-        ;
-
-        $this->menu = (new MenuItems(items: $this->mainMenu()))->namespace($this->getRoute())->pathPrefix('');
-
-        $this->applications->each(fn ($app) => $app->boot());
-
-        return $this;
+        return [
+            '@type' => 'Application',
+            ...$this->config(),
+        ];
     }
+
+    public function getContexts(): Collection
+    {
+        // return $this->getChildren()
+        //     ->collect()
+        //     ->push($this->getMenu())
+        //     ->keyBy(fn ($child) => $child->getId())
+        // ;
+
+        return collect()
+            ->concat($this->getResources())
+            ->concat($this->getDashboards())
+            ->concat($this->getApplications())
+            ->concat($this->getPages())
+            ->push($this->getMenu())
+            ->filter()
+            ->keyBy(fn ($c) => $c->getId())
+        ;
+    }
+
+    public function getChildren(): Collection
+    {
+        return $this->children ??= collect()
+            ->concat($this->getApplications())
+            ->push(NavigationSplitView::make(
+                homepage: $this->homepage(),
+                sidebar: $this->getMenu(),
+                children: collect($this->getResources())
+                    ->concat($this->getDashboards())
+                // ->concat($this->getPages())
+            )->props(['app' => $this->config()]))
+        ;
+    }
+
+    // public function getRouteRecords(): Collection
+    // {
+    //     return parent::getRouteRecords()
+    //         // ->when($this->url() != $this->homepage(), fn ($records) => $records->push(RouteRecord::redirect(path: $this->url(), redirect: $this->homepage())))
+    //     ;
+    // }
 }

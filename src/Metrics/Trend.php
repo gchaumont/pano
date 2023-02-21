@@ -9,245 +9,283 @@ use Elastico\Aggregations\Metric\Max;
 use Elastico\Aggregations\Metric\Min;
 use Elastico\Aggregations\Metric\Sum;
 use Elastico\Models\Builder\Builder;
+use Illuminate\Support\Facades\DB;
+use Pano\Facades\Pano;
 use Pano\Metrics\Results\TrendResult;
-use Pano\Pano;
 
- /**
-  * Trend Metric.
-  */
- abstract class Trend extends Metric
- {
-     const TYPE = 'trend';
+/**
+ * Trend Metric.
+ */
+abstract class Trend extends Metric
+{
+    const TYPE = 'trend';
 
-     public string|null $defaultRange;
+    const UNIT_MONTH = 'M';
 
-     public string|null $dateFormat = 'LLL. yy';
+    const UNIT_WEEK = 'w';
 
-     protected string|null $prefix = null;
+    const UNIT_DAY = 'd';
 
-     protected string|null $suffix = null;
+    const UNIT_HOUR = 'h';
 
-     public function countByMonths($request, string|Builder $model, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'count', null, 'M', $dateField);
-     }
+    const UNIT_MINUTE = 'm';
 
-     public function countByWeeks($request, string|Builder $model, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'count', null, 'w', $dateField);
-     }
+    public string|null $defaultRange;
 
-     public function countByDays($request, string|Builder $model, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'count', null, 'd', $dateField);
-     }
+    public string|null $dateFormat = 'LLL. yy';
 
-     public function countByHours($request, string|Builder $model, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'count', null, 'h', $dateField);
-     }
+    protected string|null $prefix = null;
 
-     public function countByMinutes($request, string|Builder $model, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'count', null, 'm', $dateField);
-     }
+    protected string|null $suffix = null;
 
-     public function avgByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'avg', $field, 'M', $dateField);
-     }
+    public function countByMonths($request, string|Builder $model, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'count', null, static::UNIT_MONTH, $dateField);
+    }
 
-     public function avgByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'avg', $field, 'w', $dateField);
-     }
+    public function countByWeeks($request, string|Builder $model, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'count', null, static::UNIT_WEEK, $dateField);
+    }
 
-     public function avgByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'avg', $field, 'd', $dateField);
-     }
+    public function countByDays($request, string|Builder $model, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'count', null, static::UNIT_DAY, $dateField);
+    }
 
-     public function avgByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'avg', $field, 'h', $dateField);
-     }
+    public function countByHours($request, string|Builder $model, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'count', null, static::UNIT_HOUR, $dateField);
+    }
 
-     public function avgByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'avg', $field, 'm', $dateField);
-     }
+    public function countByMinutes($request, string|Builder $model, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'count', null, static::UNIT_MINUTE, $dateField);
+    }
 
-     public function sumByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'sum', $field, 'M', $dateField);
-     }
+    public function avgByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'avg', $field, static::UNIT_MONTH, $dateField);
+    }
 
-     public function sumByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'sum', $field, 'w', $dateField);
-     }
+    public function avgByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'avg', $field, static::UNIT_WEEK, $dateField);
+    }
 
-     public function sumByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'sum', $field, 'd', $dateField);
-     }
+    public function avgByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'avg', $field, static::UNIT_DAY, $dateField);
+    }
 
-     public function sumByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'sum', $field, 'h', $dateField);
-     }
+    public function avgByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'avg', $field, static::UNIT_HOUR, $dateField);
+    }
 
-     public function sumByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'sum', $field, 'm', $dateField);
-     }
+    public function avgByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'avg', $field, static::UNIT_MINUTE, $dateField);
+    }
 
-     public function maxByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'max', $field, 'M', $dateField);
-     }
+    public function sumByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'sum', $field, static::UNIT_MONTH, $dateField);
+    }
 
-     public function maxByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'max', $field, 'w', $dateField);
-     }
+    public function sumByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'sum', $field, static::UNIT_WEEK, $dateField);
+    }
 
-     public function maxByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'max', $field, 'd', $dateField);
-     }
+    public function sumByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'sum', $field, static::UNIT_DAY, $dateField);
+    }
 
-     public function maxByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'max', $field, 'h', $dateField);
-     }
+    public function sumByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'sum', $field, static::UNIT_HOUR, $dateField);
+    }
 
-     public function maxByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'max', $field, 'm', $dateField);
-     }
+    public function sumByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'sum', $field, static::UNIT_MINUTE, $dateField);
+    }
 
-     public function minByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'min', $field, 'M', $dateField);
-     }
+    public function maxByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'max', $field, static::UNIT_MONTH, $dateField);
+    }
 
-     public function minByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'min', $field, 'w', $dateField);
-     }
+    public function maxByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'max', $field, static::UNIT_WEEK, $dateField);
+    }
 
-     public function minByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'min', $field, 'd', $dateField);
-     }
+    public function maxByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'max', $field, static::UNIT_DAY, $dateField);
+    }
 
-     public function minByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'min', $field, 'h', $dateField);
-     }
+    public function maxByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'max', $field, static::UNIT_HOUR, $dateField);
+    }
 
-     public function minByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
-     {
-         return $this->aggregateBy($request, $model, 'min', $field, 'm', $dateField);
-     }
+    public function maxByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'max', $field, static::UNIT_MINUTE, $dateField);
+    }
 
-     /**
-      * Get the ranges available for the metric.
-      *
-      * @return array
-      */
-     public function ranges()
-     {
-         return [
-             // 30 => '30 Days',
-             // 60 => '60 Days',
-             // 90 => '90 Days',
-         ];
-     }
+    public function minByMonths($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'min', $field, static::UNIT_MONTH, $dateField);
+    }
 
-     public function defaultRange(string $range): static
-     {
-         $this->defaultRange = $range;
+    public function minByWeeks($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'min', $field, static::UNIT_WEEK, $dateField);
+    }
 
-         return $this;
-     }
+    public function minByDays($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'min', $field, static::UNIT_DAY, $dateField);
+    }
 
-     public function getDefaultRange(): string|null
-     {
-         return $this->defaultRange ?? array_key_first($this->ranges());
-     }
+    public function minByHours($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'min', $field, static::UNIT_HOUR, $dateField);
+    }
 
-     public function jsonConfig(): array
-     {
-         return [
-             ...parent::jsonConfig(),
-             'defaultRange' => $this->getDefaultRange(),
-             'ranges' => collect($this->ranges())->map(fn ($range, $key) => ['key' => $key, 'name' => $range])->values(),
-             'prefix' => $this->prefix,
-             'suffix' => $this->suffix,
-         ];
-     }
+    public function minByMinutes($request, $model, string|Builder $field, string $dateField = null): TrendResult
+    {
+        return $this->aggregateBy($request, $model, 'min', $field, static::UNIT_MINUTE, $dateField);
+    }
 
-     public function getDateFormat($range): string
-     {
-         return $this->dateFormat;
-     }
+    /**
+     * Get the ranges available for the metric.
+     *
+     * @return array
+     */
+    public function ranges()
+    {
+        return [
+            // 30 => '30 Days',
+            // 60 => '60 Days',
+            // 90 => '90 Days',
+        ];
+    }
 
-     public function dateFormat(string $format): static
-     {
-         $this->dateFormat = $format;
+    public function defaultRange(string $range): static
+    {
+        $this->defaultRange = $range;
 
-         return $this;
-     }
+        return $this;
+    }
 
-     protected function getAggregation(string $function, string $field): Aggregation
-     {
-         return match ($function) {
-             'sum' => (new Sum('agg'))->field($field),
+    public function getDefaultRange(): string|null
+    {
+        return $this->defaultRange ?? array_key_first($this->ranges());
+    }
+
+    public function config(): array
+    {
+        return [
+            ...parent::config(),
+            'defaultRange' => $this->getDefaultRange(),
+            'ranges' => collect($this->ranges())->map(fn ($range, $key) => ['key' => $key, 'name' => $range])->values(),
+            'prefix' => $this->prefix,
+            'suffix' => $this->suffix,
+        ];
+    }
+
+    public function getDateFormat($range): string
+    {
+        return $this->dateFormat;
+    }
+
+    public function dateFormat(string $format): static
+    {
+        $this->dateFormat = $format;
+
+        return $this;
+    }
+
+    protected function getAggregation(string $function, string $field): Aggregation
+    {
+        return match ($function) {
+            'sum' => (new Sum('agg'))->field($field),
             'max' => (new Max('agg'))->field($field),
             'min' => (new Min('agg'))->field($field),
             'avg' => (new Avg('agg'))->field($field),
-         };
-     }
+        };
+    }
 
-     protected function currentRange(string|int $range, string $timeUnit): array
-     {
-         return ["now-{$range}{$timeUnit}/{$timeUnit}", 'now/m'];
-     }
+    protected function currentRange(string|int $range, string $timeUnit): array
+    {
+        $timeFunc = match ($timeUnit) {
+            static::UNIT_MONTH => 'subMonths',
+            static::UNIT_WEEK => 'subWeeks',
+            static::UNIT_DAY => 'subDays',
+            static::UNIT_HOUR => 'subHours',
+            static::UNIT_MINUTE => 'subMinutes',
+            default => throw new \InvalidArgumentException('Invalid time unit'),
+        };
 
-     protected function aggregateBy(
-         $request,
-         Builder|string $model,
-         string $function,
-         null|string $field = null,
-         string $timeUnit,
-         null|string $dateField = null
-     ): TrendResult {
-         $query = $model instanceof Builder ? $model : $model::query();
+        return [now()->{$timeFunc}($range), now()];
 
-         if ('count' !== $function) {
-             $field = $field ?? $query->getModel()->getQualifiedKeyName();
-         }
+        return ["now-{$range}{$timeUnit}/{$timeUnit}", 'now/m'];
+    }
 
-         $timezone = resolve(Pano::class)->resolveUserTimezone($request) ?? $request->timezone;
+    protected function aggregateBy(
+        $request,
+        Builder|string $model,
+        string $function,
+        null|string $field = null,
+        string $timeUnit,
+        null|string $dateField = null
+    ): TrendResult {
+        $query = $model instanceof Builder ? $model : $model::query();
 
-         $trend = $query->whereBetween(
-             $dateField,
-             $this->currentRange($request->range, $timeUnit, $timezone)
-         )->addAggregation(
-             (new DateHistogram('trend'))->field($dateField)->calendarInterval('1'.$timeUnit)->format($this->getDateFormat($request->range))
-                 ->when('count' !== $function, fn ($hist) => $hist->addAggregation($this->getAggregation($function, $field)))
-         )
-             ->take(0)
-             ->get()
-             ->aggregation('trend')
-             ->buckets()
-             ->keyBy(fn ($bucket) => $bucket['key_as_string'])
-             ->map(fn ($bucket) => 'count' === $function ? $bucket['doc_count'] : $bucket['agg']['value'])
-             ->all()
-         ;
+        if ('count' !== $function) {
+            $field = $field ?? $query->getModel()->getQualifiedKeyName();
+        }
 
-         return (new TrendResult())->trend($trend);
-     }
- }
+        $timezone = Pano::resolveUserTimezone($request) ?? $request->timezone;
+
+        $builder = $query->whereBetween(
+            $dateField,
+            $this->currentRange($request->range, $timeUnit, $timezone)
+        )
+        ;
+
+        if ($builder instanceof \Illuminate\Database\Eloquent\Builder) {
+            $field ??= '*';
+            $trend = $builder
+                ->select(DB::raw("DATE({$dateField}) as date"), DB::raw("{$function}({$field}) as value"))
+                ->groupBy('date')
+                ->get()
+                ->keyBy('date')
+                ->map(fn ($a) => $a->value)
+                ->all()
+            ;
+        } elseif ($builder instanceof \Elastico\Eloquent\Builder) {
+            $trend = $builder->addAggregation(
+                (new DateHistogram('trend'))->field($dateField)->calendarInterval('1'.$timeUnit)->format($this->getDateFormat($request->range))
+                    ->when('count' !== $function, fn ($hist) => $hist->addAggregation($this->getAggregation($function, $field)))
+            )
+                ->take(0)
+
+                ->get()
+                ->aggregation('trend')
+                ->buckets()
+                ->keyBy(fn ($bucket) => $bucket['key_as_string'])
+                ->map(fn ($bucket) => 'count' === $function ? $bucket['doc_count'] : $bucket['agg']['value'])
+                ->all()
+            ;
+        }
+
+        return (new TrendResult())->trend($trend);
+    }
+}

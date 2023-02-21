@@ -15,7 +15,7 @@
     </div>
 </template>
 <script>
-import Field from './Field';
+import Field from './Field.vue';
 
 export default {
     extends: Field,

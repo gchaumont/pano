@@ -2,11 +2,12 @@
 
 namespace Pano\Query\Directives;
 
-use Elastico\Query\Builder;
 use Elastico\Query\Compound\Boolean;
 use Elastico\Query\FullText\MatchQuery;
 use Elastico\Query\Query;
 use Exception;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
 use Pano\Query\Support\Regex;
 
 // Syntax Tree
@@ -129,7 +130,7 @@ abstract class Directive
         ];
     }
 
-    public function getCurrentQuery(): Query
+    public function getCurrentQuery(): Query|Builder|BaseBuilder
     {
         return $this->currentQuery ?? $this->parent?->getCurrentQuery() ?? $this->root->getQuery();
     }

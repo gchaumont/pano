@@ -1,71 +1,80 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import PanoSkeleton from './components/PanoSkeleton'
-import AppHome from './components/AppHome'
-import ResourceSkeleton from './components/Resources/ResourceSkeleton'
-import ListResource from './components/Resources/ListResource'
-import Dashboard from './components/Dashboards/Dashboard'
-import ShowResource from './components/Resources/ShowResource'
-import EditResource from './components/PanoApp'
-import CreateResource from './components/PanoApp'
+const AppHome = () => import('./components/AppHome.vue')
+const ResourceSkeleton = () => import('./components/resources/ResourceSkeleton.vue')
+const ListResource = () => import('./components/resources/ListResource.vue')
+const Dashboard = () => import('./components/dashboards/Dashboard.vue')
+const ShowResource = () => import('./components/resources/ShowResource.vue')
+const EditResource = () => import('./components/PanoRoot.vue')
+const CreateResource = () => import('./components/PanoRoot.vue')
+const NotFound = () => import('./components/NotFound.vue')
 
-
-export function resourceRoutes(resource, app, parent) {
-    return {
-        component: AppHome,
-        path: resource.path,
+export function resourceRoutes(resource, app, root) {
+    var routes =  [{
+        component: ListResource,
+        path: '',
         name: resource.route,
-        props: { app, parent },
-        children: [{
-            component: ListResource,
-            path: '',
-            props: { resource },
+        props: { app, root, resource },
+    }, {
+        component: ShowResource,
+        path: resource.path+'/:record',
+        props: route => ({ resource, record: route.params.record, app, root }),
+    }, {
+        component: EditResource,
+        path: resource.path+'/:record/edit',
+        props: route => ({ app, root, resource, record: route.params.record }),
+    }, {
+        component: CreateResource,
+        path: resource.path+'/create',
+        props: { app, root, resource },
+    }]
 
-        }, {
-            component: ShowResource,
-            path: ':object',
-            props: route => ({ resource, object: route.params.object }),
-        }, {
-            component: EditResource,
-            path: ':object/edit',
-            props: { resource },
-        }, {
-            component: CreateResource,
-            path: 'create',
-            props: { resource },
-        }]
-    }
+    return  [{
+        path: resource.path, 
+        children: routes,
+    }]
 }
 
-export function appRoutes(app, parent) {
-    var props = { app }
-    if (parent) {
-        props.parent = parent;
-    }
+export function appRoutes(app, root) {
+
+
+
+    return [{
+            component: AppHome,
+            path: app.path,
+            redirect: app.homepage,
+            props: { app, root },
+            children: [
+                ...app.dashboards.map(dash => dashboardRoute(dash, app, root)),
+                ...app.resources.map(dash => resourceRoutes(dash, app, root)).flat()
+            ]
+        },
+        ...app.apps.map(child => appRoutes(child, root)).flat()
+    ]
+
+
+
+
     return {
         redirect: app.homepage,
         path: app.path,
         name: app.route,
         props: props
     }
-
 }
 
-export function dashboardRoutes(dashboard, app, parent) {
+export function dashboardRoute(dashboard, app, root) {
     return {
-        component: AppHome,
+        component: Dashboard,
         path: dashboard.path,
         name: dashboard.route,
-        props: { app, parent },
-        children: [{
-            component: Dashboard,
-            path: '',
-            props: { dashboard },
-        }, ]
+        props: { dashboard },
     }
 }
 
-const routes = [];
+const routes = [
+    { path: '/:pathMatch(.*)*', name: '404', component: NotFound }
+];
 
 const router = createRouter({
     history: createWebHistory(),

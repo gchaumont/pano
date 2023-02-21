@@ -5,7 +5,6 @@ namespace Pano\Fields;
 use Elastico\Models\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 use Pano\Fields\Concerns\HasFilters;
 use Pano\Fields\Concerns\HasFormat;
 use Pano\Fields\Concerns\HasVisibility;
@@ -35,6 +34,8 @@ abstract class Field
 
     protected bool $sortable = false;
 
+    protected Closure|bool $searchable = false;
+
     protected bool $required;
     protected bool $stacked = false;
     protected string $help;
@@ -52,7 +53,7 @@ abstract class Field
                 $this->resolveUsing($field);
             // $this->sortable(false);
             } else {
-                throw new InvalidArgumentException('Invalid Field Parameter.');
+                throw new \InvalidArgumentException('Invalid Field Parameter.');
             }
         } else {
             $this->field = Str::snake($name);
@@ -62,6 +63,13 @@ abstract class Field
     public function field(): null|array|string
     {
         return $this->field ?? null;
+    }
+
+    public function searchable(\Closure|bool $searchable = true): static
+    {
+        $this->searchable = $searchable;
+
+        return $this;
     }
 
     public static function make(string $name, string|callable $field = null): static
@@ -114,6 +122,11 @@ abstract class Field
     public function isSortable(): bool
     {
         return $this->sortable;
+    }
+
+    public function isSearchable(): bool
+    {
+        return false === !$this->searchable;
     }
 
     public function fillUsing(callable $callable): static

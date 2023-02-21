@@ -1,6 +1,6 @@
 {
     "name": "gchaumont/pano",
-    "description": "Applications for Elastico Resources",
+    "description": "Applications for Eloquent Resources",
     "type": "library",
     "license": "MIT",
     "authors": [

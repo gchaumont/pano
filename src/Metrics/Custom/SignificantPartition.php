@@ -11,121 +11,121 @@ use Elastico\Aggregations\Metric\Min;
 use Elastico\Aggregations\Metric\Sum;
 use Elastico\Query\Builder;
 use Elastico\Query\MatchAll;
+use Pano\Facades\Pano;
 use Pano\Metrics\Partition;
 use Pano\Metrics\Results\PartitionResult;
-use Pano\Pano;
 
-  /**
-   *  Metric.
-   */
-  abstract class SignificantPartition extends Partition
-  {
-      const TYPE = 'partition';
+/**
+ *  Metric.
+ */
+abstract class SignificantPartition extends Partition
+{
+    const TYPE = 'partition';
 
-      protected string|null $prefix = null;
+    protected string|null $prefix = null;
 
-      protected string|null $suffix = null;
+    protected string|null $suffix = null;
 
-      protected int $size = 5;
+    protected int $size = 5;
 
-      protected string $type = 'gnd';
+    protected string $type = 'gnd';
 
-      public function count($request, $model, $by, callable $callback = null): PartitionResult
-      {
-          return $this->aggregateBy($request, $model, 'count', null, $by, $callback);
-      }
+    public function count($request, $model, $by, callable $callback = null): PartitionResult
+    {
+        return $this->aggregateBy($request, $model, 'count', null, $by, $callback);
+    }
 
-      public function sum($request, $model, $field, $by, callable $callback = null): PartitionResult
-      {
-          return $this->aggregateBy($request, $model, 'sum', $field, $by, $callback);
-      }
+    public function sum($request, $model, $field, $by, callable $callback = null): PartitionResult
+    {
+        return $this->aggregateBy($request, $model, 'sum', $field, $by, $callback);
+    }
 
-      public function average($request, $model, $field, $by, callable $callback = null): PartitionResult
-      {
-          return $this->aggregateBy($request, $model, 'avg', $field, $by, $callback);
-      }
+    public function average($request, $model, $field, $by, callable $callback = null): PartitionResult
+    {
+        return $this->aggregateBy($request, $model, 'avg', $field, $by, $callback);
+    }
 
-      public function max($request, $model, $field, $by, callable $callback = null): PartitionResult
-      {
-          return $this->aggregateBy($request, $model, 'max', $field, $by, $callback);
-      }
+    public function max($request, $model, $field, $by, callable $callback = null): PartitionResult
+    {
+        return $this->aggregateBy($request, $model, 'max', $field, $by, $callback);
+    }
 
-      public function min($request, $model, $field, $by, callable $callback = null): PartitionResult
-      {
-          return $this->aggregateBy($request, $model, 'min', $field, $by, $callback);
-      }
+    public function min($request, $model, $field, $by, callable $callback = null): PartitionResult
+    {
+        return $this->aggregateBy($request, $model, 'min', $field, $by, $callback);
+    }
 
-      public function size(int $size): static
-      {
-          $this->size = $size;
+    public function size(int $size): static
+    {
+        $this->size = $size;
 
-          return $this;
-      }
+        return $this;
+    }
 
-      public function type(string $type): static
-      {
-          $this->type = $type;
+    public function type(string $type): static
+    {
+        $this->type = $type;
 
-          return $this;
-      }
+        return $this;
+    }
 
-      public function jsonConfig(): array
-      {
-          return [
-              ...parent::jsonConfig(),
-              'prefix' => $this->prefix,
-              'suffix' => $this->suffix,
-          ];
-      }
+    public function jsonConfig(): array
+    {
+        return [
+            ...parent::jsonConfig(),
+            'prefix' => $this->prefix,
+            'suffix' => $this->suffix,
+        ];
+    }
 
-      protected function getAggregation(string $function, string $field = null): Aggregation
-      {
-          return match ($function) {
-              'count' => (new Filter('agg'))->filter(new MatchAll()),
-              'sum' => (new Sum('agg'))->field($field),
-              'max' => (new Max('agg'))->field($field),
-              'min' => (new Min('agg'))->field($field),
-              'avg' => (new Avg('agg'))->field($field),
-          };
-      }
+    protected function getAggregation(string $function, string $field = null): Aggregation
+    {
+        return match ($function) {
+            'count' => (new Filter('agg'))->filter(new MatchAll()),
+            'sum' => (new Sum('agg'))->field($field),
+            'max' => (new Max('agg'))->field($field),
+            'min' => (new Min('agg'))->field($field),
+            'avg' => (new Avg('agg'))->field($field),
+        };
+    }
 
-      protected function aggregateBy(
-          $request,
-          Builder|string $model,
-          string $function,
-          null|string $field = null,
-          null|string $by = null,
-          null|callable $callback = null,
-      ) {
-          $query = $model instanceof Builder ? $model : $model::query();
+    protected function aggregateBy(
+        $request,
+        Builder|string $model,
+        string $function,
+        null|string $field = null,
+        null|string $by = null,
+        null|callable $callback = null,
+    ) {
+        $query = $model instanceof Builder ? $model : $model::query();
 
-          if ('count' !== $function) {
-              $field = $field ?? $query->getModel()->getQualifiedKeyName();
-          }
+        if ('count' !== $function) {
+            $field = $field ?? $query->getModel()->getQualifiedKeyName();
+        }
 
-          $timezone = resolve(Pano::class)->resolveUserTimezone($request) ?? $request->timezone;
+        $timezone = Pano::resolveUserTimezone($request) ?? $request->timezone;
 
-          $results = $query->take(0)
-              ->addAggregation(
-                  (new SignificantTerms('terms'))
-                      ->type($this->type)
-                      ->field($by)
-                      ->size($this->size)
-                      ->addAggregation(
-                          $this->getAggregation($function, $field)
-                      )
-              )
-              ->when(!empty($callback), fn ($q) => $callback($q))
-              ->get()
-              ->aggregation('terms')
-              ->buckets()
-              ->map(fn ($bucket) => [
-                  'name' => $bucket['key'],
-                  'value' => 'count' == $function ? $bucket['doc_count'] : $bucket['agg']['value'],
-              ])
-              ->all()
-          ;
+        $results = $query->take(0)
+            ->addAggregation(
+                (new SignificantTerms('terms'))
+                    ->type($this->type)
+                    ->field($by)
+                    ->size($this->size)
+                    ->addAggregation(
+                        $this->getAggregation($function, $field)
+                    )
+            )
+            ->when(!empty($callback), fn ($q) => $callback($q))
+            ->get()
+            ->aggregation('terms')
+            ->buckets()
+            ->map(fn ($bucket) => [
+                'name' => $bucket['key'],
+                'value' => 'count' == $function ? $bucket['doc_count'] : $bucket['agg']['value'],
+            ])
+            ->all()
+        ;
 
-          return (new PartitionResult())->partition($results)->field($by);
-      }
-  }
+        return (new PartitionResult())->partition($results)->field($by);
+    }
+}

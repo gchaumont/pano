@@ -5,7 +5,7 @@
     </ul>
 </template>
 <script>
-import Field from './Field';
+import Field from './Field.vue';
 
 export default {
     extends: Field,
@@ -22,11 +22,11 @@ export default {
         fieldFormat: function () {
             switch(this.field.format) {
                 case 'heading':
-                    return 'text-base text-slate-800 dark:text-slate-200'
+                    return 'text-base text-slate-800 dark:text-slate-100'
                 case 'subtitle':
-                       return 'font-bold dark:text-slate-400'
+                       return 'font-bold dark:text-slate-300'
                 case 'small':
-                    return 'text-sm text-slate-400 dark:text-slate-500'
+                    return 'text-sm text-slate-400 dark:text-slate-400'
                 case 'base':
                 default:
                     return ''

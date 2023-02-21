@@ -1,6 +1,6 @@
 <template>
     <form id="resource-search" action="" method="get" class="relative inline-block">
-        <input class=" text-slate-400 dark:text-slate-100 bg-white dark:bg-slate-800 rounded-md py-2 px-4 min-w-55ch   shadow-sm  dark:bg-slate-800 dark:highlight-white/5 dark:hover:bg-slate-800/80 outline-none" type="text" placeholder="Search..." name="" v-model="search" style="position: sticky; top: 0" @click="activate()" @keydown="activate" @focus="activate()" @blur="deactivate()" ref="searchInput">
+        <input class=" text-slate-400 dark:text-slate-100 bg-white dark:bg-slate-700 rounded-md py-2 px-4 min-w-55ch   shadow-sm  dark:highlight-white/5 dark:hover:bg-slate-600 outline-none transition-colors" type="text" placeholder="Search..." name="" v-model="search" style="position: sticky; top: 0" @click="activate()" @keydown="activate" @focus="activate()" @blur="deactivate()" ref="searchInput">
         <button type="submit" class="hidden"> </button>
         <div class="absolute shadow-lg top-100 overflow-y-auto max-h-80 inset-x-0 z-10 bg-white dark:bg-slate-700" v-if="active && suggestions?.length">
             <ol>

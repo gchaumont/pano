@@ -1,9 +1,12 @@
 <template>
-
-    <router-view />
-
+    <router-view :resource="resource" />
 </template>
-<script>
-
+<script setup>
+const props = defineProps({
+    resource: {
+        required: true, 
+        type: Object
+    }
+})
 
 </script>

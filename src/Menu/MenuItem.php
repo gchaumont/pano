@@ -4,21 +4,43 @@ namespace Pano\Menu;
 
 use Illuminate\Support\Str;
 use Pano\Application\Application;
-use Pano\Concerns\Linkable;
+use Pano\Components\Component;
+use Pano\Concerns\Nameable;
 
-class MenuItem
+class MenuItem extends Component
 {
-    use Linkable;
+    use Nameable;
 
-    protected null|string $icon = null;
-    protected string $path;
+    public string $component = 'MenuItem';
+
+    protected null|string|\Closure $icon = null;
+
+    protected string|\Closure $path;
 
     protected bool $canSee;
 
+    protected bool $inactive = false;
+
     public function __construct(
         string $name,
+        string $link = null,
     ) {
         $this->name($name);
+        // if ($link) {
+        //     $static->path($link);
+        // }
+    }
+
+    public function getId(): string
+    {
+        return $this->id ??= (Str::slug(class_basename(static::class)).'-'.Str::random(5));
+    }
+
+    public function inactive(bool $inactive = true): static
+    {
+        $this->inactive = $inactive;
+
+        return $this;
     }
 
     // public function path(string $path): static
@@ -27,11 +49,33 @@ class MenuItem
 
     //     return $this;
     // }
-    public function path(string $path): static
+    public function path(string|\Closure $path): static
     {
         $this->path = $path;
 
         return $this;
+    }
+
+    public function getName(): string
+    {
+        return is_string($this->name) ? $this->name : ($this->name)($this->getApplication());
+    }
+
+    public function getPath(): string
+    {
+        return is_string($this->path) ? $this->path : ($this->path)($this->getApplication());
+    }
+
+    public function getIcon(): ?string
+    {
+        if (empty($this->icon)) {
+            return null;
+        }
+        $icon = is_string($this->icon) ? $this->icon : ($this->icon)($this->getApplication());
+
+        $icon = Str::finish($icon, '-icon');
+
+        return ucfirst(Str::camel($icon));
     }
 
     public function route(string $name): static
@@ -46,16 +90,6 @@ class MenuItem
         $this->canSee = is_bool($canSee) ? $canSee : $canSee();
 
         return $this;
-    }
-
-    public static function make(string $name, string $link = null)
-    {
-        $static = new static(name: $name);
-        // if ($link) {
-        //     $static->path($link);
-        // }
-
-        return $static;
     }
 
     public function icon(string|null $icon): static
@@ -74,18 +108,34 @@ class MenuItem
      * Display a link to an application
      * Items can be passed as options for the main parameter.
      */
-    public static function application(string $app, array|callable $items = null): static
+    public static function application(string $application, array|callable $items = null): static
     {
-        $static = new static(name: $app);
-        $static->application = $app;
+        $static = new static('');
+        $static->path = fn (Application $app) => $app->getApp($application)
+            ->url()
+        ;
+        $static->name = fn (Application $app) => $app->getApp($application)
+            ->getName()
+        ;
+        $static->icon = fn (Application $app) => $app->getApp($application)
+            ->getIcon()
+        ;
 
         return $static;
     }
 
     public static function dashboard(string $dashboard): static
     {
-        $static = new static(name: $dashboard);
-        $static->dashboard = $dashboard;
+        $static = new static('');
+        $static->path = fn (Application $app) => $app->getDashboard($dashboard)
+            ->url()
+        ;
+        $static->name = fn (Application $app) => $app->getDashboard($dashboard)
+            ->getName()
+        ;
+        $static->icon = fn (Application $app) => $app->getDashboard($dashboard)
+            ->getIcon()
+        ;
 
         return $static;
     }
@@ -93,16 +143,18 @@ class MenuItem
     public static function resource(string $resource): static
     {
         $static = new static('');
-        $static->resource = $resource;
+        $static->path = fn (Application $app) => $app->getResource($resource)
+            ->url()
+        ;
+
+        $static->name = fn (Application $app) => $app->getResource($resource)
+            ->getName()
+        ;
+        $static->icon = fn (Application $app) => $app->getResource($resource)
+            ->getIcon()
+        ;
 
         return $static;
-    }
-
-    public function namespace(string $namespace): static
-    {
-        $this->namespace = $namespace;
-
-        return $this;
     }
 
     public function getUriKey(): string
@@ -110,43 +162,15 @@ class MenuItem
         return '';
     }
 
-    public function pathPrefix(string $prefix): static
+    public function config(): array
     {
-        $this->pathPrefix = $prefix;
-
-        if (!empty($this->application)) {
-            $this->getContainingApp()->application($this->application)->pathPrefix($this->getPath());
-        } elseif (!empty($this->resource)) {
-            $this->getContainingApp()->resource($this->resource)->pathPrefix($this->getPath());
-        } elseif (!empty($this->dashboard)) {
-        }
-
-        return $this;
-    }
-
-    public function jsonConfig(): array
-    {
-        if (!empty($this->application)) {
-            $this->name($this->getContainingApp()->application($this->application)->getName());
-            $path = $this->getContainingApp()->application($this->application)->url();
-        } elseif (!empty($this->resource)) {
-            $resource = $this->getContainingApp()->resource($this->resource);
-            $this->name($resource->getName());
-            $path = $resource->url();
-        } elseif (!empty($this->dashboard)) {
-            $dashboard = $this->getContainingApp()->dashboard($this->dashboard);
-            $this->name($dashboard->getName());
-            $path = $dashboard->url();
-        } elseif (!empty($this->route)) {
-            $path = route($this->route);
-        }
-
         return [
             'type' => 'item',
             'format' => 'default',
-            'icon' => empty($this->icon) ? null : ucfirst(Str::camel($this->icon.'-icon')),
+            'icon' => $this->getIcon(),
             'name' => $this->getName(),
-            'path' => $path,
+            'path' => $this->getPath(),
+            'inactive' => $this->inactive,
         ];
     }
 }

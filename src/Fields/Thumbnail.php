@@ -2,21 +2,23 @@
 
 namespace Pano\Fields;
 
- class Thumbnail extends File
+ class Thumbnail extends Field
  {
-     public string $format = 'default';
+     const TYPE = 'thumbnail';
 
-     public function squared(): static
-     {
-         $this->format = 'squared';
+     // public string $format = 'default';
 
-         return $this;
-     }
+     // public function squared(): static
+     // {
+     //     $this->format = 'squared';
 
-     public function rounded(): static
-     {
-         $this->format = 'rounded';
+     //     return $this;
+     // }
 
-         return $this;
-     }
+     // public function rounded(): static
+     // {
+     //     $this->format = 'rounded';
+
+     //     return $this;
+     // }
  }

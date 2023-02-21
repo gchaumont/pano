@@ -3,7 +3,9 @@
 namespace Pano\Commands;
 
 use Illuminate\Console\Command;
-use Pano\Pano;
+use Illuminate\Support\Collection;
+use Pano\Application\Application;
+use Pano\Facades\Pano;
 
 class ListApps extends Command
 {
@@ -28,33 +30,30 @@ class ListApps extends Command
      */
     public function handle()
     {
-        // dd(resolve(Pano::class));
-        // dd(collect(resolve(Pano::class)->applications())->map(fn ($app) => $app->getRoute()));
-        $applications = $this->getApps(resolve(Pano::class));
-
-        $applications = $applications->map(fn ($app) => [
-            'name' => $app->getName(),
-            'route' => $app->getRoute(),
-            'url' => $app->getAppUrl(),
-            'class' => get_class($app),
-        ])
-            ->sortBy('route')
+        $applications = $this->getApps(Pano::manager())
+            ->map(fn ($app) => [
+                'id' => $app->getId(),
+                'name' => $app->getName(),
+                'location' => $app->getLocation(),
+                'url' => $app->url(),
+                'class' => get_class($app),
+            ])
+            ->sortBy('location')
         ;
 
         $this->table(
-            ['Name', 'Route', 'Url',  'Class'],
+            ['ID', 'Name', 'Location', 'Url', 'Class'],
             $applications->all()
         );
     }
 
-    public function getApps($appContainer)
+    public function getApps($context): Collection
     {
-        $apps = collect($appContainer->getApplications());
-
+        $apps = collect($context->getContexts());
         foreach ($apps as $app) {
             $apps = $apps->concat($this->getApps($app));
         }
 
-        return $apps->values();
+        return $apps->filter(fn ($app) => $app instanceof Application)->values();
     }
 }

@@ -1,105 +1,109 @@
 <template>
-    <h1 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{resource.name}}</h1>
-    <p v-if="error" class="text-slate-700 dark:text-slate-300 text-xl pt-6 ">{{error}}</p>
-    <div class="p-3 pl-0" v-if="model">
-        <section  class="bg-white dark:bg-slate-700 shadow overflow-hidden sm:rounded-lg">
+        
+    <PageHeading :title="data.model?.title || resource.name" :actions="resource.actions" :breadcrumbs="breadcrumbs" :meta="resource.meta" class="dark:bg-slate-800 p-5"/>
+    <p v-if="data.error" class="text-slate-700 dark:text-slate-300 text-xl pt-6 ">{{data.error}}</p>
+    <div class="p-5 mt-3" v-if="data.model">
+        <section :class="[theme.tableBody, ' shadow overflow-hidden sm:rounded-lg']">
+
             <header class="px-4 py-5 sm:px-6">
-                <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-200">{{model.title}}</h2>
+                <h2 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-200">{{data.model.title}}</h2>
                 <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">details</p>
             </header>
             <dl class="border-t border-gray-200 dark:border-gray-500">
                 <template v-for="field, key in simpleFields">
-                    <div class="dark:even:bg-slate-700 dark:odd:bg-slate-800 even:bg-slate-50 odd:bg-white px-4 py-5 sm:grid sm:grid-cols-4 sm:gap-4 sm:px-6" v-if="field.type != 'hidden-field'">
+                    <div class="dark:even:bg-slate-700/50 dark:odd:bg-slate-800 even:bg-slate-100 odd:bg-slate-200 px-4 py-5 sm:grid sm:grid-cols-4 sm:gap-4 sm:px-6" v-if="field.type != 'hidden-field'">
                         <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">{{field.name}}</dt>
                         <dd class="mt-1  sm:mt-0 sm:col-span-3 ">
-                            <component  v-if="model.fields" :is="field.type" :field="field" :value="model.fields[field.key]" />
+                            <component v-if="data.model.fields" :is="field.type" :field="field" :value="data.model.fields[field.key]" />
                         </dd>
                     </div>
                 </template>
             </dl>
         </section>
-
         <section class="mt-12" v-if="relations">
-
             <ul class="flex wrap">
-
-                <li @click="selectedRelation = relation.key" class="mx-2 text-lg" v-bind:class="{'font-bold' : selectedRelation==relation.key}" v-for="relation in relations">{{relation.name}}</li>
+                <li @click="data.selectedRelation = relation.key" class="mx-2 text-lg" v-bind:class="{'font-bold' : data.selectedRelation==relation.key}" v-for="relation in relations">{{relation.name}}
+                    <br>
+                </li>
             </ul>
-
-            <ListResource v-if="currentRelation" :resource="currentRelation" :show_metrics="false"/>
-            
+            <ListResource v-if="currentRelation" :resource="currentRelation.resource" :endpoint="relatedEndpoint" :show_metrics="false" />
         </section>
-
-
     </div>
 </template>
 <!-- USE SEARCH API -->
 <!-- USE DATATABLE -->
-<script>
+<script setup>
 import ListResource from './ListResource.vue';
+import PageHeading from '@/components/headings/PageHeading.vue'
+import { inject, computed, reactive, watch } from 'vue'
 
-export default {
-    components: {
-        ListResource
-    },
-    data() {
-        return {
-            model: null,
-            error: null,
-            fields: [],
-            selectedRelation: null,
-        }
-    },
-    props: {
-        resource: {
-            type: Object,
-            required: true,
-        },
-        object: {
-            type: String,
-            required: true,
-        },
+const theme = inject('theme');
 
+const props = defineProps({
+    resource: {
+        type: Object,
+        required: true,
     },
-    methods: {
-        loadResource: function() {
-            this.model = null
-            fetch(this.resource.path + '/' + this.object + "?" + new URLSearchParams(), { headers: { 'Accept': 'application/json' } })
-                .then(response => response.json().then(json => {
-                    if (response.ok) {
-                        this.error = null;
-                        this.model = json.model
-                        this.fields = json.fields
-                        this.selectedRelation = this.relations[0]?.key
-                    } else if (response.status ==  404) {
-                        this.error = "404 - Not Found";
-                    }  else {
-                        this.error = "500 - Error"
-                    }
-                }))
-        },
+    record: {
+        type: String,
+        required: true,
     },
-    computed: {
-        relations: function () {
-            return this.fields.filter((f) => f.type == 'relates-to-many-field');
-        },
-        simpleFields: function () {
-            return this.fields.filter((f) => f.type != 'relates-to-many-field');
-        },
-        currentRelation: function () {
-            if (this.selectedRelation) {
-                var relation = this.relations.find(r => r.key == this.selectedRelation)
 
-                relation.path = 'relations/'+relation.key
-                return relation
-            }
-        }
-    },
-    mounted() {
-        this.$watch(
-            () => this.resource.name + this.object,
-            () => this.loadResource(), { immediate: true }
-        );
+})
+
+const data = reactive({
+    model: null,
+    error: null,
+    fields: [],
+    selectedRelation: null,
+})
+
+const relations = computed(function() {
+    return data.fields.filter((f) => f.type == 'relates-to-many-field');
+})
+const breadcrumbs = computed(() => [...props.resource.breadcrumbs, {name: props.resource.name, url:props.resource.path}])
+
+const simpleFields = computed(function() {
+    return data.fields.filter((f) => f.type != 'relates-to-many-field');
+})
+const relatedEndpoint = computed(function() {
+    console.log(props.resource.endpoints)
+    return props.resource.endpoints.recordsrecordrelationrelation.url.replace(':record', props.record).replace(':relation', currentRelation.value.key)
+})
+const currentRelation = computed(function() {
+    if (data.selectedRelation) {
+        var relation = relations.value.find(r => r.key == data.selectedRelation)
+
+        // relation.path = 'relations/'+relation.key
+        return relation
     }
-}
+})
+
+
+
+const loadResource = function() {
+        data.model = null
+
+        fetch(props.resource.endpoints.recordsrecord.url.replace(':record', props.record) + "?" + new URLSearchParams(), { headers: { 'Accept': 'application/json' } })
+            .then(response => response.json().then(json => {
+                if (response.ok) {
+                    data.error = null;
+                    data.model = json.model
+                    data.fields = json.fields
+                    data.selectedRelation = relations.value[0]?.key
+
+                    console.log(relations.value);
+
+                } else if (response.status == 404) {
+                    data.error = "404 - Not Found";
+                } else {
+                    data.error = "500 - Error"
+                }
+            }))
+    }
+
+    watch(
+        () => props.resource.name + props.record,
+        () => loadResource(), { immediate: true }
+    )
 </script>

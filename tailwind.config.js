@@ -7,6 +7,7 @@ module.exports = {
     theme: {
         extend: {
             backgroundColor: {
+                body: "var(--color-bg-body)",
                 card: "var(--color-bg-card)",
                 backdrop: "var(--backdropColor)",
                 globsearch: "var(--navbarBackgroundColor)",
@@ -17,9 +18,16 @@ module.exports = {
                 '35ch': '35ch',
             },
             fontSize: {
-                '2xs' : '.60rem'
+                '2xs': '.60rem'
+            },
+            colors: {
+                slate: {
+                    850: '#1B2230',
+                },
             }
         },
     },
-    plugins: [],
+    plugins: [
+        require('@tailwindcss/forms')
+    ],
 }

@@ -1,22 +1,19 @@
 import { createApp, h, defineAsyncComponent, reactive } from 'vue'
 
-import PanoComponent from './components/PanoApp'
+import '../sass/app.scss';
 
-
+import PanoRoot from './components/PanoRoot.vue'
 import Router from './router';
+import { usePano } from './Pano';
 
-import Pano from './Pano';
 
-
-var VuePano = reactive(new Pano(document.head.querySelector('meta[name="panoapp-root"]').content))
-
-VuePano.boot(Router)
+const pano = usePano().useRouter(Router)
 
 const app = createApp({
-    render: () => h(PanoComponent)
+    render: () => h(PanoRoot)
 })
-
-app.directive('intersect', {
+.use(Router)
+.directive('intersect', {
     mounted(el, binding, vnode) {
         const observer = new IntersectionObserver(([entry]) => binding.value(entry), { threshold: 0, });
 
@@ -28,44 +25,91 @@ app.directive('intersect', {
 import * as heroicons from '@heroicons/vue/24/outline'
 
 for (const property in heroicons) {
-        // app.component(property, heroicons[property]);
-    app.component(property, defineAsyncComponent(() => import( /* webpackMode: 'lazy', webpackChunkName: 'heroicons/[request]' */ `@heroicons/vue/24/outline`).then(m => m[property])))
+    app.component(property, heroicons[property]);
+    // app.component(property, defineAsyncComponent(() => import(`@heroicons/vue/24/outline`).then(m => m[property])))
 }
 
-app.component('loading-spinner', require('./components/support/LoadingSpinner').default);
+import LoadingSpinner from './components/support/LoadingSpinner.vue';
+app.component('loading-spinner', LoadingSpinner);
 
-app.component('global-search', require('./components/search/GlobalSearch').default);
+import GlobalSearch from './components/search/GlobalSearch.vue';
+app.component('global-search', GlobalSearch);
 
-app.component('hidden-field', require('./components/fields/HiddenField').default);
-app.component('text-field', require('./components/fields/TextField').default);
-app.component('number-field', require('./components/fields/NumberField').default);
-app.component('badge-field', require('./components/fields/BadgeField').default);
-app.component('stack-field', require('./components/fields/StackField').default);
-app.component('date-field', require('./components/fields/DateField').default);
-app.component('nested-field', require('./components/fields/NestedField').default);
-// app.component('relation-field', require('./components/fields/RelationField').default);
-app.component('relates-to-one-field', require('./components/fields/RelationField').default);
+import HiddenField from './components/fields/HiddenField.vue';
+app.component('hidden-field', HiddenField);
+import TextField from './components/fields/TextField.vue';
+app.component('text-field', TextField);
+import NumberField from './components/fields/NumberField.vue';
+app.component('number-field', NumberField);
+import BadgeField from './components/fields/BadgeField.vue';
+app.component('badge-field', BadgeField);
+import StackField from './components/fields/StackField.vue';
+app.component('stack-field', StackField);
+import DateField from './components/fields/DateField.vue';
+app.component('date-field', DateField);
+import NestedField from './components/fields/NestedField.vue';
+app.component('nested-field', NestedField);
+import ThumbnailField from './components/fields/ThumbnailField.vue';
+app.component('thumbnail-field', ThumbnailField);
+import IconField from './components/fields/IconField.vue';
+app.component('icon-field', IconField);
+
+import RelationField from './components/fields/RelationField.vue';
+app.component('relates-to-one-field', RelationField);
 
 
-app.component('pano-field-table-header', require('./components/fields/TableHeader').default);
-app.component('pano-table-footer', require('./components/resources/TableFooter').default);
-app.component('model-search', require('./components/resources/ModelSearch').default);
+import TableHeader from './components/fields/TableHeader.vue';
+app.component('pano-field-table-header', TableHeader);
+import TableFooter from './components/resources/TableFooter.vue';
+app.component('pano-table-footer', TableFooter);
+import ModelSearch from './components/resources/ModelSearch.vue';
+app.component('model-search', ModelSearch);
 
-app.component('data-table', require('./components/tables/DataTable').default);
+import DataTable from './components/tables/DataTable.vue';
+app.component('data-table', DataTable);
+
+import HeroComponent from './components/support/HeroComponent.vue';
+app.component('hero-component', HeroComponent);
 
 
-app.component('value-metric', require('./components/metrics/ValueMetric').default);
-app.component('partition-metric', require('./components/metrics/PartitionMetric').default);
-app.component('trend-metric', require('./components/metrics/TrendMetric').default);
+import ValueMetric from './components/metrics/ValueMetric.vue';
+app.component('value-metric', ValueMetric);
+
+import PartitionMetric from './components/metrics/PartitionMetric.vue';
+app.component('partition-metric', PartitionMetric);
+import TrendMetric from './components/metrics/TrendMetric.vue';
+app.component('trend-metric', TrendMetric);
 
 
-app.component('pano-navbar', require('./components/navigation/Navbar').default);
-app.component('pano-menu', require('./components/menu/Menu').default);
-app.component('pano-menu-item', require('./components/menu/MenuItem').default);
-app.component('pano-menu-group', require('./components/menu/MenuGroup').default);
+import Navbar from './components/navigation/Navbar.vue';
+app.component('pano-navbar', Navbar);
+import Menu from './components/menu/Menu.vue';
+app.component('pano-menu', Menu);
+import MenuItem from './components/menu/MenuItem.vue';
+app.component('pano-menu-item', MenuItem);
+import MenuGroup from './components/menu/MenuGroup.vue';
+app.component('pano-menu-group', MenuGroup);
 
-app.config.globalProperties.$pano = VuePano
 
-app.use(Router);
+import Dashboard from './components/dashboards/Dashboard.vue';
+app.component('Dashboard', Dashboard);
+
+import AppHome from './components/AppHome.vue';
+app.component('AppHome', AppHome);
+
+import PanoApplication from './components/applications/PanoApplication.vue';
+app.component('PanoApplication', PanoApplication);
+
+import NavigationSplitView from './components/views/NavigationSplitView.vue';
+app.component('NavigationSplitView', NavigationSplitView);
+
+import ResourceSkeleton from './components/resources/ResourceSkeleton.vue';
+app.component('ResourceSkeleton', ResourceSkeleton);
+
+import ListResource from './components/resources/ListResource.vue';
+app.component('ListResource', ListResource)
+
+;import ShowResource from './components/resources/ShowResource.vue';
+app.component('ShowResource', ShowResource);
 
 app.mount("#pano-app")

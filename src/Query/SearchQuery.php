@@ -2,7 +2,7 @@
 
 namespace Pano\Query;
 
-use Elastico\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Pano\Query\Directives\PatternDirective;
 
 class SearchQuery

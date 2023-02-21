@@ -1,0 +1,25 @@
+{
+  "resources/js/app.css": {
+    "file": "assets/app-efa4eff1.css",
+    "src": "resources/js/app.css"
+  },
+  "resources/js/app.js": {
+    "css": [
+      "assets/app-efa4eff1.css"
+    ],
+    "dynamicImports": [
+      "resources/js/components/NotFound.vue"
+    ],
+    "file": "assets/app-dce51397.js",
+    "isEntry": true,
+    "src": "resources/js/app.js"
+  },
+  "resources/js/components/NotFound.vue": {
+    "file": "assets/NotFound-48f459c5.js",
+    "imports": [
+      "resources/js/app.js"
+    ],
+    "isDynamicEntry": true,
+    "src": "resources/js/components/NotFound.vue"
+  }
+}

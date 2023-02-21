@@ -1,36 +1,36 @@
 <template>
-    <div class="pr-3" v-if="state.definition">
-        <header>
-            <h2 class="text-slate-600 dark:text-slate-400 text-3xl pt-2.5 ">{{state.definition.name}}</h2>
-        </header>
-        <section v-if="props.show_metrics" class="max-w-full overflow-x-scroll overflow-y-hidden">
-            <ul class="flex flex-row gap-3 items-stretch justify-start my-4 max-h-[25rem]">
+    <div >
+        <PageHeading :title="resource.name" :actions="resource.actions" :breadcrumbs="resource.breadcrumbs" :meta="resource.meta" class="p-2 sm:p-5"/>
+        <section v-if="state.definition && props.show_metrics" class="max-w-full overflow-x-scroll overflow-y-hidden">
+            <ul class="flex flex-row gap-3 items-stretch justify-start my-4 max-h-[25rem] mx-2 sm:mx-5">
                 <li v-for="metric in state.definition.metrics" class="flex-auto ">
-                    <component class="p-4 pb-6 rounded-lg  bg-card h-full" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" @search="handleQuery"/>
+                    <component :class="[theme.cardBg, ' rounded-lg  h-full']" :is="metric.type+'-metric'" :metric="metric" :path="state.definition.path" :search="state.search" @search="handleQuery" />
                 </li>
             </ul>
         </section>
-        <section style="position: relative; ">
-            <header class="flex flex-wrap gap-3 items-center text-slate-700  dark:text-slate-300">
-                <model-search class="my-4" ref="searchbar" :path="state.definition.path" @search="handleQuery" :initialSearch="state.search" />
-                <p><span v-if="state.total == 10000">></span>
-                    {{(state.total).toLocaleString('de-CH')}} hits</p>
-            </header>
-            <div class="min-h-screen overflow-x-scroll">
-                <data-table @nextPage="nextPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" :page="state.page" :isLoading="state.isLoading" />
-            </div>
-        </section>
     </div>
+    <section v-if="state.definition" style="position: relative; " class="p-2 sm:p-5 ">
+        <header class="flex flex-wrap gap-3 items-center text-slate-700  dark:text-slate-300 ">
+            <model-search class="my-4" ref="searchbar" :path="state.definition.path" @search="handleQuery" :initialSearch="state.search" />
+            <p><span v-if="state.total == 10000">></span>
+                {{(state.total).toLocaleString('de-CH')}} hits</p>
+        </header>
+        <div class="min-h-screen overflow-x-scroll ">
+            <data-table @nextPage="nextPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" :page="state.page" :isLoading="state.isLoading" />
+        </div>
+    </section>
 </template>
 <!-- USE SEARCH API -->
 <!-- USE DATATABLE -->
 <script setup>
-import { reactive, onMounted, watch, ref } from 'vue'
+import { reactive, onMounted, watch, ref, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import PageHeading from '@/components/headings/PageHeading.vue'
 
 const route = useRoute()
 const router = useRouter()
 
+const theme = inject('theme')
 
 const state = reactive({
     models: [],
@@ -54,20 +54,28 @@ const props = defineProps({
         type: Boolean,
         required: false,
         default: true
+    },
+    endpoint: {
+        type: String,
+        required: false,
+        default: null
     }
 })
 
 function loadResource() {
     state.isLoading = true
     if (state.page == 1) {
-
         state.models = []
     }
-    var path = props.resource.path;
-    if (!path.startsWith('/')) {
-        path = window.location.pathname + '/' + path;
-    }
-    fetch(path + "?" + new URLSearchParams({ search: state.search, page: state.page, sort: route.query.sort }), { headers: { 'Accept': 'application/json' } })
+    console.log(props.resource)
+    fetch((props.endpoint || props.resource.endpoints['index'].url) + "?" + new URLSearchParams({
+            search: state.search,
+            page: state.page,
+            sort: route.query.sort
+        }), {
+            headers: { 'Accept': 'application/json' },
+            endpoint: 'index',
+        })
         .then(response => response.json().then(json => {
             state.isLoading = false;
 
@@ -88,7 +96,12 @@ function loadResource() {
 function handleQuery(query) {
     state.search = query;
     state.page = 1;
-    router.replace({ query: Object.assign({}, route.query, { search: state.search, page: state.page }) })
+    router.replace({
+        query: Object.assign({}, route.query, {
+            search: state.search,
+            page: state.page
+        })
+    })
     loadResource()
 }
 
@@ -119,7 +132,10 @@ function sortBy(sortKey) {
 }
 
 function resetMetrics() {
-    state.definition.metrics = [];
+    if (state.definition) {
+
+        state.definition.metrics = [];
+    }
 }
 
 onMounted(() => {

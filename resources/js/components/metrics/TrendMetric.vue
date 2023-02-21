@@ -1,19 +1,19 @@
 <template>
-    <div class="basis-60 shrink-0 min-h-[15rem]">
-        <header class="flex justify-between mb-2">
-            <h5 class="text-sm text-slate-500 dark:text-slate-400 font-semibold">{{metric.name}}</h5>
-            <select class="text-sm" v-if="metric.ranges?.length" v-model="selectedRange">
+    <div class="basis-60 shrink-0 min-h-[15rem] p-4 pb-2">
+        <header class="flex items-center  justify-between mb-2">
+            <h5 class="text-sm text-slate-500 dark:text-slate-200 font-semibold">{{metric.name}}</h5>
+            <select class="block rounded-md text-slate-600 dark:text-slate-200 border-gray-400 dark:border-gray-500 py-1 pl-3 pr-10 text-base focus:border-sky-500 focus:outline-none focus:ring-sky-500 sm:text-sm" v-if="metric.ranges?.length" v-model="selectedRange">
                 <option v-for="range in metric.ranges" :value="range.key">{{range.name}}</option>
             </select>
         </header>
         <!-- <p>{{value?.prefix}}  {{value?.suffix}}</p> -->
-        <!-- <div class="w-72"> -->
-        <div :id="chartID" class="h-full pt-4 min-w-[50ch]"></div>
-        <!-- </div> -->
+        <div class="h-48 pt-4  min-w-[45ch]">
+            <canvas :id="chartID" />
+        </div>
+
     </div>
 </template>
 <style type="text/css">
-
 .ct-series-a .ct-line {
     /* Set the colour of this series line */
     stroke: orange;
@@ -27,7 +27,7 @@
     color: var(--textColor);
 }
 
-.ct-label.ct-horizontal{
+.ct-label.ct-horizontal {
     transform: rotate(-40deg);
     white-space: nowrap;
 }
@@ -36,54 +36,90 @@
     stroke: grey;
 }
 </style>
-<script>
-import Chartist from 'chartist';
-export default {
-    props: {
-        path: {
-            type: String,
-            required: true,
-        },
-        metric: {
-            type: Object,
-            required: true,
-        },
-        search: {
-            type: String,
-            required: false
-        }
-    },
-    data() {
-        return {
-            value: null,
-            selectedRange: null,
-            chartID: 'chartist-' + Math.floor(Math.random() * 10000)
-        }
-    },
-    methods: {
-        loadMetric: function() {
-            fetch(this.path + "/metrics/" + this.metric.key + "?" + new URLSearchParams({ search: this.search, range: this.selectedRange }), { headers: { 'Accept': 'application/json' } })
-                .then(response => response.json().then(json => {
-                    this.value = json
-                    new Chartist.Line(
-                        '#' + this.chartID, { series: [this.value.trend], labels: this.value.labels }, {
-                            showPoint: false,
-                            chartPadding:0,
-                            chartPadding: {left:15, right: 0, top: 10, bottom: 20},
-                            // axisX: { showLabel: false }
-                        }
-                        // {lineSmooth: true,   axisX: {showGrid: true}, axisY: {showGrid: true}}
-                    )
-                }))
-        }
-    },
-    mounted() {
-        this.selectedRange = this.metric.defaultRange;
+<script setup>
+import { onMounted, watch, reactive, ref, inject, computed } from 'vue'
+import Chart from 'chart.js/auto'
 
-        this.$watch(
-            () => this.selectedRange + this.search,
-            () => this.loadMetric(), { immediate: true }
-        );
+const props = defineProps({
+    path: {
+        type: String,
+        required: true,
+    },
+    metric: {
+        type: Object,
+        required: true,
+    },
+    search: {
+        type: String,
+        required: false
     }
+})
+const theme = inject('theme');
+const value = ref(null);
+const selectedRange = ref(null);
+const chartID = ref('chartist-' + Math.floor(Math.random() * 10000));
+
+var chart = null;
+
+const loadMetric = () => {
+    fetch(props.metric.url + "?" + new URLSearchParams({ search: props.search, range: selectedRange.value }), { headers: { 'Accept': 'application/json' } })
+        .then(response => response.json().then(json => {
+            value.value = json
+
+            chart.data = {
+                labels: json.labels,
+                datasets: [
+                    {
+                        data: json.trend, 
+                        borderColor: theme.accentColor,
+                        backgroundColor: theme.accentColorTransparent,
+                        fill: true,
+                        borderWidth: 2,
+                        showLine: true,
+                        tension: 0.2,
+                        pointRadius: 0,
+                        pointHitRadius: 30, 
+                    }
+                ]
+            };
+            chart.update();
+
+        }))
 }
+
+onMounted(() => {
+    selectedRange.value = props.metric.defaultRange;
+    watch(() => selectedRange.value + props.search, () => loadMetric(), { immediate: true });
+    const ctx = document.getElementById(chartID.value);
+    // hide chart grid
+
+        chart = new Chart(ctx, {
+        type: 'line',
+        options: {
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false,
+                    // position: 'left',
+                },
+                gridLines: {
+                    display: false,
+                },
+            },
+            scales: {
+                y: { grid: {display: false} },
+                x: {
+                    grid: {display: false},
+                    // beginAtZero: true,
+                    ticks: {
+                        display: false,
+                    },
+                }
+            }
+
+        }
+    });
+});
+
+
 </script>

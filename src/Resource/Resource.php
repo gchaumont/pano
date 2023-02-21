@@ -2,29 +2,37 @@
 
 namespace Pano\Resource;
 
-use Elastico\Models\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
-use Pano\Concerns\Linkable;
+use Pano\Components\Props\QueryParameter;
+use Pano\Concerns\HasBreadcrumbs;
+use Pano\Concerns\Routable;
+use Pano\Controllers\ResourceController;
+use Pano\Endpoints\Endpoint;
 use Pano\Fields\Field;
 use Pano\Fields\Groups\Stack;
+use Pano\Fields\Relation\RelatesToMany;
 use Pano\Fields\Relation\Relation;
 use Pano\Metrics\Metric;
-use Pano\Query\Handlers\EloquentQueryHandler;
-use Pano\Query\Handlers\ResourceQueryHandler;
+use Pano\Pages\Page;
 
-abstract class Resource
+abstract class Resource extends Page
 {
-    use Linkable;
+    use Routable;
+    use HasBreadcrumbs;
 
-    // public string $queryHandler = EloquentQueryHandler::class;
-    public string $queryHandler = ResourceQueryHandler::class;
+    public string $component = 'ResourceSkeleton';
 
     public string $group;
+
     public bool $showColumnBorders = true;
+
     public string $tableStyle = 'tight';
 
-    public null|string $icon = null;
+    public string $icon;
 
     public static string $title = 'name';
 
@@ -56,16 +64,39 @@ abstract class Resource
 
     protected int $perPage = 50;
 
-    public function query(): ResourceQueryHandler
-    {
-        $class = $this->queryHandler;
+    protected Collection $metrics;
 
-        return new $class(resource: $this);
+    protected Collection $endpoints;
+
+    public function __construct()
+    {
+        // $this->id = $id ?? ;
+        // $this->route($this->getRoute());
+    }
+
+    public function getId(): string
+    {
+        return $this->id ??= 'resources:'.Str::plural(Str::slug(class_basename($this->getModel())));
+    }
+
+    public function newQuery(): Builder
+    {
+        return $this->getModel()->newQuery();
+    }
+
+    public static function make(...$args): static
+    {
+        return new static(...$args);
     }
 
     public function getName(): string
     {
         return Str::plural(Str::headline(class_basename($this->model)));
+    }
+
+    public function getIcon(): ?string
+    {
+        return !empty($this->icon) ? $this->icon.'-icon' : null;
     }
 
     public function getModel(): Model
@@ -101,7 +132,7 @@ abstract class Resource
 
     public function getRouteKey(): string
     {
-        return Str::slug(strtolower(class_basename($this->model)));
+        return Str::slug(class_basename($this->model));
     }
 
     public function actions(): array
@@ -190,7 +221,7 @@ abstract class Resource
 
     public function relationsForDetail($request): array
     {
-        return collect($this->fieldsForDetail($request))
+        return collect($this->getFields($request))
             ->flatMap(function ($field) {
                 if ($field instanceof Stack || $field instanceof Nested) {
                     return $field->fields();
@@ -198,7 +229,7 @@ abstract class Resource
 
                 return [$field];
             })
-            ->filter(fn ($field) => $field instanceof Relation)
+            ->filter(fn ($field) => $field instanceof RelatesToMany)
             ->values()
             ->all()
         ;
@@ -228,6 +259,7 @@ abstract class Resource
     {
         return $this->getFields()
             ->filter(fn ($field) => $field->isVisibleOnDetail($request))
+            // ->filter(fn ($field) => !$field instanceof RelatesToMany)
             ->values()
             ->all()
         ;
@@ -249,21 +281,6 @@ abstract class Resource
             ->values()
             ->all()
         ;
-    }
-
-    public function linkTo(string|object $resource): string
-    {
-        $resource = $resource instanceof Model ? $resource->getKey() : $resource;
-        // $resource = $resource instanceof EloquentModel ? $resource->getKey() : $resource;
-        // response($this->getRoute('show'))->send();
-        $resource = is_object($resource) ? $resource->getKey() : $resource;
-
-        return route($this->getRoute('show'), ['object' => $resource], false);
-    }
-
-    public function getRoute($endpoint = 'index'): string
-    {
-        return $this->namespace.':resources.'.$this->getRouteKey().'.'.$endpoint;
     }
 
     public function getMetric(string $metric): Metric
@@ -290,9 +307,9 @@ abstract class Resource
         ;
     }
 
-    public function getMetrics(): array
+    public function getMetrics(): Collection
     {
-        return $this->metrics ??= collect($this->metrics())->map(fn ($m) => $m->namespace($this->getRoute()))->all();
+        return $this->metrics ??= collect($this->metrics());
     }
 
     public function getDirectives($request): array
@@ -306,14 +323,106 @@ abstract class Resource
         ;
     }
 
-    public function jsonConfig(): array
+    public function url(string $page = 'index', string $key = null): string
+    {
+        return $this->getPages()->first()->url();
+
+        return route($this->getLocation().'.'.$page, array_filter(['object' => $key]), false);
+    }
+
+    public function linkTo(string|object $resource): string
+    {
+        $resource = $resource instanceof Model ? $resource->getKey() : $resource;
+        // $resource = $resource instanceof EloquentModel ? $resource->getKey() : $resource;
+        // response($this->getRoute('show'))->send();
+        $resource = is_object($resource) ? $resource->getKey() : $resource;
+
+        return route($this->getLocation().'.show', ['record' => $resource], false);
+    }
+
+    public function getContexts(): Collection
+    {
+        return $this->getPages()
+            ->concat($this->getEndpoints())
+            ->concat($this->getMetrics())
+            ->keyBy(fn ($o) => $o->getId())
+        ;
+    }
+
+    public function getChildren(): Collection
+    {
+        return $this->getPages()
+        ;
+    }
+
+    /**
+     * API Endpoints provided by the page.
+     */
+    public function getEndpoints(): Collection
+    {
+        return $this->endpoints ??= collect([
+            Endpoint::get('index')->handler([ResourceController::class, 'index']),
+            Endpoint::get('records/{record}')->handler([ResourceController::class, 'show'])->parameters(':record'),
+            Endpoint::get('suggest')->handler([ResourceController::class, 'suggest']),
+            Endpoint::get('suggestRelation')->handler([ResourceController::class, 'suggestRelation']),
+            Endpoint::get('records/{record}/relation/{relation}')->handler([ResourceController::class, 'relation'])->parameters(':record', ':relation'),
+            Endpoint::get('metric/{metric}')->handler([ResourceController::class, 'metric'])->parameters(':metric'),
+            Endpoint::post('store')->handler([ResourceController::class, 'show']),
+            Endpoint::post('update')->handler([ResourceController::class, 'show']),
+            Endpoint::delete('destroy')->handler([ResourceController::class, 'show']),
+        ]);
+    }
+
+    public function pages(): array
+    {
+        return [
+            Page::make('index')
+                ->path('/')
+                ->component('ListResource'),
+            Page::make('show')
+                ->path('/{record}')
+                ->parameters(':record')
+                ->component('ShowResource')
+                ->props([
+                    'record' => QueryParameter::make('record'),
+                ]),
+        ];
+    }
+
+    public function breadcrumbs(): array
+    {
+        $app = $this;
+        $crumbs = collect();
+        while ($app = $app->getApplication()) {
+            $crumbs->prepend([
+                'name' => $app->getName(),
+                'url' => $app->url(),
+            ]);
+        }
+
+        return $crumbs->all();
+    }
+
+    public function getProps(): array
+    {
+        return [
+            'resource' => $this->config()];
+    }
+
+    public function config(): array
     {
         return [
             'name' => $this->getName(),
-            // 'key' => $this->getUriKey(),
-            'metrics' => array_map(fn ($metric) => $metric->jsonConfig(), $this->getMetrics()),
-            'route' => $this->getRoute(),
+            'breadcrumbs' => $this->getBreadcrumbs(),
+            'actions' => [],
+            // 'key' => $this->getUriKey().asd,
+            'metrics' => $this->getMetrics()->map(fn ($m) => $m->config()),
+            // 'route' => $this->getContext().$this->getRoute(),
+            'route' => $this->getLocation(),
             'path' => $this->url(),
+            'icon' => $this->getIcon(),
+            'endpoints' => $this->getEndpoints()->keyBy(fn ($c) => $c->name)->map(fn ($e) => $e->config()),
+            // 'routes' => $this->getRoutes()
             // 'fields' => array_map(fn ($field) => $field->jsonConfig(), $this->fields()),
         ];
     }

@@ -2,8 +2,7 @@
 
 namespace Pano\Query;
 
-use Closure;
-use Elastico\Models\Builder\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Pano\Query\Directives\BaseDirective;
 use Pano\Query\Directives\BooleanDirective;
 use Pano\Query\Directives\Directive;
@@ -20,7 +19,7 @@ class SearchExecutor
         protected Builder $builder,
         protected array $patternDirectives = [],
         protected ?BaseDirective $baseDirective = null,
-        protected ?Closure $beforeApplying = null,
+        protected ?\Closure $beforeApplying = null,
     ) {
     }
 

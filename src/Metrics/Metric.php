@@ -2,56 +2,74 @@
 
 namespace Pano\Metrics;
 
-use DateTime;
-use Elastico\Query\Builder;
-use Pano\Concerns\Linkable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
+use Pano\Components\Component;
+use Pano\Concerns\Nameable;
+use Pano\Concerns\Routable;
+use Pano\Controllers\ResourceController;
 use Pano\Metrics\Results\MetricResult;
 
- /**
-  *  Metric.
-  */
- abstract class Metric
- {
-     use Linkable;
+/**
+ *  Metric.
+ */
+abstract class Metric extends Component
+{
+    use Nameable;
+    use Routable;
 
-     public int $precision = 2;
+    public string $component = 'Metric';
 
-     abstract public function calculate($request, Builder $builder = null): MetricResult;
+    public int $precision = 2;
 
-     public function asJson($request, Builder $builder = null): array
-     {
-         return $this->calculate($request, $builder)->toJson();
-     }
+    abstract public function calculate($request, Builder $builder = null): MetricResult;
 
-     public function make(): static
-     {
-         return new static(...func_get_args());
-     }
+    public function asJson($request, Builder $builder = null): array
+    {
+        return $this->calculate($request, $builder)->toJson();
+    }
 
-     public function cacheFor(): int|null|DateTime
-     {
-         return -1;
-     }
+    public function getId(): string
+    {
+        return $this->id ??= 'metrics-'.Str::plural(Str::slug(class_basename(static::class)));
+    }
 
-     public function precision(int $precision): static
-     {
-         $this->precision = $precision;
+    public function cacheFor(): int|null|\DateTime
+    {
+        return -1;
+    }
 
-         return $this;
-     }
+    public function precision(int $precision): static
+    {
+        $this->precision = $precision;
 
-     public function jsonConfig(): array
-     {
-         return [
-             'type' => $this->getType(),
-             'name' => $this->getName(),
-             'key' => $this->getUriKey(),
-             'path' => $this->getPath(),
-         ];
-     }
+        return $this;
+    }
 
-     protected function getType(): string
-     {
-         return static::TYPE;
-     }
- }
+    public function url(): string
+    {
+        return route($this->getContext()->getLocation().'.'.$this->getId());
+    }
+
+    public function registerRoute(): void
+    {
+        Route::get($this->getPath(), [ResourceController::class, 'metric'])->name($this->getContextSeparator().$this->getRoute());
+    }
+
+    public function config(): array
+    {
+        return [
+            'type' => $this->getType(),
+            'name' => $this->getName(),
+            'key' => $this->getId(),
+            'path' => $this->getPath(),
+            'url' => $this->url(),
+        ];
+    }
+
+    protected function getType(): string
+    {
+        return static::TYPE;
+    }
+}
