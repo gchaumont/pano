@@ -48,6 +48,8 @@ class ContextManager
 
         $page->register();
 
+        // dd($page::$remember);
+
         return $this;
     }
 

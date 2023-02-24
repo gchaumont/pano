@@ -74,10 +74,10 @@ abstract class Resource extends Page
         // $this->route($this->getRoute());
     }
 
-    public function getId(): string
-    {
-        return $this->id ??= 'resources:'.Str::plural(Str::slug(class_basename($this->getModel())));
-    }
+    // public function getId(): string
+    // {
+    //     return $this->id ?? $this->setId('resources:'.Str::plural(Str::slug(class_basename($this->getModel()))))->id;
+    // }
 
     public function newQuery(): Builder
     {
@@ -247,11 +247,21 @@ abstract class Resource extends Page
     public function filterableFields($request): array
     {
         return $this->getFields()
-            ->map(fn ($field) => $field instanceof Stack ? $field->fields : $field)
+            ->map(fn ($field) => $field instanceof Stack ? $field->fields() : $field)
             ->flatten()
             ->filter(fn ($field) => $field->isFilterable($request))
             ->values()
             ->all()
+        ;
+    }
+
+    public function searchableFields($request): Collection
+    {
+        return $this->getFields()
+            ->map(fn ($field) => $field instanceof Stack ? $field->fields() : $field)
+            ->flatten()
+            ->filter(fn ($field) => $field->isSearchable($request))
+            ->values()
         ;
     }
 
@@ -309,7 +319,7 @@ abstract class Resource extends Page
 
     public function getMetrics(): Collection
     {
-        return $this->metrics ??= collect($this->metrics());
+        return $this->metrics ??= collect($this->metrics()); // ->keyBy(fn ($m) => $m->getKey());
     }
 
     public function getDirectives($request): array
@@ -345,7 +355,7 @@ abstract class Resource extends Page
         return $this->getPages()
             ->concat($this->getEndpoints())
             ->concat($this->getMetrics())
-            ->keyBy(fn ($o) => $o->getId())
+            ->keyBy(fn ($o, $k) => is_numeric($k) ? $o->getKey() : $k)
         ;
     }
 
@@ -361,15 +371,15 @@ abstract class Resource extends Page
     public function getEndpoints(): Collection
     {
         return $this->endpoints ??= collect([
-            Endpoint::get('index')->handler([ResourceController::class, 'index']),
-            Endpoint::get('records/{record}')->handler([ResourceController::class, 'show'])->parameters(':record'),
-            Endpoint::get('suggest')->handler([ResourceController::class, 'suggest']),
-            Endpoint::get('suggestRelation')->handler([ResourceController::class, 'suggestRelation']),
-            Endpoint::get('records/{record}/relation/{relation}')->handler([ResourceController::class, 'relation'])->parameters(':record', ':relation'),
-            Endpoint::get('metric/{metric}')->handler([ResourceController::class, 'metric'])->parameters(':metric'),
-            Endpoint::post('store')->handler([ResourceController::class, 'show']),
-            Endpoint::post('update')->handler([ResourceController::class, 'show']),
-            Endpoint::delete('destroy')->handler([ResourceController::class, 'show']),
+            // Endpoint::get('index')->handler([ResourceController::class, 'index']),
+            // Endpoint::get('records/{record}')->handler([ResourceController::class, 'show'])->parameters(':record'),
+            // Endpoint::get('suggest')->handler([ResourceController::class, 'suggest']),
+            // Endpoint::get('suggestRelation')->handler([ResourceController::class, 'suggestRelation']),
+            // Endpoint::get('records/{record}/relation/{relation}')->handler([ResourceController::class, 'relation'])->parameters(':record', ':relation'),
+            // Endpoint::get('metric/{metric}')->handler([ResourceController::class, 'metric'])->parameters(':metric'),
+            // Endpoint::post('store')->handler([ResourceController::class, 'show']),
+            // Endpoint::post('update')->handler([ResourceController::class, 'show']),
+            // Endpoint::delete('destroy')->handler([ResourceController::class, 'show']),
         ]);
     }
 
@@ -378,11 +388,18 @@ abstract class Resource extends Page
         return [
             Page::make('index')
                 ->path('/')
-                ->component('ListResource'),
+                ->component('ListResource')
+                ->children($this->metrics())
+                ->setData([
+                    'resource' => fn ($request) => app(ResourceController::class)->withResource($this)->index(),
+                ]),
             Page::make('show')
                 ->path('/{record}')
                 ->parameters(':record')
                 ->component('ShowResource')
+                ->setData([
+                    'record' => fn ($request) => app(ResourceController::class)->withResource($this)->show($request->input('record')),
+                ])
                 ->props([
                     'record' => QueryParameter::make('record'),
                 ]),
@@ -403,25 +420,43 @@ abstract class Resource extends Page
         return $crumbs->all();
     }
 
+        public function getAlias(): null|string
+        {
+            if (empty($this->key)) {
+                return static::class;
+            }
+
+            return null;
+        }
+
+    public function getFilters(): Collection
+    {
+        return collect($this->filterableFields(request()));
+    }
+
     public function getProps(): array
     {
         return [
-            'resource' => $this->config()];
-    }
-
-    public function config(): array
-    {
-        return [
+            ...parent::getProps(),
             'name' => $this->getName(),
             'breadcrumbs' => $this->getBreadcrumbs(),
             'actions' => [],
             // 'key' => $this->getUriKey().asd,
             'metrics' => $this->getMetrics()->map(fn ($m) => $m->config()),
             // 'route' => $this->getContext().$this->getRoute(),
-            'route' => $this->getLocation(),
             'path' => $this->url(),
             'icon' => $this->getIcon(),
             'endpoints' => $this->getEndpoints()->keyBy(fn ($c) => $c->name)->map(fn ($e) => $e->config()),
+            'filters' => $this->getFilters()->map(fn ($f) => $f->jsonConfig(request())),
+        ];
+    }
+
+    public function config(): array
+    {
+        return [
+            ...parent::config(),
+            '@type' => 'resource',
+            'route' => $this->getLocation(),
             // 'routes' => $this->getRoutes()
             // 'fields' => array_map(fn ($field) => $field->jsonConfig(), $this->fields()),
         ];

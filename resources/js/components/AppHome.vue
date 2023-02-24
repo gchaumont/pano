@@ -1,8 +1,8 @@
 <template>
     <div id="mastgrid" :class="[theme.bg, 'block sm:grid']">
         <nav id="sidebar" class="flex">
-            <pano-menu v-if="!app.isRoot" :header="root" :menu="root.menu" :class="theme.rootMenu" :collapsed="!app.isRoot" />
-            <pano-menu :header="app" :menu="app.menu" :class="theme.menu" />
+            <pano-menu v-if="!app.props.isRoot" :header="root.props" :menu="root.props.menu" :class="theme.rootMenu" :collapsed="!app.props.isRoot" />
+            <pano-menu :header="app.props" :menu="app.props.menu" :class="theme.menu" />
         </nav>
         <!-- <pano-navbar id="mastnav" :app="app" /> -->
         <main class="flex-1">
@@ -58,9 +58,21 @@ const props = defineProps({
 
 
 const getAppItems = function(app) {
-    return [app, ...app.dashboards, ...app.resources, ...app.apps.map(app => getAppItems(app)).flat()]
-}
+    
+    var items =  [
+        app, 
+        ...app.props.dashboards, 
+        ...app.props.resources, 
+        ]
+        .map(item => ({
+            path: item.path,
+            name: item.props?.name,
+            icon: item.props?.icon, 
+        }))
+    items.push(...app.props.apps.map(a => getAppItems(a)).flat())
 
+    return items
+}
 
 const theme = {
     "rootMenu" : "bg-sky-900 dark:bg-black",
@@ -70,7 +82,8 @@ const theme = {
     "cardBg" : "bg-white dark:bg-slate-800/90",
     "tableHeader" :"bg-slate-50 dark:bg-slate-700 dark:text-slate-200",
     "tableBody" : "bg-white dark:bg-slate-800 dark:text-slate-200 text-zinc-500 ",
-    "tableRow" : "border-slate-200 dark:border-slate-700 hover:bg-sky-100/20 dark:hover:bg-sky-900/30 ",
+    "tableRow" : "border-slate-200 dark:border-slate-700 hover:bg-sky-100/20 dark:hover:bg-sky-800/30 ",
+    "tableRowSelected" : "bg-gray-50 dark:bg-sky-900/30",
     "txtAccent" : "text-sky-400 dark:text-sky-500",
     "accentColor" : 'rgb(56, 189, 248)',// 'rgb(14, 165, 233)', // light 
     "accentColorTransparent" : 'rgba(56, 189, 248, .2)',// 'rgb(14, 165, 233)', // light 

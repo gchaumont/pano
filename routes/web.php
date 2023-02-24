@@ -3,7 +3,7 @@
 use Pano\Facades\Pano;
 
 Pano::getContexts()
-    ->each(fn ($context) => $context->registerRoutes())
+    ->each(fn ($context) => Route::group([], $context->getRoutes()))
 ;
 
 // Route::group(array_filter([

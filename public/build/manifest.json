@@ -1,21 +1,28 @@
 {
+  "node_modules/chart.js/dist/chart.mjs": {
+    "file": "assets/chart-fbaaf438.js",
+    "isDynamicEntry": true,
+    "src": "node_modules/chart.js/dist/chart.mjs"
+  },
   "resources/js/app.css": {
-    "file": "assets/app-efa4eff1.css",
+    "file": "assets/app-ef2a79c3.css",
     "src": "resources/js/app.css"
   },
   "resources/js/app.js": {
     "css": [
-      "assets/app-efa4eff1.css"
+      "assets/app-ef2a79c3.css"
     ],
     "dynamicImports": [
-      "resources/js/components/NotFound.vue"
+      "resources/js/components/NotFound.vue",
+      "node_modules/chart.js/dist/chart.mjs",
+      "node_modules/chart.js/dist/chart.mjs"
     ],
-    "file": "assets/app-dce51397.js",
+    "file": "assets/app-40b4abed.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   },
   "resources/js/components/NotFound.vue": {
-    "file": "assets/NotFound-48f459c5.js",
+    "file": "assets/NotFound-06c568cc.js",
     "imports": [
       "resources/js/app.js"
     ],

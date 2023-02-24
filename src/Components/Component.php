@@ -4,11 +4,9 @@ namespace Pano\Components;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Route;
-use Pano\Application\Application;
 use Pano\Concerns\HasPages;
 use Pano\Concerns\Nameable;
 use Pano\Context;
-use Pano\Controllers\PageController;
 use Pano\Pages\Page;
 use Pano\Routes\RouteRecord;
 
@@ -33,12 +31,26 @@ abstract class Component extends Context
         return $this;
     }
 
-    public function definition()
+    public function config()
     {
         return [
+            '@type' => 'Component',
+            'uiPath' => $this->uiPath(),
             'component' => $this->getComponent(),
             'props' => $this->getProps(),
         ];
+    }
+
+    public function uiPath(): string
+    {
+        $path = collect();
+        $context = $this;
+        while (!empty($context) && !is_subclass_of($context, Page::class)) {
+            $path->push($context->getKey());
+            $context = $context->getContext();
+        }
+
+        return $path->reverse()->implode('.');
     }
 
     public function getComponent(): string
@@ -55,6 +67,8 @@ abstract class Component extends Context
 
     public function getChildren(): Collection
     {
+        // return $this->pages ??= collect();
+
         return collect($this->children ?? []);
     }
 
@@ -85,7 +99,8 @@ abstract class Component extends Context
     public function getContexts(): Collection
     {
         return $this->getChildren()
-            ->keyBy(fn ($child) => $child->getId())
+            ->concat($this->getPages())
+            ->keyBy(fn ($child) => $child->getKey())
         ;
     }
 
@@ -101,31 +116,15 @@ abstract class Component extends Context
         return $this;
     }
 
-    public function registerRoutes(): void
+    /**
+     * Register potential Routes of Child Pages.
+     */
+    public function getRoutes(): \Closure
     {
-        Route::group(array_filter([
-            // 'middleware' => $this->getMiddleware()->push('pano:'.$this->getLocation())->all(),
-            // 'as' => $this->getContextSeparator().$this->getId(),
-            // 'domain' => $this->getDomain(),
-            // 'prefix' => $this->getPath(),
-        ]), function () {
-            if ($this instanceof Page) {
-                // dump($this->getId());
-                Route::get('', PageController::class)->name('');
-            }
-
-            Route::controller(PageController::class)
-                ->group(
-                    fn () => $this->getContexts()
-                        // ->tap(fn ($a) => dump($a->keys()))
-                        ->each(fn ($item) => $item instanceof Page
-                               && Route::get($item->getPath())->name($this->getContextSeparator().$item->getRoute()))
-                        ->each(fn (Component $item) => $item->registerRoutes())
-                )
+        return function () {
+            $this->getContexts()
+                ->each(fn (Component $component) => Route::group([], $component->getRoutes()))
             ;
-            if ($this instanceof Application) {
-                Route::fallback(fn () => redirect($pages->first()->getPath()))->name($this->getContextSeparator().'404');
-            }
-        });
+        };
     }
 }

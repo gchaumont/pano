@@ -26,15 +26,16 @@
 }
 </style>
 <script setup>
-    import {onMounted, watch, reactive, ref, inject} from 'vue'
+import { onMounted, watch, reactive, ref, inject } from 'vue'
+import { useRoute } from 'vue-router'
+import { useData } from '@/Pano.js'
 
-    const theme = inject('theme');
 
-import Chart from 'chart.js/auto'
 
+const theme = inject('theme');
 
 const props = defineProps({
-    path: {
+    uiPath: {
         type: String,
         required: true,
     },
@@ -42,12 +43,13 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-    search: {
-        type: String,
+    params: {
+        type: Object,
         required: false
     }
 })
-const emit = defineEmits(['search']);
+const endpoint = useData();
+const emit = defineEmits(['filter']);
 const chartID = 'chartist-' + Math.floor(Math.random() * 10000);
 const chartData = ref({});
 var chart = null;
@@ -55,55 +57,63 @@ var chart = null;
 onMounted(() => {
     const ctx = document.getElementById(chartID);
 
-    chart = new Chart(ctx, {
-        type: 'doughnut',
-        options: {
-            plugins: {
+    import('chart.js')
+        .then(({Chart, DoughnutController, ArcElement, Tooltip}) => {
+            Chart.register(DoughnutController, ArcElement, Tooltip)
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                options: {
+                    plugins: {
 
-            legend: {
-                display: false,
-                // position: 'left',
-            },
-            },
-            // scales: {
-            //     y: {
-            //         beginAtZero: true
-            //     }
-            // }
-        }
-    });
+                        legend: {
+                            display: false,
+                            // position: 'left',
+                        },
+                    },
+                    // scales: {
+                    //     y: {
+                    //         beginAtZero: true
+                    //     }
+                    // }
+                }
+
+
+
+            })
+
+        })
+        .then(() => loadMetric())
+        ;
 })
 
 
 const loadMetric = function() {
-
-    // props.path + "/metrics/" + props.metric.key +
-    fetch(props.metric.url+ "?" + new URLSearchParams({ search: props.search }), { headers: { 'Accept': 'application/json' } })
-        .then(response => response.json().then(json => {
+    endpoint.query({endpoint: 'value', params: props.params, uiPath: props.uiPath})
+        .then(response => {
+            response = response.value;
             chart.data = {
-                labels: json.partition.map(p => p.name),
-                datasets: [
-                    {
-                        data: json.partition.map(p =>p.value),
-                        borderColor: theme.accentColor
-                    }
-                ]
+                labels: response.partition.map(p => p.name),
+                datasets: [{
+                    data: response.partition.map(p => p.value),
+                    borderColor: theme.accentColor
+                }]
             };
             chart.update();
 
-            chartData.value = json
-            // new Chartist.Pie(
-            //     '#' + this.chartID, { series: this.value.partition }, { donut: true, donutWidth: 15, labelOffset: 15, chartPadding: 15 }
-            // )
-        }))
+            chartData.value = response
+
+
+        })
 }
 const filter = function(item) {
-    emit('search', (props.search + " " + chartData.value.field + ":\"" + (item.id || item.name) + "\"").trim())
+    console.log(props.metric, item)
+    emit('filter', {key: chartData.value.field, value: item.id})
+    // emit('search', (props.search + " " + chartData.value.field + ":\"" + (item.id || item.name) + "\"").trim())
 }
 
 
 watch(
-    () => props.search,
-    () => loadMetric(), { immediate: true }
+    () => props.params+props.uiPath,
+    (newP, oldP) => newP?.toString() !== oldP?.toString() && loadMetric()
 );
 </script>

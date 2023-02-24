@@ -10,7 +10,6 @@
         <div class="h-48 pt-4  min-w-[45ch]">
             <canvas :id="chartID" />
         </div>
-
     </div>
 </template>
 <style type="text/css">
@@ -38,88 +37,100 @@
 </style>
 <script setup>
 import { onMounted, watch, reactive, ref, inject, computed } from 'vue'
-import Chart from 'chart.js/auto'
+import { useData } from '@/Pano.js'
+
+
+
 
 const props = defineProps({
-    path: {
-        type: String,
-        required: true,
-    },
     metric: {
         type: Object,
         required: true,
     },
-    search: {
+    uiPath: {
         type: String,
-        required: false
+        required: true,
+    },
+    params: {
+        type: Object,
+        required: false, 
+        default: () =>({})
     }
 })
+const endpoint = useData();
 const theme = inject('theme');
 const value = ref(null);
 const selectedRange = ref(null);
 const chartID = ref('chartist-' + Math.floor(Math.random() * 10000));
 
-var chart = null;
+var chart = {};
 
 const loadMetric = () => {
-    fetch(props.metric.url + "?" + new URLSearchParams({ search: props.search, range: selectedRange.value }), { headers: { 'Accept': 'application/json' } })
-        .then(response => response.json().then(json => {
-            value.value = json
+    var params = ref(props.params);
 
+    if (selectedRange.value) {
+        params.value['range'] = selectedRange.value;
+    }
+
+    endpoint.query({endpoint: 'value', params, uiPath: props.uiPath})
+        .then(response => {
+            response = response.value;
             chart.data = {
-                labels: json.labels,
-                datasets: [
-                    {
-                        data: json.trend, 
-                        borderColor: theme.accentColor,
-                        backgroundColor: theme.accentColorTransparent,
-                        fill: true,
-                        borderWidth: 2,
-                        showLine: true,
-                        tension: 0.2,
-                        pointRadius: 0,
-                        pointHitRadius: 30, 
-                    }
-                ]
+                labels: response.labels,
+                datasets: [{
+                    data: response.trend,
+                    borderColor: theme.accentColor,
+                    backgroundColor: theme.accentColorTransparent,
+                    fill: true,
+                    borderWidth: 2,
+                    showLine: true,
+                    tension: 0.2,
+                    pointRadius: 0,
+                    pointHitRadius: 30,
+                }]
             };
             chart.update();
+        })
 
-        }))
 }
 
 onMounted(() => {
     selectedRange.value = props.metric.defaultRange;
-    watch(() => selectedRange.value + props.search, () => loadMetric(), { immediate: true });
     const ctx = document.getElementById(chartID.value);
-    // hide chart grid
 
-        chart = new Chart(ctx, {
-        type: 'line',
-        options: {
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false,
-                    // position: 'left',
-                },
-                gridLines: {
-                    display: false,
-                },
-            },
-            scales: {
-                y: { grid: {display: false} },
-                x: {
-                    grid: {display: false},
-                    // beginAtZero: true,
-                    ticks: {
-                        display: false,
+    import('chart.js')
+        .then(({ Chart, LineController, LineElement, Tooltip, LinearScale, CategoryScale, PointElement, Filler }) => {
+            Chart.register(LineController, LineElement, Tooltip, LinearScale, CategoryScale, PointElement, Filler)
+            chart = new Chart(ctx, {
+                type: 'line',
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false,
+                            // position: 'left',
+                        },
+                        gridLines: {
+                            display: false,
+                        },
                     },
+                    scales: {
+                        y: { grid: { display: false } },
+                        x: {
+                            grid: { display: false },
+                            // beginAtZero: true,
+                            ticks: {
+                                display: false,
+                            },
+                        }
+                    }
+
                 }
-            }
+            })
+        })
+        .then(() => loadMetric());
 
-        }
-    });
+    watch(() => selectedRange.value, () => loadMetric())
+    watch(() => props.params, (oldP, newP) => oldP?.toString() !== newP?.toString() && loadMetric())
 });
-
-
 </script>

@@ -2,66 +2,70 @@
 
 namespace Pano\Fields;
 
+use Pano\Fields\Concerns\HasOptions;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\FieldDirective;
 
- class Badge extends Field
- {
-     protected bool $with_icons = false;
+class Badge extends Field
+{
+    use HasOptions;
 
-     protected array $field_map = [
-         'info' => 'info',
-         'success' => 'success',
-         'danger' => 'danger',
-         'warning' => 'warning',
-     ];
+    protected bool $with_icons = false;
 
-     protected array $type_map = [
-         'info' => 'badge-blue',
-         'success' => ['badge-green', 'bold'],
-     ];
+    protected array $field_map = [
+        'info' => 'info',
+        'success' => 'success',
+        'danger' => 'danger',
+        'warning' => 'warning',
+    ];
 
-     protected array $icon_map = [
-     ];
+    protected array $type_map = [
+        'info' => 'badge-blue',
+        'success' => ['badge-green', 'bold'],
+    ];
 
-     public function getDirective(): null|Directive
-     {
-         if (!empty($this->field)) {
-             return new FieldDirective($this->field);
-         }
+    protected array $icon_map = [
+    ];
 
-         return null;
-     }
+    public function getDirective(): null|Directive
+    {
+        if (!empty($this->field)) {
+            return new FieldDirective($this->field);
+        }
 
-     public function map(array $fields): static
-     {
-         $this->field_map = $fields;
+        return null;
+    }
 
-         return $this;
-     }
+    public function map(array $fields): static
+    {
+        $this->field_map = $fields;
 
-     public function types(array $types): static
-     {
-         $this->type_map = array_merge($types, $this->type_map);
-     }
+        return $this;
+    }
 
-     public function withIcons(bool $icons = true): static
-     {
-         $this->with_icons = $icons;
+    public function types(array $types): static
+    {
+        $this->type_map = array_merge($types, $this->type_map);
+    }
 
-         return $this;
-     }
+    public function withIcons(bool $icons = true): static
+    {
+        $this->with_icons = $icons;
 
-     public function addTypes(array $types): static
-     {
-     }
+        return $this;
+    }
 
-     public function jsonConfig($request): array
-     {
-         return [
-             ...parent::jsonConfig($request),
-             'map' => $this->field_map,
-             'withIcons' => $this->with_icons,
-         ];
-     }
- }
+    public function addTypes(array $types): static
+    {
+    }
+
+    public function jsonConfig($request): array
+    {
+        return [
+            ...parent::jsonConfig($request),
+            'map' => $this->field_map,
+            'withIcons' => $this->with_icons,
+            'options' => $this->getOptions($request),
+        ];
+    }
+}

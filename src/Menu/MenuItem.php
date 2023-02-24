@@ -26,14 +26,11 @@ class MenuItem extends Component
         string $link = null,
     ) {
         $this->name($name);
+        // $this->key(Str::slug($this->name).'-'.Str::random(5));
+        $this->key('mItem-'.Str::random(5));
         // if ($link) {
         //     $static->path($link);
         // }
-    }
-
-    public function getId(): string
-    {
-        return $this->id ??= (Str::slug(class_basename(static::class)).'-'.Str::random(5));
     }
 
     public function inactive(bool $inactive = true): static

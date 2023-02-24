@@ -27,9 +27,11 @@ function wrapRoute(page) {
 const rootApp = ref(null);
 const currentApp = ref(null);
 
-const pano = reactive(new Pano(
-    JSON.parse(document.head.querySelector('meta[name="pano-config"]').content),
-));
+const pano = reactive(new Pano(window.panoConfig));
+
+function setPageTitle(title) {
+    document.title = title;
+}
 
 export function usePano() {
     return pano
@@ -41,6 +43,24 @@ export function setRootApp(App) {
 export function setCurrentApp(App) {
     currentApp.value = App;
 }
+
+export function useData() {
+    const route = useRoute();
+
+    function query({uiPath, endpoint, params = {}}) {
+        const path = route.matched.filter(r => r.meta?.page).at(-1).path;
+        params = ref(params)
+        params.value.uiPath = uiPath;
+        params.value.endpoint = endpoint;
+
+        // console.log(id, path, params, new URLSearchParams(params).toString())
+         return fetch(path + "?" + new URLSearchParams(params.value), { headers: { 'Accept': 'application/json' } })
+            .then(response => response.json())
+    }
+
+    return { query }
+}
+
 
 export function resolveProps(props) {
     var route = useRoute()
@@ -75,13 +95,14 @@ export default function Pano(config) {
             // Router.addRoute(wrapRoute(config[i]))
         }
 
-        // Router.beforeEach((to, from) => {
-        //     if (to.meta.app) {
-        //         setRootApp(to.meta.rootApp)
-        //         setCurrentApp(to.meta.app)
-        //     }
-        //     return true
-        // })
+        Router.beforeEach((to, from) => {
+            if (to.meta.name) {
+                setPageTitle(to.meta.name)
+                // setRootApp(to.meta.rootApp)
+                // setCurrentApp(to.meta.app)
+            }
+            return true
+        })
     }
 
 

@@ -8,7 +8,7 @@ use Elastico\Aggregations\Metric\Avg;
 use Elastico\Aggregations\Metric\Max;
 use Elastico\Aggregations\Metric\Min;
 use Elastico\Aggregations\Metric\Sum;
-use Elastico\Models\Builder\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Pano\Facades\Pano;
 use Pano\Metrics\Results\TrendResult;
@@ -29,6 +29,8 @@ abstract class Trend extends Metric
     const UNIT_HOUR = 'h';
 
     const UNIT_MINUTE = 'm';
+
+    public string $component = 'trend-metric';
 
     public string|null $defaultRange;
 
@@ -189,10 +191,10 @@ abstract class Trend extends Metric
         return $this->defaultRange ?? array_key_first($this->ranges());
     }
 
-    public function config(): array
+    public function getProps(): array
     {
         return [
-            ...parent::config(),
+            ...parent::getProps(),
             'defaultRange' => $this->getDefaultRange(),
             'ranges' => collect($this->ranges())->map(fn ($range, $key) => ['key' => $key, 'name' => $range])->values(),
             'prefix' => $this->prefix,
@@ -256,7 +258,7 @@ abstract class Trend extends Metric
 
         $builder = $query->whereBetween(
             $dateField,
-            $this->currentRange($request->range, $timeUnit, $timezone)
+            $this->currentRange($request->input('range'), $timeUnit, $timezone)
         )
         ;
 

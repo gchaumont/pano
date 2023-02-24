@@ -21,6 +21,8 @@ abstract class Partition extends Metric
 {
     const TYPE = 'partition';
 
+    public string $component = 'partition-metric';
+
     protected string|null $prefix = null;
 
     protected string|null $suffix = null;
@@ -59,10 +61,10 @@ abstract class Partition extends Metric
         return $this;
     }
 
-    public function config(): array
+    public function getProps(): array
     {
         return [
-            ...parent::config(),
+            ...parent::getProps(),
             'prefix' => $this->prefix,
             'suffix' => $this->suffix,
         ];

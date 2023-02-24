@@ -2,12 +2,12 @@
 
 namespace Pano\Fields\Concerns;
 
-use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Pano\Query\Directives\Directive;
 
 trait HasFilters
 {
-    protected Closure|bool $filterable = true;
+    protected \Closure|bool $filterable = false;
 
     protected null|Directive $directive = null;
 
@@ -18,9 +18,17 @@ trait HasFilters
         return $this;
     }
 
-    public function applyFilter($request, $query, $value, $attribute): Builder
+    public function applyFilter($request, Builder $query, mixed $value): Builder
     {
-        return is_callable($this->filterable) ? call_user_func($this->filterable, func_get_args()) : $query;
+        if (is_callable($this->filterable)) {
+            return call_user_func($this->filterable, func_get_args());
+        }
+
+        if (str_contains($value, ',')) {
+            return $query->whereIn($this->field(), explode(',', $value));
+        }
+
+        return $query->where($this->field(), $value);
     }
 
     public function isFilterable($request): bool

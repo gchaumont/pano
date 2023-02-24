@@ -36,8 +36,9 @@ class ListContexts extends Command
                 'location' => $app->getLocation(),
                 // 'url' => $app->url(),
                 'class' => get_class($app),
+                'type' => get_parent_class($app),
             ])
-            ->sortBy('location')
+            // ->sortBy('location')
         ;
 
         $this->table(

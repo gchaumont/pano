@@ -3,7 +3,6 @@
 namespace Pano\Concerns;
 
 use Illuminate\Support\Collection;
-use Pano\Pages\Page;
 
 trait HasPages
 {
@@ -24,11 +23,5 @@ trait HasPages
     public function getPages(): Collection
     {
         return $this->pages ??= collect($this->pages()); // ->keyBy(fn ($page) => $page->getId());
-    }
-
-    public function getRoutes(): Collection
-    {
-        return $this->getChildren()
-            ->map(fn ($r) => $r instanceof Page ? $r->definition() : $r->getRoutes())->values();
     }
 }

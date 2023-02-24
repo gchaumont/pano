@@ -35,7 +35,7 @@ class TrendResult extends MetricResult
         return $this;
     }
 
-    public function toJson(): array
+    public function toArray(): array
     {
         return [
             // 'labels' => $this->getSpacedLabels($this->labels),

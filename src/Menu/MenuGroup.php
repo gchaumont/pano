@@ -3,6 +3,7 @@
 namespace Pano\Menu;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 class MenuGroup extends MenuItems
 {
@@ -20,6 +21,9 @@ class MenuGroup extends MenuItems
     ) {
         $this->items = collect($items);
         $this->item = is_string($name) ? MenuItem::make($name) : $name;
+        // $this->name($this->item->getName());
+        // $this->key($this->getKey());
+        $this->key('mGroup-'.Str::random(5));
     }
 
     public function getName(): string

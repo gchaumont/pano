@@ -18,10 +18,10 @@ abstract class Dashboard extends Page
 
     // const CONTEXT_SEPARATOR = ':';
 
-    public function getId(): string
-    {
-        return 'dashboards:'.$this->id;
-    }
+    // public function getId(): string
+    // {
+    //     return 'dashboards:'.$this->id;
+    // }
 
     public function getIcon(): ?string
     {
@@ -33,13 +33,6 @@ abstract class Dashboard extends Page
         return [];
     }
 
-    public function getProps(): array
-    {
-        return [
-            'dashboard' => $this->config(),
-        ];
-    }
-
     // public function getRoute(): string
     // {
     //     return implode(':dashboards.', [$this->getNamespace(), $this->getRouteKey()]);
@@ -47,7 +40,7 @@ abstract class Dashboard extends Page
 
     public function getMetrics(): Collection
     {
-        return $this->metrics ??= collect($this->metrics())->keyBy(fn ($m) => $m->getId());
+        return $this->metrics ??= collect($this->metrics())->keyBy(fn ($m) => $m->getKey());
     }
 
     public function getMetric(string $metric): Metric
@@ -78,16 +71,24 @@ abstract class Dashboard extends Page
     //     return 'dashboards.'.($this->route ?? Str::slug($this->getPath()));
     // }
 
-    public function config(): array
+    public function getProps(): array
     {
         return [
             'name' => $this->getName(),
             'metrics' => $this->getMetrics()->map(fn ($m) => $m->config())->values(),
             // 'route' => $this->getRoute(),
-            'breadcrumbs' => $this->getBreadcrumbs(),
-            'route' => $this->getLocation(),
-            'path' => $this->url(),
+            // 'breadcrumbs' => $this->getBreadcrumbs(),
+            // 'route' => $this->getLocation(),
+            // 'path' => $this->url(),
             'icon' => $this->getIcon(),
+        ];
+    }
+
+    public function config(): array
+    {
+        return [
+            ...parent::config(),
+            '@type' => 'Dashboard',
         ];
     }
 }

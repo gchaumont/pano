@@ -21,15 +21,27 @@ class Page extends Component
     use Routable;
     use HasBreadcrumbs;
 
-    public function __construct(string $name)
+    public function __construct(string $name = null)
     {
-        $this->name($name);
-        $this->route($name);
-        $this->id($name);
+        $this->name($name ?? $this->getName());
+        $this->key($this->getKey());
+        // $this->route($name);
     }
 
     public function toResponse($request): JsonResponse
     {
+    }
+
+    public function data(): array
+    {
+        return $this->data ?? [];
+    }
+
+    public function setData(array $data): static
+    {
+        $this->data = $data;
+
+        return $this;
     }
 
     public function breadcrumbs(): array
@@ -46,63 +58,62 @@ class Page extends Component
         return $crumbs->all();
     }
 
-    public function definition()
+    public function config(): array
     {
         if (($app = $this->getApplication()) && $app->url() != $app->homepage() && $app->homepage() == $this->url()) {
             $alias = [$app->url()];
         }
 
         return [
+            ...parent::config(),
             '@type' => 'Page',
-            ...parent::definition(),
             'name' => $this->getLocation(),
             'path' => $this->url(),
             'alias' => $alias ?? [],
             'breadcrumbs' => $this->getBreadcrumbs(),
-            'children' => $this->getChildren()
-                ->map(fn ($child) => $child->definition())
-                ->values(),
+            // 'children' => $this->getChildren()
+            //     ->map(fn ($child) => $child->config())
+            //     ->values(),
         ];
     }
 
-    public function registerRoutes(): void
+    public function getRoutes(): \Closure
     {
-        Route::group(array_filter([
-            'middleware' => $this->getMiddleware()->push('pano:'.$this->getLocation())->all(),
-            'as' => $this->getContextSeparator().$this->getId(),
-            'domain' => $this->getDomain(),
-            'prefix' => $this->getPath(),
-        ]), function () {
-            if ($this instanceof Page) {
-                // dump($this->getId());
+        return function () {
+            Route::group(array_filter([
+                'middleware' => $this->getMiddleware()->push('pano:'.$this->getLocation())->all(),
+                'as' => $this->getContextSeparator().$this->getKey(),
+                'domain' => $this->getDomain(),
+                'prefix' => $this->getPath(),
+            ]), function () {
                 Route::get('', PageController::class)->name('');
-            }
 
-            if ($this instanceof Resource) {
-                Route::group(['prefix' => '_endpoints'], function () {
-                    $this->getEndpoints()->each(fn ($endpoint) => $endpoint->registerRoute());
-                    $this->getMetrics()->each(fn ($metric) => $metric->registerRoute());
-                });
-            } elseif ($this instanceof Dashboard) {
-                Route::group(['prefix' => '_endpoints'], function () {
-                    $this->getMetrics()->each(fn ($metric) => $metric->registerRoute());
-                });
-            }
-            Route::controller(PageController::class)
-                ->group(
-                    fn () => $this->getContexts()
-                        ->filter(fn ($item) => is_a($item, Component::class))
-                        ->each(fn ($item) => $item instanceof Page
-                               && Route::get($item->getPath())->name($item->getContextSeparator().$item->getRoute()))
-                        ->each(fn (Component $item) => $item->registerRoutes())
-                )
-            ;
-            if ($this instanceof Application) {
-                // if ($this->url() !== $this->homepage()) {
-                //     Route::redirect($this->url(), $this->homepage());
-                // }
-                // Route::fallback(fn () => redirect($this->getPages()->first()->getPath()))->name($this->getContextSeparator().'404');
-            }
-        });
+                if ($this instanceof Resource) {
+                    Route::group(['prefix' => '_endpoints'], function () {
+                        $this->getEndpoints()->each(fn ($endpoint) => $endpoint->registerRoute());
+                        $this->getMetrics()->each(fn ($metric) => $metric->registerRoute());
+                    });
+                } elseif ($this instanceof Dashboard) {
+                    Route::group(['prefix' => '_endpoints'], function () {
+                        $this->getMetrics()->each(fn ($metric) => $metric->registerRoute());
+                    });
+                }
+                Route::controller(PageController::class)
+                    ->group(
+                        fn () => $this->getContexts()
+                            ->filter(fn ($item) => is_a($item, Component::class))
+                            ->each(fn ($item) => $item instanceof Page
+                                   && Route::get($item->getPath())->name($item->getContextSeparator().$item->getRoute()))
+                            ->each(fn (Component $item) => Route::group([], $item->getRoutes()))
+                    )
+                ;
+                if ($this instanceof Application) {
+                    // if ($this->url() !== $this->homepage()) {
+                    //  Route::redirect($this->url(), $this->homepage());
+                    // }
+                    // Route::fallback(fn () => redirect($this->getPages()->first()->getPath()))->name($this->getContextSeparator().'404');
+                }
+            });
+        };
     }
 }

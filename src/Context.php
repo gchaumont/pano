@@ -14,7 +14,7 @@ abstract class Context
 
     const CONTEXT_SEPARATOR = '.';
 
-    protected readonly null|string  $context;
+    protected readonly null|string $context;
 
     protected readonly null|string $application;
 
@@ -38,8 +38,8 @@ abstract class Context
 
     public function getLocation(): string
     {
-        return collect($this->getNamespace())
-            ->push($this->getId())
+        return $this->id ??= collect($this->getNamespace())
+            ->push($this->getKey())
             ->filter(fn ($l) => !empty($l))
             ->implode($this->getContextSeparator())
         ;
@@ -65,7 +65,14 @@ abstract class Context
             $this->setApplication($context->getApplication());
         }
 
+        $this->getRoot()->remember($this->getId(), $this);
+
         return $this;
+    }
+
+    public function getRoot(): Context
+    {
+        return $this->hasParent() ? $this->getContext()->getRoot() : $this;
     }
 
     public function getApplication(): ?Application

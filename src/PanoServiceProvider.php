@@ -5,6 +5,7 @@ namespace Pano;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Pano\Commands\LinkDev;
 use Pano\Commands\ListApps;
 use Pano\Commands\ListContexts;
 use Pano\Facades\Pano;
@@ -38,6 +39,7 @@ class PanoServiceProvider extends ServiceProvider
         $this->commands([
             ListApps::class,
             ListContexts::class,
+            LinkDev::class,
         ]);
     }
 

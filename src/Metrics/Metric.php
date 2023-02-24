@@ -4,12 +4,12 @@ namespace Pano\Metrics;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 use Pano\Components\Component;
 use Pano\Concerns\Nameable;
 use Pano\Concerns\Routable;
 use Pano\Controllers\ResourceController;
 use Pano\Metrics\Results\MetricResult;
+use Pano\Resource\Resource;
 
 /**
  *  Metric.
@@ -23,16 +23,18 @@ abstract class Metric extends Component
 
     public int $precision = 2;
 
-    abstract public function calculate($request, Builder $builder = null): MetricResult;
+    public string $resource;
 
-    public function asJson($request, Builder $builder = null): array
+    public function __construct()
     {
-        return $this->calculate($request, $builder)->toJson();
+        $this->key($this->getKey());
     }
 
-    public function getId(): string
+    abstract public function calculate($request, Builder $builder): MetricResult;
+
+    public function getResource(): Resource
     {
-        return $this->id ??= 'metrics-'.Str::plural(Str::slug(class_basename(static::class)));
+        return $this->getApplication()->getResource($this->resource);
     }
 
     public function cacheFor(): int|null|\DateTime
@@ -47,25 +49,40 @@ abstract class Metric extends Component
         return $this;
     }
 
-    public function url(): string
-    {
-        return route($this->getContext()->getLocation().'.'.$this->getId());
-    }
+    // public function url(): string
+    // {
+    //     return route($this->getLocation());
+    // }
 
     public function registerRoute(): void
     {
-        Route::get($this->getPath(), [ResourceController::class, 'metric'])->name($this->getContextSeparator().$this->getRoute());
+        // Route::get($this->getPath(), [ResourceController::class, 'metric'])->name($this->getContextSeparator().$this->getKey());
     }
 
-    public function config(): array
+    public function data(): array
+    {
+        return [
+            'value' => fn ($request) => $this->calculate($request, $this->getResource()->newQuery()),
+            // 'data' => Data::get()
+            //     ->query(Data::inject('filters.'.$this->getResource()->key()))
+            //     ->updateOn(Event::ui('resourceFiltered'))
+            //     ->onFilter(Event::ui('resourceFiltered')),
+        ];
+    }
+
+    public function getProps(): array
     {
         return [
             'type' => $this->getType(),
             'name' => $this->getName(),
-            'key' => $this->getId(),
-            'path' => $this->getPath(),
-            'url' => $this->url(),
+            'key' => $this->getKey(),
+            // 'path' => $this->getPath(),
         ];
+    }
+
+    public function getContextSeparator(): string
+    {
+        return '.';
     }
 
     protected function getType(): string

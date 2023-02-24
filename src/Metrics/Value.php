@@ -14,6 +14,8 @@ abstract class Value extends Metric
 {
     const TYPE = 'value';
 
+    public string $component = 'value-metric';
+
     protected string|int $defaultRange;
 
     protected string|null $prefix = null;
@@ -101,10 +103,10 @@ abstract class Value extends Metric
         ];
     }
 
-    public function config(): array
+    public function getProps(): array
     {
         return [
-            ...parent::config(),
+            ...parent::getProps(),
             'defaultRange' => $this->getDefaultRange(),
             'ranges' => collect($this->ranges())->map(fn ($range, $key) => ['key' => $key, 'name' => $range])->values(),
             'prefix' => $this->prefix,

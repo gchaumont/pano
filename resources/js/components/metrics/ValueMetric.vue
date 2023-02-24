@@ -6,53 +6,53 @@
                 <option v-for="range in metric.ranges" :value="range.key">{{range.name}}</option>
             </select>
         </header>
-        <p :class="['text-xl mt-4']"><span >{{value?.prefix}} {{value?.result}} {{value?.suffix}}</span> <span v-if="value?.previous != null" class="text-sm dark:text-slate-400">({{value.previous}})</span></p>
+        <p :class="['text-xl mt-4']"><span>{{value?.prefix}} {{value?.result}} {{value?.suffix}}</span> <span v-if="value?.previous != null" class="text-sm dark:text-slate-400">({{value.previous}})</span></p>
     </div>
 </template>
 <script setup>
-    import { onMounted, watch, reactive, ref, inject, computed } from 'vue'
-    const theme = inject('theme');
+import { onMounted, watch, reactive, ref, inject, computed } from 'vue'
+import { useData } from '@/Pano.js'
+
+
+const theme = inject('theme');
 const props = defineProps({
-    path: {
-        type: String,
-        required: true,
-    },
     metric: {
         type: Object,
         required: true,
     },
-    search: {
+    params: {
+        type: Object,
+        required: false, 
+        default: () => ({})
+    },
+    uiPath: {
         type: String,
-        required: false
+        required: true
     }
 })
 
+const endpoint = useData();
 const value = ref(null);
 const selectedRange = ref(null);
 
-const searchParams = computed(() => {
-    var params = {};
-    if (props.search) {
-        params.search = props.search;
-    }
-    if (selectedRange.value) {
-        params.range = selectedRange.value
-    }
-    return params;
-});
-
 const loadMetric = () => {
-    fetch(props.metric.url + "?" + new URLSearchParams(searchParams.value), { headers: { 'Accept': 'application/json' } })
-        .then(response => response.json().then(json => {
-            value.value = json
-        }))
+    var params = ref(props.params);
+
+    if (selectedRange.value) {
+        params.value['range'] = selectedRange.value;
+    }
+
+    endpoint.query({endpoint: 'value', params, uiPath: props.uiPath})
+        .then(response => {
+            value.value = response.value;
+
+        })
 }
 
 onMounted(() => {
     selectedRange.value = props.metric.defaultRange;
-    watch(() => selectedRange.value + props.search, () => loadMetric(), { immediate: true });
+    loadMetric()
+    watch(() => selectedRange.value, () => loadMetric())
+    watch(() => props.params, (oldP, newP) => oldP?.toString() !== newP?.toString() && loadMetric())
 });
-
-
-
 </script>

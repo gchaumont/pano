@@ -32,7 +32,7 @@ class Endpoint extends Context implements Arrayable
             $static->method($name);
         }
         $static->name(Str::slug($arguments[0]));
-        $static->id('endpoints-'.Str::slug($name.$arguments[0]));
+        $static->key('endpoints-'.Str::slug($name.$arguments[0]));
         $static->route('endpoints-'.Str::slug($name.$arguments[0]));
         $static->path($arguments[0]);
 

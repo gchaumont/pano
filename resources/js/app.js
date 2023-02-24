@@ -103,8 +103,8 @@ app.component('PanoApplication', PanoApplication);
 import NavigationSplitView from './components/views/NavigationSplitView.vue';
 app.component('NavigationSplitView', NavigationSplitView);
 
-import ResourceSkeleton from './components/resources/ResourceSkeleton.vue';
-app.component('ResourceSkeleton', ResourceSkeleton);
+// import ResourceSkeleton from './components/resources/ResourceSkeleton.vue';
+// app.component('ResourceSkeleton', ResourceSkeleton);
 
 import ListResource from './components/resources/ListResource.vue';
 app.component('ListResource', ListResource)

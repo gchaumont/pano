@@ -16,11 +16,7 @@ class MenuItems extends Component
         iterable $items,
     ) {
         $this->items = collect($items);
-    }
-
-    public function getId(): string
-    {
-        return $this->id ??= (Str::slug(class_basename(static::class)).'-'.Str::random(5));
+        $this->key(Str::slug(class_basename(static::class)).'-'.Str::random(5));
     }
 
     public function collapsable(bool $collapsable = true): static

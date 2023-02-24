@@ -49,7 +49,7 @@ abstract class Relation extends Field
         public function jsonConfig($request): array
         {
             return [
-                'resource' => $this->getResource()->config(),
+                // 'resource' => $this->getResource()->config(),
                 ...parent::jsonConfig($request),
             ];
         }

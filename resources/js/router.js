@@ -10,57 +10,57 @@ const CreateResource = () => import('./components/PanoRoot.vue')
 const NotFound = () => import('./components/NotFound.vue')
 
 export function resourceRoutes(resource, app, root) {
-    var routes =  [{
-        component: ListResource,
-        path: '',
-        name: resource.route,
-        props: { app, root, resource },
-    }, {
-        component: ShowResource,
-        path: resource.path+'/:record',
-        props: route => ({ resource, record: route.params.record, app, root }),
-    }, {
-        component: EditResource,
-        path: resource.path+'/:record/edit',
-        props: route => ({ app, root, resource, record: route.params.record }),
-    }, {
-        component: CreateResource,
-        path: resource.path+'/create',
-        props: { app, root, resource },
-    }]
+    return [{
+        path: resource.path,
+        children: [{
+            component: ListResource,
+            path: '',
+            name: resource.route,
+            props: { resource: resource.props, uiPath: resource.uiPath }, //  app, root,
+            meta: { 
+                page: resource.route+'.index',
+                name: resource.props.name  +' - '+app.props.name,
+            }
+        }, {
+            component: ShowResource,
+            path: resource.path + '/:record',
+            props: route => ({ resource: resource.props, record: route.params.record, uiPath: resource.uiPath, }),
+            meta: {
+                page: resource.route+'.show',
+                name: resource.props.name  +' - '+app.props.name,
 
-    return  [{
-        path: resource.path, 
-        children: routes,
+            }
+
+        }, {
+            component: EditResource,
+            path: resource.path + '/:record/edit',
+            props: route => ({ app, root, resource, record: route.params.record }),
+
+        }, {
+            component: CreateResource,
+            path: resource.path + '/create',
+            props: { app, root, resource },
+        }],
     }]
 }
 
 export function appRoutes(app, root) {
-
-
-
     return [{
             component: AppHome,
             path: app.path,
-            redirect: app.homepage,
+            redirect: app.props.homepage,
             props: { app, root },
+            meta: { 
+                page: app.name,
+                name: app.props.name +' - '+app.props.name,
+            },
             children: [
-                ...app.dashboards.map(dash => dashboardRoute(dash, app, root)),
-                ...app.resources.map(dash => resourceRoutes(dash, app, root)).flat()
+                ...app.props.dashboards.map(dash => dashboardRoute(dash, app, root)),
+                ...app.props.resources.map(dash => resourceRoutes(dash, app, root)).flat()
             ]
         },
-        ...app.apps.map(child => appRoutes(child, root)).flat()
+        ...app.props.apps.map(child => appRoutes(child, root)).flat()
     ]
-
-
-
-
-    return {
-        redirect: app.homepage,
-        path: app.path,
-        name: app.route,
-        props: props
-    }
 }
 
 export function dashboardRoute(dashboard, app, root) {
@@ -68,7 +68,16 @@ export function dashboardRoute(dashboard, app, root) {
         component: Dashboard,
         path: dashboard.path,
         name: dashboard.route,
-        props: { dashboard },
+            meta: {
+             page: app.name,
+            name: dashboard.props.name  +' - '+app.props.name,
+
+         },
+
+        props: () => {
+            // console.log(dashboard.props);
+            return { dashboard: dashboard.props }
+        }
     }
 }
 

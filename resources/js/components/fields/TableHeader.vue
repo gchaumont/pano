@@ -1,9 +1,9 @@
 <template>
     <th :class="[theme.tableHeader, 'sticky top-0 bg-slate-100  first:rounded-tl-md last:rounded-tr-md']">
         <div v-if="config" class="flex items-center">
-            <template v-if="config.sortable">
-                <p :style="valueStyle" @click="sortBy">{{config.name}}</p>
-                <div @click="sortBy" style="display: flex; flex-direction: column; align-items: center; margin-left: .5rem">
+            <template v-if="config.sortable" >
+                <p :style="valueStyle" @click="sortBy" class="cursor-pointer">{{config.name}}</p>
+                <div @click="sortBy" class="cursor-pointer flex flex-col items-center ml-2" >
                     <ChevronUpIcon v-show="!isActiveAsc" :fill="isActiveDesc ? 'black' : 'grey'" style="height: 16px; width: 16px;" />
                     <ChevronDownIcon v-show="!isActiveDesc" :fill="isActiveAsc ? 'black' : 'grey'" style="height: 16px; width: 16px;" />
                 </div>
@@ -31,24 +31,19 @@ const props = defineProps({
 })
 
 const sortBy = function() {
-    var sortKey = isActiveAsc ? '-' + props.config.key : props.config.key;
+    var sortKey = isActiveAsc.value ? '-' + props.config.key : props.config.key;
 
     emit('sortBy', sortKey);
-
 }
-const isActiveAsc = computed(function() {
-    return route.query.sort == props.config.key
-})
-const isActiveDesc = computed(function() {
-    return route.query.sort == '-' + props.config.key
-})
+
+const isActiveAsc = computed(() => route.query.sort == props.config.key)
+const isActiveDesc = computed(() => route.query.sort == '-' + props.config.key)
+
 const valueStyle = computed(function() {
-    var style = {
+    return {
         'font-weight': 500,
         'white-space': 'nowrap',
         'color': 'var(--interfaceTextColor)'
     };
-
-    return style
 })
 </script>

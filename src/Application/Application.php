@@ -5,7 +5,6 @@ namespace Pano\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Pano\Dashboards\Dashboard;
-use Pano\Facades\Pano;
 use Pano\Menu\MenuGroup;
 use Pano\Menu\MenuItem;
 use Pano\Menu\MenuItems;
@@ -34,14 +33,17 @@ abstract class Application extends Page
     protected string $logo;
 
     final public function __construct(
-        null|string $id = null,
+        null|string $key = null,
         string $name = null,
     ) {
         if ($name) {
             $this->name($name);
         }
-        $this->id($id ?? Str::slug(class_basename(static::class)));
-        $this->route($this->getId());
+        if ($key) {
+            $this->key($key);
+        }
+        // $this->id($id ?? Str::slug(class_basename(static::class)));
+        // $this->route($this->getId());
     }
 
     public static function make(...$args): static
@@ -57,14 +59,6 @@ abstract class Application extends Page
     public function getLogo(): ?string
     {
         return !empty($this->logo) ? $this->logo : null;
-    }
-
-    public function getProps(): array
-    {
-        return [
-            'app' => $this->config(),
-            // 'menu' => $this->getMenu(),
-        ];
     }
 
     public function dashboards(): array
@@ -84,7 +78,11 @@ abstract class Application extends Page
 
     public function getDashboard(string $dashboard): Dashboard
     {
-        $dashboard = Str::start($dashboard, 'dashboards:');
+        // $dashboard = Str::start($dashboard, 'dashboards:');
+
+        if (class_exists($dashboard)) {
+            return $this->getRoot()->context($dashboard);
+        }
 
         return $this->getDashboards()->get($dashboard)
         ?? throw new \Exception("The dashboard [{$dashboard}] was not found in [{$this->getLocation()}]");
@@ -92,7 +90,10 @@ abstract class Application extends Page
 
     public function getResource(string $resource): Resource
     {
-        $resource = Str::start($resource, 'resources:');
+        // $resource = Str::start($resource, 'resources:');
+        if (class_exists($resource)) {
+            return $this->getRoot()->context($resource);
+        }
 
         return $this->getResources()->get($resource)
         ?? throw new \Exception("The resource [{$resource}] was not found in [{$this->getLocation()}]");
@@ -100,6 +101,10 @@ abstract class Application extends Page
 
     public function getApp(string $application): Application
     {
+        if (class_exists($application)) {
+            return $this->getRoot()->context($application);
+        }
+
         return $this->getApplications()->get($application)
         ?? throw new \Exception("The application [{$application}] was not found in [{$this->getLocation()}]");
     }
@@ -111,17 +116,26 @@ abstract class Application extends Page
 
     public function getResources(): Collection
     {
-        return $this->resources ??= collect($this->resources())->keyBy(fn ($r) => $r->getId());
+        return $this->resources ??= collect($this->resources())->keyBy(fn ($r) => $r->getKey());
     }
 
     public function getDashboards(): Collection
     {
-        return $this->dashboards ??= collect($this->dashboards())->keyBy(fn ($r) => $r->getId());
+        return $this->dashboards ??= collect($this->dashboards())->keyBy(fn ($r) => $r->getKey());
     }
 
     public function getApplications(): Collection
     {
-        return $this->applications ??= collect($this->applications())->keyBy(fn ($r) => $r->getId());
+        return $this->applications ??= collect($this->applications())->keyBy(fn ($r) => $r->getKey());
+    }
+
+    public function getAlias(): null|string
+    {
+        if (empty($this->key)) {
+            return static::class;
+        }
+
+        return null;
     }
 
     public function getMenu(): MenuItems
@@ -129,6 +143,7 @@ abstract class Application extends Page
         if (isset($this->menu)) {
             return $this->menu;
         }
+
         $this->menu = new MenuItems($this->menu());
         if ($this->getApplication()) {
             $this->menu->items->prepend(
@@ -168,7 +183,7 @@ abstract class Application extends Page
             $menu->push(
                 MenuGroup::make(
                     name: MenuItem::make('Dashboards')->icon('dashboard'),
-                    items: $this->getDashboards()->map(fn ($dashboard) => MenuItem::dashboard($dashboard->getId()))->all()
+                    items: $this->getDashboards()->map(fn ($dashboard) => MenuItem::dashboard($dashboard->getKey()))->all()
                 )
                     ->collapsable()
             );
@@ -178,7 +193,7 @@ abstract class Application extends Page
                 MenuGroup::make(
                     name: MenuItem::make('Resources')->icon('object'),
                     items: $this->getResources()
-                        ->map(fn ($resource) => MenuItem::resource($resource->getId()))->all()
+                        ->map(fn ($resource) => MenuItem::resource($resource->getKey()))->all()
                 )
                     ->collapsable()
             );
@@ -187,7 +202,7 @@ abstract class Application extends Page
             $menu->push(
                 MenuGroup::make(
                     name: MenuItem::make('Applications'),
-                    items: $this->getApplications()->map(fn ($application) => MenuItem::application($application->getId()))->all()
+                    items: $this->getApplications()->map(fn ($application) => MenuItem::application($application->getKey()))->all()
                 )
                     ->collapsable()
             );
@@ -218,7 +233,7 @@ abstract class Application extends Page
     {
     }
 
-    final public function config(): array
+    final public function getProps(): array
     {
         return [
             'name' => $this->getName(),
@@ -230,8 +245,8 @@ abstract class Application extends Page
             'menu' => $this->getMenu()->items->map(fn (MenuItem|MenuGroup $menu) => $menu->config())->values()->all(),
             'resources' => $this->getResources()->map(fn ($resource) => $resource->config())->values()->all(),
             'dashboards' => $this->getDashboards()->map(fn ($dashboard) => $dashboard->config())->values()->all(),
-            'apps' => $this->getApplications()->map(fn ($app) => $app->definition())->values()->all(),
-            'root' => Pano::rootApp()->url(),
+            'apps' => $this->getApplications()->map(fn ($app) => $app->config())->values()->all(),
+            'root' => $this->getRoot()->url(),
             'location' => $this->getLocation(),
             'icon' => $this->getIcon(),
             'logo' => $this->getLogo(),
@@ -239,11 +254,11 @@ abstract class Application extends Page
         ];
     }
 
-    public function definition()
+    public function config(): array
     {
         return [
+            ...parent::config(),
             '@type' => 'Application',
-            ...$this->config(),
         ];
     }
 
@@ -259,10 +274,10 @@ abstract class Application extends Page
             ->concat($this->getResources())
             ->concat($this->getDashboards())
             ->concat($this->getApplications())
-            ->concat($this->getPages())
+            // ->concat($this->getPages())
             ->push($this->getMenu())
             ->filter()
-            ->keyBy(fn ($c) => $c->getId())
+            ->keyBy(fn ($c) => $c->getKey())
         ;
     }
 
@@ -276,7 +291,7 @@ abstract class Application extends Page
                 children: collect($this->getResources())
                     ->concat($this->getDashboards())
                 // ->concat($this->getPages())
-            )->props(['app' => $this->config()]))
+            )->props(['app' => $this->getProps()]))
         ;
     }
 

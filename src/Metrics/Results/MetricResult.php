@@ -2,48 +2,50 @@
 
 namespace Pano\Metrics\Results;
 
- /**
-  *  Metric.
-  */
- abstract class MetricResult
- {
-     protected int|float|array $result;
+use Illuminate\Contracts\Support\Arrayable;
 
-     protected int|float|array $previous;
+/**
+ *  Metric.
+ */
+abstract class MetricResult implements Arrayable
+{
+    protected int|float|array $result;
 
-     protected string|null $prefix = null;
+    protected int|float|array $previous;
 
-     protected string|null $suffix = null;
+    protected string|null $prefix = null;
 
-     protected string $currency;
+    protected string|null $suffix = null;
 
-     abstract public function toJson(): array;
+    protected string $currency;
 
-     public function previous(int|float|array $previous): static
-     {
-         $this->previous = $previous;
+    abstract public function toArray(): array;
 
-         return $this;
-     }
+    public function previous(int|float|array $previous): static
+    {
+        $this->previous = $previous;
 
-     public function prefix(string $prefix): static
-     {
-         $this->prefix = $prefix;
+        return $this;
+    }
 
-         return $this;
-     }
+    public function prefix(string $prefix): static
+    {
+        $this->prefix = $prefix;
 
-     public function suffix(string $suffix): static
-     {
-         $this->suffix = $suffix;
+        return $this;
+    }
 
-         return $this;
-     }
+    public function suffix(string $suffix): static
+    {
+        $this->suffix = $suffix;
 
-     public function currency($currency): static
-     {
-         $this->currency = $currency;
+        return $this;
+    }
 
-         return $this;
-     }
- }
+    public function currency($currency): static
+    {
+        $this->currency = $currency;
+
+        return $this;
+    }
+}

@@ -4,6 +4,7 @@ namespace Pano\Controllers;
 
 use App\Http\Controllers\Controller;
 use Elastico\Query\FullText\MultiMatchQuery;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 use Pano\Application\Application;
 use Pano\Facades\Pano;
@@ -20,14 +21,6 @@ class ResourceController extends Controller
     public function metric()
     {
         $metric = Pano::context(request()->route()->getName());
-        // $metric = $this->getResource()->getMetric($metric);
-        // $builder = $this->getResource()->model::query()->select(0);
-
-        // $searchQuery = new SearchQuery($builder);
-
-        // $searchQuery->patternDirectives(...$this->getResource()->getDirectives(request()));
-
-        // $builder = $searchQuery->applyQueryToBuilder(request()->input('search') ?? '');
 
         // if (empty(request()->input('search'))) {
         //     return Cache::remember(
@@ -36,8 +29,11 @@ class ResourceController extends Controller
         //         fn () => $metric->asJson(request(), $builder)
         //     );
         // }
+        $resource = $metric->getResource();
 
-        return $metric->asJson(request());
+        $query = $this->applyToBuilder($resource, $resource->newQuery(), request());
+
+        return $metric->asJson(request(), $query);
     }
 
     public function suggest()
@@ -73,24 +69,12 @@ class ResourceController extends Controller
             ->first(fn ($field) => $field->getKey() == trim($sortInput, '-'))
             ?? $resource->defaultSortField(request());
 
-        $query = $resource->newQuery()
-            // ->select($fields->map(fn ($f) => $f->field())->all())
+        $query = $this->applyToBuilder($resource, $resource->newQuery(), request());
 
-            ->when(
-                !empty(request()->input('search')),
-                function ($query) use ($fields) {
-                    return $query->where(function ($q) use ($fields) {
-                        $fields
-                            ->filter(fn ($field) => $field->isSearchable())
-                            ->each(fn ($field) => $query->orWhere($field->field(), 'like', '%'.request()->input('search').'%'))
-                        ;
-                    });
-                }
-            )
+        // ->select($fields->map(fn ($f) => $f->field())->all())
+
         //         query: request()->input('search') ?? '',
         //         filters: $filters,
-
-        ;
 
         // ->when($query, function ($q) use ($query, $resource) {
             //     $terms = explode(' ', $query);
@@ -148,6 +132,7 @@ class ResourceController extends Controller
             'total' => $total,
             'resource' => $resource->config(),
             'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
+            'filterOptions' => $resource->getFilters()->map(fn ($f) => $f->jsonConfig(request())),
         ];
     }
 
@@ -270,9 +255,16 @@ class ResourceController extends Controller
     {
     }
 
+    public function withResource(Resource $resource): static
+    {
+        $this->resource = $resource;
+
+        return $this;
+    }
+
     protected function getResource(): Resource
     {
-        return Pano::context(request()->route()->getName())->getContext();
+        return $this->resource ??= Pano::context(request()->route()->getName())->getContext();
 
         return Pano::resolveFromRoute(request()->route()->getName());
     }
@@ -283,10 +275,32 @@ class ResourceController extends Controller
             'title' => $resource->getTitle($hit),
             'subtitle' => $resource->getSubtitle($hit),
             'link' => $resource->linkTo($hit->getKey()),
+            'id' => $hit->getKey(),
             'fields' => collect($fields)
                 ->keyBy(fn ($field) => $field->getKey())
                 ->map(fn ($field) => $field->serialiseValue($hit)),
         ]
         ;
+    }
+
+    protected function applyToBuilder(Resource $resource, Builder $builder, $request)
+    {
+        $searchableFields = $resource->searchableFields($request);
+
+        $filters = $resource->getFilters()
+            ->filter(fn ($filter) => $request->has($filter->getKey()))
+            ->each(fn ($filter) => $filter->applyFilter($request, $builder, $request->input($filter->getKey())))
+        ;
+
+        return $builder->when(
+            !empty($request->input('search')),
+            function ($query) use ($searchableFields, $request) {
+                return $query->where(function ($q) use ($searchableFields, $request) {
+                    $searchableFields
+                        ->each(fn ($field) => $q->orWhere($field->field(), 'like', '%'.trim($request->input('search')).'%'))
+                    ;
+                });
+            }
+        );
     }
 }

@@ -6,7 +6,30 @@ use Illuminate\Support\Str;
 
 trait Identifiable
 {
-    public string $id;
+    protected readonly string $key;
+
+    protected readonly string $alias;
+
+    private readonly string $id;
+
+    public function key(string $key): static
+    {
+        $this->key = $key;
+
+        return $this;
+    }
+
+    public function getKey(): string
+    {
+        // if (isset($this->id)) {
+        //     return $this->id;
+        // }
+        if (isset($this->key)) {
+            return $this->key;
+        }
+
+        return Str::slug($this->getName() ?? class_basename(static::class));
+    }
 
     public function id(string $id): static
     {
@@ -15,17 +38,13 @@ trait Identifiable
         return $this;
     }
 
-    public function setId(string $id): static
+    public function getAlias(): null|string
     {
-        $this->id = $id;
-
-        return $this;
+        return $this->alias ?? null;
     }
 
     public function getId(): string
     {
-        return $this->id ??= static::class;
-
-        return $this->id ??= (Str::slug(class_basename(static::class)).'-'.Str::random(5));
+        return $this->getLocation();
     }
 }

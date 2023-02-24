@@ -4,7 +4,7 @@ namespace Pano\Commands;
 
 use Illuminate\Console\Command;
 
-class ListApps extends Command
+class LinkDev extends Command
 {
     /**
      * The name and signature of the console command.
@@ -29,10 +29,12 @@ class ListApps extends Command
     {
         $target = base_path('vendor/gchaumont/pano/public');
         $link = public_path('/vendor/pano');
+        app()->make('files')->delete($link);
         app()->make('files')->link($target, $link);
 
         $target = base_path('vendor/gchaumont/pano/resources');
         $link = resource_path('/vendor/pano');
+        app()->make('files')->delete($link);
         app()->make('files')->link($target, $link);
     }
 }

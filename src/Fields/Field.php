@@ -72,9 +72,9 @@ abstract class Field
         return $this;
     }
 
-    public static function make(string $name, string|callable $field = null): static
+    public static function make(...$args): static
     {
-        return new static(name: $name, field: $field);
+        return new static(...$args);
     }
 
     public function default(mixed $value): static

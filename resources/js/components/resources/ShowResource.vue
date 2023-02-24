@@ -26,7 +26,7 @@
                     <br>
                 </li>
             </ul>
-            <ListResource v-if="currentRelation" :resource="currentRelation.resource" :endpoint="relatedEndpoint" :show_metrics="false" />
+            <!-- <ListResource v-if="currentRelation" :resource="currentRelation.resource" :endpoint="relatedEndpoint" :show_metrics="false" /> -->
         </section>
     </div>
 </template>
@@ -35,9 +35,12 @@
 <script setup>
 import ListResource from './ListResource.vue';
 import PageHeading from '@/components/headings/PageHeading.vue'
+import {useData} from '@/Pano.js'
 import { inject, computed, reactive, watch } from 'vue'
 
 const theme = inject('theme');
+
+const endpoint = useData()
 
 const props = defineProps({
     resource: {
@@ -45,6 +48,10 @@ const props = defineProps({
         required: true,
     },
     record: {
+        type: String,
+        required: true,
+    },
+    uiPath: {
         type: String,
         required: true,
     },
@@ -84,9 +91,11 @@ const currentRelation = computed(function() {
 const loadResource = function() {
         data.model = null
 
-        fetch(props.resource.endpoints.recordsrecord.url.replace(':record', props.record) + "?" + new URLSearchParams(), { headers: { 'Accept': 'application/json' } })
-            .then(response => response.json().then(json => {
-                if (response.ok) {
+        endpoint.query({endpoint: 'record', params :{record:props.record}, uiPath: props.uiPath})
+            .then(r => {
+                console.log(r.record)
+                var json = r.record;
+
                     data.error = null;
                     data.model = json.model
                     data.fields = json.fields
@@ -94,12 +103,13 @@ const loadResource = function() {
 
                     console.log(relations.value);
 
-                } else if (response.status == 404) {
-                    data.error = "404 - Not Found";
-                } else {
-                    data.error = "500 - Error"
-                }
-            }))
+
+            })
+
+        // fetch(props.resource.endpoints.recordsrecord.url.replace(':record', props.record) + "?" + new URLSearchParams(), { headers: { 'Accept': 'application/json' } })
+        //     .then(response => response.json().then(json => {
+    
+        //     }))
     }
 
     watch(
