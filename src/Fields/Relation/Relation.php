@@ -35,7 +35,7 @@ abstract class Relation extends Field
         return $this;
     }
 
-    public function getResource()
+    public function getResource(): Resource
     {
         if ($this->appPath) {
             return Pano::context($this->appPath)->getResource($this->resource);
@@ -46,11 +46,11 @@ abstract class Relation extends Field
         return Pano::getCurrentApp()->getResource($this->resource);
     }
 
-        public function jsonConfig($request): array
+        public function jsonConfig($request, $resource): array
         {
             return [
                 // 'resource' => $this->getResource()->config(),
-                ...parent::jsonConfig($request),
+                ...parent::jsonConfig($request, $resource),
             ];
         }
 

@@ -62,7 +62,7 @@ abstract class Metric extends Component
     public function data(): array
     {
         return [
-            'value' => fn ($request) => $this->calculate($request, $this->getResource()->newQuery()),
+            'value' => fn ($request) => $this->calculate($request, $this->getResource()->newFilteredQuery($request)),
             // 'data' => Data::get()
             //     ->query(Data::inject('filters.'.$this->getResource()->key()))
             //     ->updateOn(Event::ui('resourceFiltered'))

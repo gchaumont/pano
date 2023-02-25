@@ -35,13 +35,13 @@ class Stack
         return false;
     }
 
-    public function jsonConfig($request): array
+    public function jsonConfig($request, $resource): array
     {
         return [
             'key' => $this->getKey(),
             'type' => 'stack-field',
             'name' => $this->getName(),
-            'fields' => collect($this->fields)->keyBy(fn ($f) => $f->getKey())->map(fn ($f) => $f->jsonConfig($request))->all(),
+            'fields' => collect($this->fields)->keyBy(fn ($f) => $f->getKey())->map(fn ($f) => $f->jsonConfig($request, $resource))->all(),
         ];
     }
 

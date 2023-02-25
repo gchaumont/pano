@@ -3,6 +3,7 @@
 namespace Pano\Fields;
 
 use Elastico\Models\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Pano\Fields\Concerns\HasFilters;
@@ -34,7 +35,7 @@ abstract class Field
 
     protected bool $sortable = false;
 
-    protected Closure|bool $searchable = false;
+    protected \Closure|bool $searchable = false;
 
     protected bool $required;
     protected bool $stacked = false;
@@ -70,6 +71,15 @@ abstract class Field
         $this->searchable = $searchable;
 
         return $this;
+    }
+
+    public function applySearch(Builder $builder, mixed $value): Builder
+    {
+        if (is_callable($this->searchable)) {
+            return ($this->searchable)($builder, $value);
+        }
+
+        return $builder->where($this->field(), 'like', '%'.trim($value).'%');
     }
 
     public static function make(...$args): static
@@ -300,7 +310,7 @@ abstract class Field
         return defined(static::class.'::TYPE') ? static::TYPE.'-field' : strtolower(class_basename(static::class)).'-field';
     }
 
-    public function jsonConfig($request): array
+    public function jsonConfig($request, $resource): array
     {
         return array_filter([
             'key' => $this->getKey(),

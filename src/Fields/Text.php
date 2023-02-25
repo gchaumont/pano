@@ -53,11 +53,11 @@ class Text extends Field
         return $this;
     }
 
-        public function jsonConfig($request): array
+        public function jsonConfig($request, $resource): array
         {
             return [
-                ...parent::jsonConfig($request),
-                'options' => $this->getOptions($request),
+                ...parent::jsonConfig($request, $resource),
+                'options' => $this->getOptions($request, $resource),
             ];
         }
 }

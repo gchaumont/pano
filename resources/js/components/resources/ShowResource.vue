@@ -26,7 +26,7 @@
                     <br>
                 </li>
             </ul>
-            <!-- <ListResource v-if="currentRelation" :resource="currentRelation.resource" :endpoint="relatedEndpoint" :show_metrics="false" /> -->
+            <!-- <ListResource v-if="currentRelation" :resource="currentRelation.resource" :endpoint="relatedEndpoint" :show_metrics="false" :uiPath="uiPath/> -->
         </section>
     </div>
 </template>

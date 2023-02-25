@@ -59,13 +59,13 @@ class Badge extends Field
     {
     }
 
-    public function jsonConfig($request): array
+    public function jsonConfig($request, $resource): array
     {
         return [
-            ...parent::jsonConfig($request),
+            ...parent::jsonConfig($request, $resource),
             'map' => $this->field_map,
             'withIcons' => $this->with_icons,
-            'options' => $this->getOptions($request),
+            'options' => $this->getOptions($request, $resource),
         ];
     }
 }

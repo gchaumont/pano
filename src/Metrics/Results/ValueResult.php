@@ -7,7 +7,7 @@ namespace Pano\Metrics\Results;
  */
 class ValueResult extends MetricResult
 {
-    public function result(int|float|array $result): static
+    public function result(string|int|float|array $result): static
     {
         $this->result = $result;
 

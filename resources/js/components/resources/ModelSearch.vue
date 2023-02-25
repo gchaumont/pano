@@ -1,6 +1,9 @@
 <template>
+
     <form id="resource-search" action="" method="get" class="relative inline-block">
-        <input class=" text-slate-400 dark:text-slate-100 bg-white dark:bg-slate-700 rounded-md py-2 px-4 min-w-55ch   shadow-sm  dark:highlight-white/5 dark:hover:bg-slate-600 outline-none transition-colors" type="text" placeholder="Search..." name="" v-model="search" style="position: sticky; top: 0" @click="activate()" @keydown="activate" @focus="activate()" @blur="deactivate()" ref="searchInput">
+        <input class="flex items-center py-2 px-4  pl-12 text-slate-400 dark:text-slate-100 bg-white dark:bg-slate-700 ring-1  ring-slate-900/10  border-none rounded-md min-w-35ch shadow-sm dark:highlight-white/5 dark:hover:bg-slate-600 outline-none transition-colors " type="text" placeholder="Search..." name="" v-model="search" style="position: sticky; top: 0" @click="activate()" @keydown="activate" @focus="activate()" @blur="deactivate()" ref="searchInput">
+        <MagnifyingGlassIcon class="pointer-events-none absolute top-2.5 left-4 h-5 w-5 text-gray-400" aria-hidden="true" />
+
         <button type="submit" class="hidden"> </button>
         <div class="absolute shadow-lg top-100 overflow-y-auto max-h-80 inset-x-0 z-10 bg-white dark:bg-slate-700" v-if="active && suggestions?.length">
             <ol>
@@ -13,8 +16,12 @@
         </div>
     </form>
 </template>
+
 <script>
+import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
 export default {
+    components: { MagnifyingGlassIcon },
+
     props: {
         path: {
             type: String,

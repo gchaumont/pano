@@ -57,6 +57,8 @@ app.component('icon-field', IconField);
 import RelationField from './components/fields/RelationField.vue';
 app.component('relates-to-one-field', RelationField);
 
+import SelectMenu from './components/forms/SelectMenu.vue';
+app.component('pano-select-menu', SelectMenu);
 
 import TableHeader from './components/fields/TableHeader.vue';
 app.component('pano-field-table-header', TableHeader);

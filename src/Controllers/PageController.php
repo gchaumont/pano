@@ -17,11 +17,17 @@ class PageController extends Controller
             $page = Pano::context(request()->route()->getName());
             $component = request()->input('uiPath') ? $page->context(request()->input('uiPath')) : $page;
             $endpoint = request()->input('endpoint');
-            // response(get_class($component))->send();
 
             return collect($component->data())
                 ->filter(fn ($data, $key) => $endpoint == $key)
                 ->map(fn ($data, $key) => is_callable($data) ? $data(request()) : $data)
+                // ->map(function ($data, $key) {
+                //     try {
+                //         return is_callable($data) ? $data(request(), request()) : $data;
+                //     } catch (\Throwable $e) {
+                //         throw $e;
+                //     }
+                // })
                 ->each(fn (Arrayable|array $item) => $item)
                 ->toArray()
             ;

@@ -47,7 +47,9 @@
             </router-link>
             <div class="flex flex-1 flex-col overflow-y-auto px-2 py-4">
                 <nav class="flex-1 ">
-                    <component v-for="item in menu" :is="'pano-menu-'+item.type" :config="item" :collapsed="collapsed"/>
+                    <!-- {{ menu}} -->
+                    <component v-for="item in menu" :is="item.component" :config="item" :collapsed="collapsed"/>
+                    
                 </nav>
             </div>
         </div>

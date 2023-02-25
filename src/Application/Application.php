@@ -5,6 +5,7 @@ namespace Pano\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Pano\Dashboards\Dashboard;
+use Pano\Forms\SelectMenu;
 use Pano\Menu\MenuGroup;
 use Pano\Menu\MenuItem;
 use Pano\Menu\MenuItems;
@@ -21,6 +22,8 @@ abstract class Application extends Page
     public Collection $dashboards;
 
     public Collection $applications;
+
+    public Collection $scopes;
 
     public string $component = 'PanoApplication';
 
@@ -178,6 +181,11 @@ abstract class Application extends Page
     public function menu(): array
     {
         $menu = collect();
+        if ($this->getScopes()->isNotEmpty()) {
+            $this->getScopes()
+                ->each(fn ($scope) => $menu->push(SelectMenu::make(class_basename($scope::class))))
+            ;
+        }
 
         if ($this->getDashboards()->isNotEmpty()) {
             $menu->push(
@@ -242,7 +250,7 @@ abstract class Application extends Page
             'path' => $this->url(),
             'route' => $this->getRoute(),
             // 'routes' => $this->getRoutes(),
-            'menu' => $this->getMenu()->items->map(fn (MenuItem|MenuGroup $menu) => $menu->config())->values()->all(),
+            'menu' => $this->getMenu()->items->map(fn (MenuItem|MenuGroup|SelectMenu $menu) => $menu->config())->values()->all(),
             'resources' => $this->getResources()->map(fn ($resource) => $resource->config())->values()->all(),
             'dashboards' => $this->getDashboards()->map(fn ($dashboard) => $dashboard->config())->values()->all(),
             'apps' => $this->getApplications()->map(fn ($app) => $app->config())->values()->all(),
@@ -250,6 +258,7 @@ abstract class Application extends Page
             'location' => $this->getLocation(),
             'icon' => $this->getIcon(),
             'logo' => $this->getLogo(),
+            'scopes' => $this->getScopes(),
             // 'settings'
         ];
     }
@@ -260,6 +269,16 @@ abstract class Application extends Page
             ...parent::config(),
             '@type' => 'Application',
         ];
+    }
+
+    public function scopes(): array
+    {
+        return [];
+    }
+
+    public function getScopes(): Collection
+    {
+        return $this->scopes ??= collect($this->scopes());
     }
 
     public function getContexts(): Collection
@@ -274,6 +293,7 @@ abstract class Application extends Page
             ->concat($this->getResources())
             ->concat($this->getDashboards())
             ->concat($this->getApplications())
+            // ->concat($this->getScopes())
             // ->concat($this->getPages())
             ->push($this->getMenu())
             ->filter()

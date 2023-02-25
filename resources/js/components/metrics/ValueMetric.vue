@@ -53,6 +53,6 @@ onMounted(() => {
     selectedRange.value = props.metric.defaultRange;
     loadMetric()
     watch(() => selectedRange.value, () => loadMetric())
-    watch(() => props.params, (oldP, newP) => oldP?.toString() !== newP?.toString() && loadMetric())
+    watch(() => props.params, (oldP, newP) => oldP !== newP && loadMetric())
 });
 </script>

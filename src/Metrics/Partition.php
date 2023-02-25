@@ -116,6 +116,8 @@ abstract class Partition extends Metric
             $field ??= '*';
             $results = $query
                 ->groupBy($by)
+                ->when(!empty($callback), fn ($q) => $callback($q))
+
                 ->orderByRaw("{$function}({$field}) DESC")
                 ->selectRaw("{$function}({$field}) as metric, {$by}")
                 ->take(5)

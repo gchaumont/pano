@@ -12,7 +12,7 @@
     ], 'vendor/pano/build')
 }}
 @else
-    @vite(['resources/js/app.js'] , '/vendor/pano/build')
+    @vite(['resources/js/app.js'] , 'vendor/pano/build')
 @endif
 {{-- <meta name="pano-config" content="{{   }}"> --}}
 {{--

@@ -10,7 +10,7 @@ class MenuItems extends Component
 {
     public Collection $items;
 
-    public string $component = 'MenuItems';
+    public string $component = 'pano-menu-menu-items';
 
     public function __construct(
         iterable $items,
@@ -34,6 +34,7 @@ class MenuItems extends Component
     public function config(): array
     {
         return [
+            ...parent::config(),
             'type' => 'group',
             'name' => $this->getName(),
             'collapsable' => $this->collapsable,

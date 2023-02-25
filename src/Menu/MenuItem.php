@@ -6,12 +6,14 @@ use Illuminate\Support\Str;
 use Pano\Application\Application;
 use Pano\Components\Component;
 use Pano\Concerns\Nameable;
+use Pano\Menu\Concerns\HasStatus;
 
 class MenuItem extends Component
 {
     use Nameable;
+    use HasStatus;
 
-    public string $component = 'MenuItem';
+    public string $component = 'pano-menu-item';
 
     protected null|string|\Closure $icon = null;
 
@@ -162,12 +164,14 @@ class MenuItem extends Component
     public function config(): array
     {
         return [
+            ...parent::config(),
             'type' => 'item',
             'format' => 'default',
             'icon' => $this->getIcon(),
             'name' => $this->getName(),
             'path' => $this->getPath(),
             'inactive' => $this->inactive,
+            'status' => $this->getStatus(),
         ];
     }
 }

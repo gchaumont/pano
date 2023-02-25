@@ -2,87 +2,86 @@
 
 namespace Pano\Fields;
 
-use Closure;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\NestedFieldDirective;
 
- /**
-  * Shows Nested data.
-  */
- class Nested extends Field
- {
-     protected array $fields;
+/**
+ * Shows Nested data.
+ */
+class Nested extends Field
+{
+    protected array $fields;
 
-     protected int $max;
+    protected int $max;
 
-     protected Closure|bool $visibleOnIndex = false;
+    protected \Closure|bool $visibleOnIndex = false;
 
-     public function getDirective(): null|Directive
-     {
-         if (!empty($this->field)) {
-             return new NestedFieldDirective(
-                 $this->field,
-                 directives: collect($this->fields)->map(fn ($field) => $field->getDirective())->filter()->values()->all(),
-             );
-         }
+    public function getDirective(): null|Directive
+    {
+        if (!empty($this->field)) {
+            return new NestedFieldDirective(
+                $this->field,
+                directives: collect($this->fields)->map(fn ($field) => $field->getDirective())->filter()->values()->all(),
+            );
+        }
 
-         return null;
-     }
+        return null;
+    }
 
-     public function fields(array $fields): static
-     {
-         $this->fields = $fields;
+    public function fields(array $fields): static
+    {
+        $this->fields = $fields;
 
-         return $this;
-     }
+        return $this;
+    }
 
-     public function max(int $max): static
-     {
-         $this->max = $max;
+    public function max(int $max): static
+    {
+        $this->max = $max;
 
-         return $this;
-     }
+        return $this;
+    }
 
-     public function getFields(): array
-     {
-         return $this->fields;
-     }
+    public function getFields(): array
+    {
+        return $this->fields;
+    }
 
-     /**
-      * Prepare value to be sent to Front.
-      */
-     public function serialiseValue(object $object): mixed
-     {
-         $list = [];
-         foreach ($this->resolveValue($object) ?? [] as $nested) {
-             $entity = [];
-             foreach ($this->fields as $field) {
-                 $entity[] = $field->serialiseValue($nested);
-             }
-             $list[] = $entity;
-         }
+    /**
+     * Prepare value to be sent to Front.
+     */
+    public function serialiseValue(object $object): mixed
+    {
+        $list = [];
+        foreach ($this->resolveValue($object) ?? [] as $nested) {
+            $entity = [];
+            foreach ($this->fields as $field) {
+                $entity[] = $field->serialiseValue($nested);
+            }
+            $list[] = $entity;
+        }
 
-         return $list;
-     }
+        return $list;
+    }
 
-     public function jsonConfig($request): array
-     {
-         $config = parent::jsonConfig($request);
-         $config['fields'] = array_map(fn ($field) => $field->jsonConfig($request), $this->fields);
-         $config['max'] = $this->max ?? null;
+    public function jsonConfig($request, $resource): array
+    {
+        $config = parent::jsonConfig($request);
+        $config['fields'] = array_map(fn ($field) => $field->jsonConfig($request, $resource), $this->fields);
+        $config['max'] = $this->max ?? null;
 
-         return $config;
-     }
+        return $config;
+    }
 
-     public function namespace(string $namespace): static
-     {
-         $this->fields = collect($this->fields)
-             ->map(fn ($field) => $field->namespace($namespace))
-             ->all()
-         ;
+    public function namespace(string $namespace): static
+    {
+        $this->fields = collect($this->fields)
+            ->map(fn ($field) => $field->namespace($namespace))
+            ->all()
+        ;
 
-         $this->namespace = $namespace;
+        $this->namespace = $namespace;
 
-         return $this;
-     }
- }
+        return $this;
+    }
+}

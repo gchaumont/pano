@@ -105,10 +105,10 @@ class HasMany extends RelatesToMany
      //     dd($value);
     // }
 
-    public function jsonConfig($request): array
+    public function jsonConfig($request, $resource): array
     {
         return [
-            ...parent::jsonConfig($request),
+            ...parent::jsonConfig($request, $resource),
             // 'resource' => $this->getResource(),
             // 'path' => $this->getResource()->url(),
         ];

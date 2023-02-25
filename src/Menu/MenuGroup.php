@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class MenuGroup extends MenuItems
 {
-    public string $component = 'MenuGroup';
+    public string $component = 'pano-menu-group';
 
     public Collection $items;
 

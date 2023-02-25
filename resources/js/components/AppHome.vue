@@ -56,6 +56,8 @@ const props = defineProps({
     },
 })
 
+provide('locale', 'de-CH')
+
 
 const getAppItems = function(app) {
     

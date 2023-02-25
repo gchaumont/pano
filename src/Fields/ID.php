@@ -5,16 +5,23 @@ namespace Pano\Fields;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\FieldDirective;
 
- class ID extends Field
- {
-     const TYPE = 'text';
+class ID extends Field
+{
+    const TYPE = 'text';
 
-     public function getDirective(): null|Directive
-     {
-         if (!empty($this->field)) {
-             return new FieldDirective($this->field);
-         }
+    public function __construct(
+        public string $name = 'ID',
+        null|string|callable $field = 'id',
+    ) {
+        parent::__construct($name, $field);
+    }
 
-         return null;
-     }
- }
+    public function getDirective(): null|Directive
+    {
+        if (!empty($this->field)) {
+            return new FieldDirective($this->field);
+        }
+
+        return null;
+    }
+}

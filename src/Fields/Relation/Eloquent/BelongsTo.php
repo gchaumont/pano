@@ -4,6 +4,7 @@ namespace Pano\Fields\Relation\Eloquent;
 
 use Elastico\Models\DataAccessObject;
 use Elastico\Models\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Pano\Fields\Relation\RelatesToOne;
 use Pano\Query\Directives\Directive;
@@ -33,6 +34,15 @@ class BelongsTo extends RelatesToOne
 
         return null;
     }
+
+     public function applySearch(Builder $builder, mixed $value): Builder
+     {
+         if (is_callable($this->searchable)) {
+             return ($this->searchable)($builder, $value);
+         }
+
+         return $builder->whereHas($this->field(), fn ($q) => $q->where('name', 'like', '%'.$value.'%'));
+     }
 
     public function formatValue(mixed $object): mixed
     {

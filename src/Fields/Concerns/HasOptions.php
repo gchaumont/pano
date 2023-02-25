@@ -4,7 +4,7 @@ namespace Pano\Fields\Concerns;
 
 trait HasOptions
 {
-    protected \Closure|array $options = [];
+    protected \Closure|array $options;
 
     public function options(array|callable $options): static
     {
@@ -13,8 +13,18 @@ trait HasOptions
         return $this;
     }
 
-    public function getOptions($request): array
+    public function getOptions($request, $resource): array
     {
+        if (!$this->isFilterable($request)) {
+            return [];
+        }
+        if (!isset($this->options)) {
+            return $resource
+                ->fieldOptions($this->field)
+                ->all()
+            ;
+        }
+
         return collect($this->options instanceof \Closure ? $this->options($request) : $this->options)
             ->map(fn ($label, $value) => ['label' => $label, 'value' => $value])
             ->all()

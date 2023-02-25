@@ -2,13 +2,16 @@
     <a v-if="config.path && isAbsolute" :href="config.path" :class="linkClass">
         <component :is="config.icon" v-if="config.icon" :class="iconClass" />
         <span >{{config.name}}</span>
+        <StatusIndicator v-if="config.status" :status="config.status" />
     </a>
     <router-link v-else :to="config.path" :active-class="linkActiveClass" :class="linkClass" v-slot="{isActive}">
         <component :is="config.icon" v-if="config.icon" :class="[isActive && !config.inactive ? 'text-gray-100 group-hover:text-gray-200 dark:text-gray-300 dark:hover:text-gray-300' : 'text-gray-300 dark:group-hover:text-gray-300 group-hover:text-gray-200', iconClass]" />
-        <span v-if="!collapsed">{{config.name}}</span>
+        <span v-if="!collapsed" class="mr-auto">{{config.name}}</span>
+        <StatusIndicator v-if="config.status" :status="config.status" />
     </router-link>
 </template>
 <script setup>
+import StatusIndicator from '@/components/support/StatusIndicator.vue'
 import { computed, inject } from 'vue'
 
 const theme = inject('theme');

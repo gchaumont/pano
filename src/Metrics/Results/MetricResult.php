@@ -9,7 +9,7 @@ use Illuminate\Contracts\Support\Arrayable;
  */
 abstract class MetricResult implements Arrayable
 {
-    protected int|float|array $result;
+    protected string|int|float|array $result;
 
     protected int|float|array $previous;
 

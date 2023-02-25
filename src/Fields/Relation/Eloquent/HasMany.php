@@ -2,7 +2,6 @@
 
 namespace Pano\Fields\Relation\Eloquent;
 
-use Closure;
 use Elastico\Models\DataAccessObject;
 use Illuminate\Database\Eloquent\Collection;
 use Pano\Fields\Relation\RelatesToMany;
@@ -10,47 +9,47 @@ use Pano\Query\Handlers\EloquentQueryHandler;
 use Pano\Query\Handlers\ResourceQueryHandler;
 use Pano\Resource\Resource;
 
- class HasMany extends RelatesToMany
- {
-     public string $foreignKey;
+class HasMany extends RelatesToMany
+{
+    public string $foreignKey;
 
-     public Closure|bool $visibleOnIndex = false;
+    public \Closure|bool $visibleOnIndex = false;
 
-     public function load(array $objects): array
-     {
-         return Collection::make($objects)->load($this->field())->all();
-     }
+    public function load(array $objects): array
+    {
+        return Collection::make($objects)->load($this->field())->all();
+    }
 
-     public function query(Resource $resource, string $key): ResourceQueryHandler
-     {
-         // $class = $resource->model;
-         // $model = (new $class());
+    public function query(Resource $resource, string $key): ResourceQueryHandler
+    {
+        // $class = $resource->model;
+        // $model = (new $class());
 
-         return (new EloquentQueryHandler($resource))->related(relation: $this, key: $key);
+        return (new EloquentQueryHandler($resource))->related(relation: $this, key: $key);
 
-         return $model->setAttribute($model->getKeyName(), $key)->{$this->field()}();
-     }
+        return $model->setAttribute($model->getKeyName(), $key)->{$this->field()}();
+    }
 
-     /**
-      *  Enable display of default or custom metrics
-      *  on related resource pages.
-      */
-     public function withMetrics(bool|array $metrics = true): static
-     {
-         // code...
-     }
+    /**
+     *  Enable display of default or custom metrics
+     *  on related resource pages.
+     */
+    public function withMetrics(bool|array $metrics = true): static
+    {
+        // code...
+    }
 
-     /**
-      *  Display custom fields on related
-      *  resource pages.
-      */
-     public function withFields(array $fields): static
-     {
-         // code...
-     }
+    /**
+     *  Display custom fields on related
+     *  resource pages.
+     */
+    public function withFields(array $fields): static
+    {
+        // code...
+    }
 
-     // public function formatValue(mixed $object): mixed
-     // {
+    // public function formatValue(mixed $object): mixed
+    // {
      //     if (!empty($object)) {
      //         return [
      //             'id' => $object->getKey(),
@@ -60,22 +59,22 @@ use Pano\Resource\Resource;
      //     }
 
      //     return null;
-     // }
+    // }
 
-     public function getForeignKey(): string
-     {
-         return $this->foreignKey ?? $this->field.'.'.$this->getResource()->getModel()->getForeignKey();
-     }
+    public function getForeignKey(): string
+    {
+        return $this->foreignKey ?? $this->field.'.'.$this->getResource()->getModel()->getForeignKey();
+    }
 
-     public function foreignKey(string $foreignKey): static
-     {
-         $this->foreignKey = $foreignKey;
+    public function foreignKey(string $foreignKey): static
+    {
+        $this->foreignKey = $foreignKey;
 
-         return $this;
-     }
+        return $this;
+    }
 
-     // public function serialiseValue(DataAccessObject $object): mixed
-     // {
+    // public function serialiseValue(DataAccessObject $object): mixed
+    // {
      //     return $this->getResource()->getTitle($object->{$this->field});
 
      //     return $object;
@@ -85,30 +84,30 @@ use Pano\Resource\Resource;
      //     // response($this->resource)->send();
 
      //     return $class::query()->find($value);
-     // }
+    // }
 
-     public function title(DataAccessObject $object): string
-     {
-         return $object->{$this->name};
-     }
+    public function title(DataAccessObject $object): string
+    {
+        return $object->{$this->name};
+    }
 
-     public function fields(): array
-     {
-         return [];
-     }
+    public function fields(): array
+    {
+        return [];
+    }
 
-     // public function formatValue(mixed $value): mixed
-     // {
+    // public function formatValue(mixed $value): mixed
+    // {
      //     response(json_encode($value))->send();
      //     dd($value);
-     // }
+    // }
 
-     public function jsonConfig($request): array
-     {
-         return [
-             ...parent::jsonConfig($request),
-             // 'resource' => $this->getResource(),
-             // 'path' => $this->getResource()->url(),
-         ];
-     }
- }
+    public function jsonConfig($request, $resource): array
+    {
+        return [
+            ...parent::jsonConfig($request, $resource),
+            // 'resource' => $this->getResource(),
+            // 'path' => $this->getResource()->url(),
+        ];
+    }
+}

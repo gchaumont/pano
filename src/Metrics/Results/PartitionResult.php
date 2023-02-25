@@ -11,7 +11,7 @@ class PartitionResult extends MetricResult
 
     protected array $label;
 
-    protected array $color;
+    protected array|\Closure $color;
 
     protected null|string $field;
 
@@ -38,9 +38,11 @@ class PartitionResult extends MetricResult
         return $this;
     }
 
-    public function colors(callable $callable): string
+    public function color(callable $callback): static
     {
-        $this->color = $callable;
+        foreach ($this->partition as &$part) {
+            $part['color'] = $callback($part);
+        }
 
         return $this;
     }

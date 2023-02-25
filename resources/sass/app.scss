@@ -2,9 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-//@import "chartist/dist/scss/chartist.scss";
-
-
 :root {
 
     --color-bg-body: theme(colors.zinc.50);
@@ -40,5 +37,4 @@
 //     body {
 //         @apply bg-body;
 //     }
-
 // }

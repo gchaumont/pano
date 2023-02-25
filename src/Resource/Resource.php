@@ -2,6 +2,7 @@
 
 namespace Pano\Resource;
 
+use Elastico\Aggregations\Bucket\Terms;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -81,7 +82,15 @@ abstract class Resource extends Page
 
     public function newQuery(): Builder
     {
-        return $this->getModel()->newQuery();
+        return $this->getModel()
+            ->newQuery()
+            ->when($this->getApplication()->getScopes()->isNotEmpty(), function ($query) {
+                $this->getApplication()->getScopes()->each(function ($scope, $key) use ($query) {
+                    $query->withGlobalScope($key, $scope);
+                    // $scope->apply($query);
+                });
+            })
+        ;
     }
 
     public static function make(...$args): static
@@ -399,6 +408,7 @@ abstract class Resource extends Page
                 ->component('ShowResource')
                 ->setData([
                     'record' => fn ($request) => app(ResourceController::class)->withResource($this)->show($request->input('record')),
+                    'related' => fn ($request) => app(ResourceController::class)->withResource($this)->relation($request->input('record'), $request->input('relation')),
                 ])
                 ->props([
                     'record' => QueryParameter::make('record'),
@@ -447,7 +457,7 @@ abstract class Resource extends Page
             'path' => $this->url(),
             'icon' => $this->getIcon(),
             'endpoints' => $this->getEndpoints()->keyBy(fn ($c) => $c->name)->map(fn ($e) => $e->config()),
-            'filters' => $this->getFilters()->map(fn ($f) => $f->jsonConfig(request())),
+            'filters' => $this->getFilters()->map(fn ($f) => $f->jsonConfig(request(), $this)),
         ];
     }
 
@@ -461,4 +471,60 @@ abstract class Resource extends Page
             // 'fields' => array_map(fn ($field) => $field->jsonConfig(), $this->fields()),
         ];
     }
+
+     public function newFilteredQuery($request): Builder
+     {
+         $builder = $this->newQuery();
+         $searchableFields = $this->searchableFields($request);
+
+         $filters = $this->getFilters()
+             ->filter(fn ($filter) => $request->has($filter->getKey()))
+             ->each(fn ($filter) => $filter->applyFilter($request, $builder, $request->input($filter->getKey())))
+         ;
+
+         return $builder->when(
+             !empty($request->input('search')),
+             function ($query) use ($searchableFields, $request) {
+                 return $query->where(function ($q) use ($searchableFields, $request) {
+                     $searchableFields
+                         ->each(fn ($field) => $q->orWhere(fn ($q) => $field->applySearch($q, $request->input('search'))))
+                     ;
+                 });
+             }
+         );
+     }
+
+     public function fieldOptions(string $field): Collection
+     {
+         $builder = $this->newQuery(request());
+
+         if ($builder instanceof \Elastico\Eloquent\Builder) {
+             return $builder
+                 ->take(0)
+                 ->addAggregation(
+                     (new Terms('terms'))->field($field)->size(5)
+                 )
+                 ->get()
+                 ->aggregation('terms')
+                 ->buckets()
+                 ->map(fn ($bucket) => [
+                     'label' => $bucket['key'],
+                     'value' => $bucket['key'],
+                 ])
+             ;
+         }
+         if ($builder instanceof \Illuminate\Database\Eloquent\Builder) {
+             return $builder
+                 ->groupBy($field)
+                 ->selectRaw("count({$field}) as metric, {$field}")
+                 ->take(5)
+                 ->pluck('metric', $field)
+                 ->map(fn ($result, $key) => [
+                     'value' => $key,
+                     'label' => $key,
+                 ])
+                 ->values()
+             ;
+         }
+     }
 }

@@ -69,7 +69,9 @@ class ResourceController extends Controller
             ->first(fn ($field) => $field->getKey() == trim($sortInput, '-'))
             ?? $resource->defaultSortField(request());
 
-        $query = $this->applyToBuilder($resource, $resource->newQuery(), request());
+        $query = $resource->newFilteredQuery(request());
+
+        // $query = $this->applyToBuilder($resource, $resource->newQuery(), request());
 
         // ->select($fields->map(fn ($f) => $f->field())->all())
 
@@ -131,8 +133,8 @@ class ResourceController extends Controller
                 ->all(),
             'total' => $total,
             'resource' => $resource->config(),
-            'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
-            'filterOptions' => $resource->getFilters()->map(fn ($f) => $f->jsonConfig(request())),
+            'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request(), $resource)),
+            'filterOptions' => $resource->getFilters()->map(fn ($f) => $f->jsonConfig(request(), $resource)),
         ];
     }
 
@@ -239,7 +241,7 @@ class ResourceController extends Controller
         return [
             'model' => $this->serialiseResource($resource, $model, $propFields),
             'fields' => $fields
-                ->map(fn ($f) => $f->jsonConfig(request())),
+                ->map(fn ($f) => $f->jsonConfig(request(), $resource)),
         ];
     }
 

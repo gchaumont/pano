@@ -77,7 +77,7 @@ abstract class Dashboard extends Page
             'name' => $this->getName(),
             'metrics' => $this->getMetrics()->map(fn ($m) => $m->config())->values(),
             // 'route' => $this->getRoute(),
-            // 'breadcrumbs' => $this->getBreadcrumbs(),
+            'breadcrumbs' => $this->getBreadcrumbs(),
             // 'route' => $this->getLocation(),
             // 'path' => $this->url(),
             'icon' => $this->getIcon(),

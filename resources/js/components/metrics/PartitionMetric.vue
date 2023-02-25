@@ -10,7 +10,7 @@
                         <a v-if="chartData.field" href="" @click.prevent="filter(item)" class="text-slate-600 dark:text-slate-300 font-semibold">{{item.name}} </a>
                         <span v-else class="text-slate-600 dark:text-slate-300 font-semibold">{{item.name}} </span>
                     </td>
-                    <td :class="[ 'pl-4 text-right ']"><span>{{chartData?.prefix}} {{item.value}} {{chartData?.suffix}} </span></td>
+                    <td :class="[ 'pl-4 text-right text-gray-400 font-medium ']"><span>{{chartData?.prefix}} {{new Intl.NumberFormat(locale).format(item.value)}} {{chartData?.suffix}} </span></td>
                 </tr>
             </table>
             <div class="relative h-40 w-40">
@@ -19,20 +19,14 @@
         </div>
     </div>
 </template>
-<style type="text/css">
-.ct-chart-donut .ct-label {
-    /*color: var(--textColor);*/
-    @apply fill-slate-900 fill-slate-100;
-}
-</style>
+
 <script setup>
 import { onMounted, watch, reactive, ref, inject } from 'vue'
 import { useRoute } from 'vue-router'
 import { useData } from '@/Pano.js'
 
-
-
 const theme = inject('theme');
+const locale = inject('locale');
 
 const props = defineProps({
     uiPath: {
@@ -58,11 +52,15 @@ onMounted(() => {
     const ctx = document.getElementById(chartID);
 
     import('chart.js')
-        .then(({Chart, DoughnutController, ArcElement, Tooltip}) => {
+        .then(({ Chart, DoughnutController, ArcElement, Tooltip }) => {
             Chart.register(DoughnutController, ArcElement, Tooltip)
             chart = new Chart(ctx, {
                 type: 'doughnut',
                 options: {
+                    animation: {
+                        animateRotate: true,
+                        animateScale: false
+                    },
                     plugins: {
 
                         legend: {
@@ -82,22 +80,32 @@ onMounted(() => {
             })
 
         })
-        .then(() => loadMetric())
-        ;
+        .then(() => loadMetric());
+    watch(
+        () => props.params,
+        (newP, oldP) => JSON.stringify(newP) !== JSON.stringify(oldP) && loadMetric()
+    );
+    watch(
+        () => props.uiPath,
+        (newP, oldP) => loadMetric()
+    );
 })
 
 
 const loadMetric = function() {
-    endpoint.query({endpoint: 'value', params: props.params, uiPath: props.uiPath})
+    endpoint.query({ endpoint: 'value', params: props.params, uiPath: props.uiPath })
         .then(response => {
             response = response.value;
+
             chart.data = {
                 labels: response.partition.map(p => p.name),
                 datasets: [{
                     data: response.partition.map(p => p.value),
-                    borderColor: theme.accentColor
+                    borderColor: theme.accentColor,
+                    backgroundColor: theme.accentColorTransparent
                 }]
             };
+        
             chart.update();
 
             chartData.value = response
@@ -107,13 +115,7 @@ const loadMetric = function() {
 }
 const filter = function(item) {
     console.log(props.metric, item)
-    emit('filter', {key: chartData.value.field, value: item.id})
+    emit('filter', { key: chartData.value.field, value: item.id })
     // emit('search', (props.search + " " + chartData.value.field + ":\"" + (item.id || item.name) + "\"").trim())
 }
-
-
-watch(
-    () => props.params+props.uiPath,
-    (newP, oldP) => newP?.toString() !== oldP?.toString() && loadMetric()
-);
 </script>

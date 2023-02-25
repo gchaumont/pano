@@ -262,7 +262,21 @@ abstract class Trend extends Metric
         )
         ;
 
-        if ($builder instanceof \Illuminate\Database\Eloquent\Builder) {
+        if ($builder instanceof \Elastico\Eloquent\Builder) {
+            $trend = $builder->addAggregation(
+                (new DateHistogram('trend'))->field($dateField)->calendarInterval('1'.$timeUnit)->format($this->getDateFormat($request->range))
+                    ->when('count' !== $function, fn ($hist) => $hist->addAggregation($this->getAggregation($function, $field)))
+            )
+                ->take(0)
+                ->select(['*'])
+                ->get()
+                ->aggregation('trend')
+                ->buckets()
+                ->keyBy(fn ($bucket) => $bucket['key_as_string'])
+                ->map(fn ($bucket) => 'count' === $function ? $bucket['doc_count'] : $bucket['agg']['value'])
+                ->all()
+            ;
+        } elseif ($builder instanceof \Illuminate\Database\Eloquent\Builder) {
             $field ??= '*';
             $trend = $builder
                 ->select(DB::raw("DATE({$dateField}) as date"), DB::raw("{$function}({$field}) as value"))
@@ -270,20 +284,6 @@ abstract class Trend extends Metric
                 ->get()
                 ->keyBy('date')
                 ->map(fn ($a) => $a->value)
-                ->all()
-            ;
-        } elseif ($builder instanceof \Elastico\Eloquent\Builder) {
-            $trend = $builder->addAggregation(
-                (new DateHistogram('trend'))->field($dateField)->calendarInterval('1'.$timeUnit)->format($this->getDateFormat($request->range))
-                    ->when('count' !== $function, fn ($hist) => $hist->addAggregation($this->getAggregation($function, $field)))
-            )
-                ->take(0)
-
-                ->get()
-                ->aggregation('trend')
-                ->buckets()
-                ->keyBy(fn ($bucket) => $bucket['key_as_string'])
-                ->map(fn ($bucket) => 'count' === $function ? $bucket['doc_count'] : $bucket['agg']['value'])
                 ->all()
             ;
         }
