@@ -149,7 +149,7 @@ abstract class Field extends Component
 
     public function isSearchable(): bool
     {
-        return false === !$this->searchable;
+        return true === $this->searchable || $this->searchable instanceof \Closure;
     }
 
     public function fillUsing(callable $callable): static

@@ -40,6 +40,7 @@ abstract class Component extends Context
             'uiPath' => $this->uiPath(),
             'component' => $this->getComponent(),
             'props' => $this->getProps(),
+            // 'data' => $this->getData(request()),
         ];
     }
 

@@ -251,7 +251,7 @@ abstract class Resource extends Page
     public function filterableFields($request): array
     {
         return $this->getFields()
-            ->map(fn ($field) => $field instanceof Stack ? $field->fields() : $field)
+            ->map(fn ($field) => $field instanceof Stack ? $field->getFields() : $field)
             ->flatten()
             ->filter(fn ($field) => $field->isFilterable($request))
             ->values()
@@ -262,7 +262,7 @@ abstract class Resource extends Page
     public function searchableFields($request): Collection
     {
         return $this->getFields()
-            ->map(fn ($field) => $field instanceof Stack ? $field->fields() : $field)
+            ->map(fn ($field) => $field instanceof Stack ? $field->getFields() : $field)
             ->flatten()
             ->filter(fn ($field) => $field->isSearchable($request))
             ->values()
