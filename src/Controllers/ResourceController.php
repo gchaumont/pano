@@ -204,7 +204,7 @@ class ResourceController extends Controller
             'hits' => $hits,
             'total' => $total,
             'resource' => $relatedResource->config(),
-            'fields' => collect($relatedResource->fieldsForIndex(request()))->map(fn ($f) => $f->jsonConfig(request())),
+            'fields' => collect($relatedResource->fieldsForIndex(request()))->map(fn ($f) => $f->config()),
             // 'metrics' => $response->aggregations(),
         ];
     }
@@ -242,7 +242,7 @@ class ResourceController extends Controller
         return [
             'model' => $this->serialiseResource($resource, $model, $propFields),
             'fields' => $fields
-                ->map(fn ($f) => $f->jsonConfig(request(), $resource)),
+                ->map(fn ($f) => $f->config()),
         ];
     }
 

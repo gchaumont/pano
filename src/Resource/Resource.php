@@ -457,7 +457,7 @@ abstract class Resource extends Page
             '@type' => 'resource',
             'route' => $this->getLocation(),
             // 'routes' => $this->getRoutes()
-            // 'fields' => array_map(fn ($field) => $field->jsonConfig(), $this->fields()),
+            // 'fields' => array_map(fn ($field) => $field->config(), $this->fields()),
         ];
     }
 
