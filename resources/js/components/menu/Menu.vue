@@ -34,7 +34,7 @@
             </div>
         </Dialog>
     </TransitionRoot> -->
-    <div  :class="[width ,'hidden h-screen md:flex sticky top-0  md:flex-col overflow-x-auto' ]">
+    <div  :class="[width ,'hidden h-screen md:flex sticky top-0 md:flex-col overflow-x-auto' ]">
         <!-- md:w-64  md:fixed md:inset-y-0 -->
         <!-- Sidebar component, swap this element with another sidebar if you like -->
         <div class="flex  h-full flex-1 flex-col  ">

@@ -53,8 +53,8 @@ class HasMany extends RelatesToMany
      //     if (!empty($object)) {
      //         return [
      //             'id' => $object->getKey(),
-     //             'title' => $this->getResource()->getTitle($object),
-     //             'link' => $this->getResource()->linkTo($object),
+     //             'title' => $this->getRelatedResource()->getTitle($object),
+     //             'link' => $this->getRelatedResource()->linkTo($object),
      //         ];
      //     }
 
@@ -63,7 +63,7 @@ class HasMany extends RelatesToMany
 
     public function getForeignKey(): string
     {
-        return $this->foreignKey ?? $this->field.'.'.$this->getResource()->getModel()->getForeignKey();
+        return $this->foreignKey ?? $this->field.'.'.$this->getRelatedResource()->getModel()->getForeignKey();
     }
 
     public function foreignKey(string $foreignKey): static
@@ -75,7 +75,7 @@ class HasMany extends RelatesToMany
 
     // public function serialiseValue(DataAccessObject $object): mixed
     // {
-     //     return $this->getResource()->getTitle($object->{$this->field});
+     //     return $this->getRelatedResource()->getTitle($object->{$this->field});
 
      //     return $object;
      //     $value = $object->getAttribute($this->getForeignKey());
@@ -96,18 +96,12 @@ class HasMany extends RelatesToMany
         return [];
     }
 
-    // public function formatValue(mixed $value): mixed
-    // {
-     //     response(json_encode($value))->send();
-     //     dd($value);
-    // }
-
-    public function jsonConfig($request, $resource): array
+    public function config(): array
     {
         return [
-            ...parent::jsonConfig($request, $resource),
-            // 'resource' => $this->getResource(),
-            // 'path' => $this->getResource()->url(),
+            ...parent::config(),
+            // 'resource' => $this->getRelatedResource(),
+            // 'path' => $this->getRelatedResource()->url(),
         ];
     }
 }

@@ -16,6 +16,12 @@ abstract class Dashboard extends Page
 
     public string $component = 'Dashboard';
 
+    public function __construct(string $name = null)
+    {
+        $this->name($name ?? $this->getName());
+        // $this->route($name);
+    }
+
     // const CONTEXT_SEPARATOR = ':';
 
     // public function getId(): string
@@ -26,6 +32,15 @@ abstract class Dashboard extends Page
     public function getIcon(): ?string
     {
         return isset($this->icon) ? $this->icon.'-icon' : null;
+    }
+
+    public function getAlias(): null|string
+    {
+        if (empty($this->key)) {
+            return static::class;
+        }
+
+        return null;
     }
 
     public function metrics(): array

@@ -5,6 +5,8 @@ namespace Pano\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Pano\Dashboards\Dashboard;
+use Pano\Dashboards\Home;
+use Pano\Facades\Pano;
 use Pano\Forms\SelectMenu;
 use Pano\Menu\MenuGroup;
 use Pano\Menu\MenuItem;
@@ -66,6 +68,8 @@ abstract class Application extends Page
 
     public function dashboards(): array
     {
+        return [Home::make()->key('home')];
+
         return [];
     }
 
@@ -109,6 +113,7 @@ abstract class Application extends Page
         }
 
         return $this->getApplications()->get($application)
+        ?? Pano::context($application)
         ?? throw new \Exception("The application [{$application}] was not found in [{$this->getLocation()}]");
     }
 
@@ -150,8 +155,7 @@ abstract class Application extends Page
         $this->menu = new MenuItems($this->menu());
         if ($this->getApplication()) {
             $this->menu->items->prepend(
-                MenuItem::make($this->getApplication()->getName())
-                    ->path(fn ($app) => $this->getApplication()->url())
+                MenuItem::application($this->getApplication()->getId())
                     ->icon('chevron-left')
                     ->inactive(true)
             );
@@ -183,7 +187,10 @@ abstract class Application extends Page
         $menu = collect();
         if ($this->getScopes()->isNotEmpty()) {
             $this->getScopes()
-                ->each(fn ($scope) => $menu->push(SelectMenu::make(class_basename($scope::class))))
+                ->each(fn ($scope) => $menu->push(
+                    SelectMenu::make($scope->getName())
+                        ->options(fn () => $scope->getOptions())
+                ))
             ;
         }
 
@@ -191,7 +198,9 @@ abstract class Application extends Page
             $menu->push(
                 MenuGroup::make(
                     name: MenuItem::make('Dashboards')->icon('dashboard'),
-                    items: $this->getDashboards()->map(fn ($dashboard) => MenuItem::dashboard($dashboard->getKey()))->all()
+                    items: $this->getDashboards()
+                        ->map(fn ($dashboard) => MenuItem::dashboard($dashboard->getKey()))
+                        ->all()
                 )
                     ->collapsable()
             );
@@ -201,7 +210,8 @@ abstract class Application extends Page
                 MenuGroup::make(
                     name: MenuItem::make('Resources')->icon('object'),
                     items: $this->getResources()
-                        ->map(fn ($resource) => MenuItem::resource($resource->getKey()))->all()
+                        ->map(fn ($resource) => MenuItem::resource($resource->getKey()))
+                        ->all()
                 )
                     ->collapsable()
             );
@@ -210,7 +220,9 @@ abstract class Application extends Page
             $menu->push(
                 MenuGroup::make(
                     name: MenuItem::make('Applications'),
-                    items: $this->getApplications()->map(fn ($application) => MenuItem::application($application->getKey()))->all()
+                    items: $this->getApplications()
+                        ->map(fn ($application) => MenuItem::application($application->getKey()))
+                        ->all()
                 )
                     ->collapsable()
             );

@@ -13,17 +13,18 @@ class PageController extends Controller
      */
     public function __invoke()
     {
-        if (request()->wantsJson()) {
-            $page = Pano::context(request()->route()->getName());
-            $component = request()->input('uiPath') ? $page->context(request()->input('uiPath')) : $page;
-            $endpoint = request()->input('endpoint');
+        $request = request();
+        if ($request->wantsJson()) {
+            $page = Pano::context($request->route()->getName());
+            $component = $request->input('uiPath') ? $page->context($request->input('uiPath')) : $page;
+            $endpoint = $request->input('endpoint');
 
-            return collect($component->data())
+            return collect($component->getData($request))
                 ->filter(fn ($data, $key) => $endpoint == $key)
-                ->map(fn ($data, $key) => is_callable($data) ? $data(request()) : $data)
+                ->map(fn ($data, $key) => is_callable($data) ? $data($request) : $data)
                 // ->map(function ($data, $key) {
                 //     try {
-                //         return is_callable($data) ? $data(request(), request()) : $data;
+                //         return is_callable($data) ? $data($request, $request) : $data;
                 //     } catch (\Throwable $e) {
                 //         throw $e;
                 //     }

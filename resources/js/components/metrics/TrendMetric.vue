@@ -7,7 +7,7 @@
             </select>
         </header>
         <!-- <p>{{value?.prefix}}  {{value?.suffix}}</p> -->
-        <div class="h-48 pt-4  min-w-[45ch]">
+        <div class="h-48 pt-4  ">
             <canvas :id="chartID" />
         </div>
     </div>

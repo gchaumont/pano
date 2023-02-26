@@ -1,5 +1,5 @@
 <template>
-    <div id="mastgrid" :class="[theme.bg, 'block sm:grid']">
+    <div id="mastgrid" :class="[theme.bg, 'block md:grid']">
         <nav id="sidebar" class="flex">
             <pano-menu v-if="!app.props.isRoot" :header="root.props" :menu="root.props.menu" :class="theme.rootMenu" :collapsed="!app.props.isRoot" />
             <pano-menu :header="app.props" :menu="app.props.menu" :class="theme.menu" />

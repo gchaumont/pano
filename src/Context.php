@@ -18,20 +18,41 @@ abstract class Context
 
     protected readonly null|string $application;
 
+    protected \Closure $onRegistered;
+
     public static function make(...$args): static
     {
         return new static(...$args);
     }
 
-    public function register(Context $context = null): static
+    final public function register(Context $context = null): static
     {
         if ($context) {
             $this->setContext($context);
         }
 
+        $this->getRoot()->remember($this->getId(), $this);
+
         $this->getContexts()
             ->each(fn (Context $c) => $c->register($this))
         ;
+
+        return $this;
+    }
+
+    public function registered(): void
+    {
+        isset($this->onRegistered) && ($this->onRegistered)($this);
+        unset($this->onRegistered);
+
+        $this->getContexts()
+            ->each(fn ($context) => $context->registered())
+        ;
+    }
+
+    public function onRegistered(\Closure $callback): static
+    {
+        $this->onRegistered = $callback;
 
         return $this;
     }
@@ -64,8 +85,6 @@ abstract class Context
         } elseif ($context->getApplication()) {
             $this->setApplication($context->getApplication());
         }
-
-        $this->getRoot()->remember($this->getId(), $this);
 
         return $this;
     }

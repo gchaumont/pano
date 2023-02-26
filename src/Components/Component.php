@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Pano\Concerns\HasPages;
 use Pano\Concerns\Nameable;
 use Pano\Context;
+use Pano\Fields\Concerns\HasData;
 use Pano\Pages\Page;
 use Pano\Routes\RouteRecord;
 
@@ -17,6 +18,7 @@ abstract class Component extends Context
 {
     use HasPages;
     use Nameable;
+    use HasData;
 
     public string $component;
 

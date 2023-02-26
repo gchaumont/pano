@@ -16,7 +16,7 @@ export function resourceRoutes(resource, app, root) {
             component: ListResource,
             path: '',
             name: resource.route,
-            props: { resource: resource.props, uiPath: resource.uiPath, root }, //  app, root,
+            props: { resource: resource.props, uiPath: resource.uiPath }, //  app, root,
             meta: { 
                 page: resource.route+'.index',
                 name: resource.props.name  +' - '+app.props.name,

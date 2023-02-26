@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Collection as BaseCollection;
 use Illuminate\Support\Str;
 use Pano\Components\Props\QueryParameter;
-use Pano\Concerns\HasBreadcrumbs;
+use Pano\Concerns\HasFields;
 use Pano\Concerns\Routable;
 use Pano\Controllers\ResourceController;
 use Pano\Endpoints\Endpoint;
@@ -23,7 +23,7 @@ use Pano\Pages\Page;
 abstract class Resource extends Page
 {
     use Routable;
-    use HasBreadcrumbs;
+    use HasFields;
 
     public string $component = 'ResourceSkeleton';
 
@@ -149,11 +149,6 @@ abstract class Resource extends Page
         return [
             ExportAsCsv::make(),
         ];
-    }
-
-    public function fields(): array
-    {
-        return [];
     }
 
     public function metrics(): array
@@ -319,13 +314,6 @@ abstract class Resource extends Page
         ;
     }
 
-    public function getFields(): BaseCollection
-    {
-        return collect($this->fields())
-            ->map(fn ($field) => $field->namespace($this->getNamespace()))
-        ;
-    }
-
     public function getMetrics(): Collection
     {
         return $this->metrics ??= collect($this->metrics()); // ->keyBy(fn ($m) => $m->getKey());
@@ -364,6 +352,7 @@ abstract class Resource extends Page
         return $this->getPages()
             ->concat($this->getEndpoints())
             ->concat($this->getMetrics())
+            ->concat($this->getFields())
             ->keyBy(fn ($o, $k) => is_numeric($k) ? $o->getKey() : $k)
         ;
     }
@@ -430,14 +419,14 @@ abstract class Resource extends Page
         return $crumbs->all();
     }
 
-        public function getAlias(): null|string
-        {
-            if (empty($this->key)) {
-                return static::class;
-            }
-
-            return null;
+    public function getAlias(): null|string
+    {
+        if (empty($this->key)) {
+            return static::class;
         }
+
+        return null;
+    }
 
     public function getFilters(): Collection
     {
@@ -457,7 +446,7 @@ abstract class Resource extends Page
             'path' => $this->url(),
             'icon' => $this->getIcon(),
             'endpoints' => $this->getEndpoints()->keyBy(fn ($c) => $c->name)->map(fn ($e) => $e->config()),
-            'filters' => $this->getFilters()->map(fn ($f) => $f->jsonConfig(request(), $this)),
+            // 'filters' => $this->getFilters()->map(fn ($f) => $f->config(request(), $this)),
         ];
     }
 

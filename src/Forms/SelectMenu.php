@@ -2,12 +2,11 @@
 
 namespace Pano\Forms;
 
-use Illuminate\Support\Collection;
 use Pano\Components\Component;
 
 class SelectMenu extends Component
 {
-    public Collection $items;
+    public \Closure|array $options;
 
     public string $component = 'pano-select-menu';
 
@@ -16,6 +15,25 @@ class SelectMenu extends Component
         $this->collapsable = $collapsable;
 
         return $this;
+    }
+
+    public function options(array|\Closure $options): static
+    {
+        $this->options = $options;
+
+        return $this;
+    }
+
+    public function getProps(): array
+    {
+        return [
+            'options' => $this->getOptions(),
+        ];
+    }
+
+    public function getOptions(): array
+    {
+        return is_callable($this->options) ? ($this->options)() : $this->options;
     }
 
     public function config(): array

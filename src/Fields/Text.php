@@ -15,6 +15,8 @@ class Text extends Field
     use HasOptions;
     use HasFilters;
 
+    const TYPE = 'text';
+
     protected array $suggestions;
 
     protected bool $asHtml = false;
@@ -53,11 +55,10 @@ class Text extends Field
         return $this;
     }
 
-        public function jsonConfig($request, $resource): array
-        {
-            return [
-                ...parent::jsonConfig($request, $resource),
-                'options' => $this->getOptions($request, $resource),
-            ];
-        }
+    public function data($request): array
+    {
+        return [
+            'options' => fn ($request) => $this->getOptions($request),
+        ];
+    }
 }

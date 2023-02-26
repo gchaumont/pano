@@ -6,16 +6,18 @@ use Elastico\Models\Model;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Pano\Components\Component;
 use Pano\Fields\Concerns\HasFilters;
 use Pano\Fields\Concerns\HasFormat;
 use Pano\Fields\Concerns\HasVisibility;
+use Pano\Resource\Resource;
 
 /**
  * Represents an object attribute and provides
  * information on how to access, filter,
  * display and sort the property.
  */
-abstract class Field
+abstract class Field extends Component
 {
     use HasVisibility;
     use HasFormat;
@@ -64,6 +66,17 @@ abstract class Field
     public function field(): null|array|string
     {
         return $this->field ?? null;
+    }
+
+    public function getResource(): Resource
+    {
+        $context = $this->getContext();
+
+        while (!is_a($context, Resource::class)) {
+            $context = $context->getContext();
+        }
+
+        return $context;
     }
 
     public function searchable(\Closure|bool $searchable = true): static
@@ -310,16 +323,23 @@ abstract class Field
         return defined(static::class.'::TYPE') ? static::TYPE.'-field' : strtolower(class_basename(static::class)).'-field';
     }
 
-    public function jsonConfig($request, $resource): array
+    public function data($request): array
+    {
+        return [
+            'filterable' => $this->isFilterable($request),
+        ];
+    }
+
+    public function config(): array
     {
         return array_filter([
+            ...parent::config(),
             'key' => $this->getKey(),
             'type' => $this->getType(),
             'name' => $this->getName(),
             'help' => $this->help ?? null,
             'field' => $this->field(),
             'sortable' => $this->isSortable(),
-            'filterable' => $this->isFilterable($request),
             'align' => $this->textAlign ?? null,
             'format' => $this->format ?? null,
         ]);

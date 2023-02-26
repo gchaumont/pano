@@ -3,17 +3,19 @@
         <PageHeading :title="resource.name" :actions="resource.actions" :breadcrumbs="resource.breadcrumbs" :meta="resource.meta" class="p-2 sm:p-5" />
         <section v-if="state.definition && props.show_metrics" class="max-w-full overflow-x-scroll overflow-y-hidden">
             <ul class="flex flex-row gap-3 items-stretch justify-start my-4 max-h-[25rem] mx-2 sm:mx-5">
-                <li v-for="metric in state.definition.metrics" class="flex-auto ">
+                <li v-for="metric in state.definition.metrics" class="basis-96 shrink-0  ">
                     <component :class="[theme.cardBg, ' rounded-lg  h-full']" :is="metric.component" :metric="metric.props" :path="state.definition.path" :params="getQueryParams" @filter="handleFilter" :uiPath="metric.uiPath" />
                 </li>
             </ul>
         </section>
     </div>
-    <section v-if="state.definition" style="position: relative; " class="p-2 sm:p-5 ">
+    <section v-if="state.definition"  class="p-2 sm:p-5 ">
         <header class="flex flex-wrap gap-3 items-center text-slate-700  dark:text-slate-300 ">
             <model-search class="my-4" ref="searchbar" :path="state.definition.path" @search="handleQuery" :initialSearch="state.search" />
-            <p class="mr-5"><span v-if="state.total == 10000">></span>
-                {{(state.total).toLocaleString(locale)}} hits</p>
+            <p class="mr-5 min-w-[10ch]">
+                <span v-if="state.total == 10000">></span>
+                {{(state.total).toLocaleString(locale)}} hits
+            </p>
             <!-- <ul class="flex gap-2">
                     <li v-for="field in state.filterOptions">{{field.name}}</li>
                 </ul> -->
@@ -247,7 +249,7 @@ onMounted(() => {
     loadResource()
     watch(
         () => props.resource,
-        () => { toPage(1), loadResource(), resetMetrics(), state.search = '' }
+        () => { toPage(1), loadResource(), resetMetrics(), state.search = '', state.models= [] }
     )
     watch(
         () => state.page,

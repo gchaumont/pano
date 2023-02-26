@@ -15,7 +15,7 @@ class SetupApplication
 
         // Pano::bootCurrentApp();
 
-        // dd(Pano::manager());
+        $app->registered();
 
         if (!$request->wantsJson()) {
             View::share('panoConfig', \Pano\Facades\Pano::getContexts()->map(fn ($context) => $context->config())->values());

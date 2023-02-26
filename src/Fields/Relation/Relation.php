@@ -11,7 +11,7 @@ abstract class Relation extends Field
 {
     const TYPE = 'relation';
 
-    public string $resource;
+    public string $related;
 
     public null|string $appPath = null;
 
@@ -27,32 +27,30 @@ abstract class Relation extends Field
      */
     abstract public function query(Resource $resource, string $key): ResourceQueryHandler;
 
-    public function resource(string $resource, string $appPath = null): static
+    public function resource(string $resource): static
     {
-        $this->resource = $resource;
-        $this->appPath = $appPath;
+        $this->related = $resource;
 
         return $this;
     }
 
-    public function getResource(): Resource
+    public function getRelatedResource(): Resource
     {
-        if ($this->appPath) {
-            return Pano::context($this->appPath)->getResource($this->resource);
-        }
-
-        return Pano::context($this->namespace)->getResource($this->resource);
-
-        return Pano::getCurrentApp()->getResource($this->resource);
+        // return $this->getApplication()->getResource($this->resource);
+        // if ($this->appPath) {
+        //     return Pano::context($this->appPath)->getResource($this->resource);
+        // }
+        return $this->getRoot()->context($this->related);
+        // return Pano::context($this->related)->getResource($this->resource);
     }
 
-        public function jsonConfig($request, $resource): array
-        {
-            return [
-                // 'resource' => $this->getResource()->config(),
-                ...parent::jsonConfig($request, $resource),
-            ];
-        }
+    public function config(): array
+    {
+        return [
+            // 'resource' => $this->getResource()->config(),
+            ...parent::config(),
+        ];
+    }
 
     public function getModel(): string
     {

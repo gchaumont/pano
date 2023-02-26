@@ -10,9 +10,9 @@ use Pano\Pages\Page;
 
 trait HasContexts
 {
-    public static $remember = [];
+    public static array $remember = [];
 
-    public static $aliased = [];
+    public static array $aliased = [];
 
     protected Collection $contexts;
 
@@ -24,15 +24,17 @@ trait HasContexts
         if (isset(static::$remember[$context])) {
             return static::$remember[$context];
         }
+        // dump(static::class.' - '.$context);
+        // dump(array_keys(static::$remember));
         $path = $context;
         if (Str::contains($path, '.')) {
-            try {
-                return $this->context(Str::before($path, '.'))->context(Str::after($context, '.'));
-            } catch (\Exception $e) {
-                // dd($this);
+            // try {
+            return $this->context(Str::before($path, '.'))->context(Str::after($context, '.'));
+            // } catch (\Exception $e) {
+            //     // dd($this);
 
-                throw $e;
-            }
+            //     throw $e;
+            // }
         }
 
         return $this->getContexts()->get($path)

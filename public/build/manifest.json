@@ -5,24 +5,24 @@
     "src": "node_modules/chart.js/dist/chart.mjs"
   },
   "resources/js/app.css": {
-    "file": "assets/app-31677e5a.css",
+    "file": "assets/app-43736542.css",
     "src": "resources/js/app.css"
   },
   "resources/js/app.js": {
     "css": [
-      "assets/app-31677e5a.css"
+      "assets/app-43736542.css"
     ],
     "dynamicImports": [
       "resources/js/components/NotFound.vue",
       "node_modules/chart.js/dist/chart.mjs",
       "node_modules/chart.js/dist/chart.mjs"
     ],
-    "file": "assets/app-699f53bc.js",
+    "file": "assets/app-80070796.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   },
   "resources/js/components/NotFound.vue": {
-    "file": "assets/NotFound-1175cbe2.js",
+    "file": "assets/NotFound-db468070.js",
     "imports": [
       "resources/js/app.js"
     ],

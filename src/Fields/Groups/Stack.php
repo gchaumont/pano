@@ -2,27 +2,27 @@
 
 namespace Pano\Fields\Groups;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Pano\Components\Component;
+use Pano\Concerns\HasFields;
 use Pano\Fields\Concerns\HasVisibility;
 
 /**
  * Group of fields displayed vertically.
  */
-class Stack
+class Stack extends Component
 {
     use HasVisibility;
+    use HasFields;
 
     public bool $showInEdit = false;
 
     public function __construct(
         public string $name,
-        public array $fields,
+        array $fields,
     ) {
-    }
-
-    public static function make(string $name, array $items): static
-    {
-        return new static($name, $items);
+        $this->fields = collect($fields);
     }
 
     public function getKey(): string
@@ -35,13 +35,16 @@ class Stack
         return false;
     }
 
-    public function jsonConfig($request, $resource): array
+    public function config(): array
     {
         return [
             'key' => $this->getKey(),
             'type' => 'stack-field',
             'name' => $this->getName(),
-            'fields' => collect($this->fields)->keyBy(fn ($f) => $f->getKey())->map(fn ($f) => $f->jsonConfig($request, $resource))->all(),
+            'fields' => collect($this->fields)
+                ->keyBy(fn ($f) => $f->getKey())
+                ->map(fn ($f) => $f->config())
+                ->all(),
         ];
     }
 
@@ -62,22 +65,26 @@ class Stack
 
     public function serialiseValue(mixed $resource): mixed
     {
-        return collect($this->fields)->keyBy(fn ($f) => $f->getKey())->map(fn ($field) => $field->serialiseValue($resource))->all();
-    }
-
-    public function fields(): array
-    {
-        return $this->fields;
-    }
-
-    public function namespace(string $namespace): static
-    {
-        $this->fields = collect($this->fields)
-            ->map(fn ($field) => $field->namespace($namespace))
+        return collect($this->fields)
+            ->keyBy(fn ($f) => $f->getKey())
+            ->map(fn ($field) => $field->serialiseValue($resource))
             ->all()
         ;
-        $this->namespace = $namespace;
-
-        return $this;
     }
+
+    public function getContexts(): Collection
+    {
+        return $this->getFields();
+    }
+
+    // public function namespace(string $namespace): static
+    // {
+    //     $this->fields = collect($this->fields)
+    //         ->map(fn ($field) => $field->namespace($namespace))
+    //         ->all()
+    //     ;
+    //     $this->namespace = $namespace;
+
+    //     return $this;
+    // }
 }

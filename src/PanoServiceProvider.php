@@ -2,7 +2,9 @@
 
 namespace Pano;
 
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Pano\Commands\LinkDev;
@@ -18,6 +20,7 @@ class PanoServiceProvider extends ServiceProvider
         // Route::bind('pano-application', fn ($value) => Pano::resolveApp($value));
 
         // Route::bind('pano-resource', fn ($value) => Pano::resolveApp(request()->route()->getName()));
+
         $this->app['view']->addNamespace('Pano', __DIR__.'/../resources/views');
 
         $this->app['view']->composer('Pano::pano', function ($view) {
@@ -41,6 +44,13 @@ class PanoServiceProvider extends ServiceProvider
             ListContexts::class,
             LinkDev::class,
         ]);
+
+        // DB::listen(function (QueryExecuted $query) {
+        //     dump($query);
+        //     // $query->sql;
+        //     // $query->bindings;
+        //     // $query->time;
+        // });
     }
 
     public function register()

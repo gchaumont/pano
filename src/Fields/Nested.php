@@ -64,13 +64,13 @@ class Nested extends Field
         return $list;
     }
 
-    public function jsonConfig($request, $resource): array
+    public function config(): array
     {
-        $config = parent::jsonConfig($request);
-        $config['fields'] = array_map(fn ($field) => $field->jsonConfig($request, $resource), $this->fields);
-        $config['max'] = $this->max ?? null;
-
-        return $config;
+        return [
+            ...parent::config(),
+            'fields' => collect($this->fields)->map(fn ($field) => $field->config())->all(),
+            'max' => $this->max ?? null,
+        ];
     }
 
     public function namespace(string $namespace): static

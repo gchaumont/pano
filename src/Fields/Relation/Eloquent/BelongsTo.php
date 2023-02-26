@@ -44,22 +44,36 @@ class BelongsTo extends RelatesToOne
          return $builder->whereHas($this->field(), fn ($q) => $q->where('name', 'like', '%'.$value.'%'));
      }
 
+      public function applyFilter($request, Builder $query, mixed $value): Builder
+      {
+          if (is_callable($this->filterable)) {
+              return call_user_func($this->filterable, func_get_args());
+          }
+
+          $keyName = $this->getRelatedResource()->getModel()->getKeyName();
+          $models = $this->getRelatedResource()->getModel()->newCollection(explode(',', $value))
+              ->map(fn ($key) => $this->getRelatedResource()->getModel()->setAttribute($keyName, $key))
+          ;
+
+          return $query->whereBelongsTo($models, $this->field());
+      }
+
     public function formatValue(mixed $object): mixed
     {
         if (is_string($object)) {
             return [
                 'id' => $object,
                 'title' => $object,
-                'link' => $this->getResource()->linkTo($object),
+                'link' => $this->getRelatedResource()->linkTo($object),
             ];
         }
 
         if (!empty($object)) {
             return [
                 'id' => $object->getKey(),
-                'title' => $this->getResource()->getTitle($object),
-                'link' => $this->getResource()->linkTo($object),
-                'subtitle' => $this->getResource()->getSubtitle($object),
+                'title' => $this->getRelatedResource()->getTitle($object),
+                'link' => $this->getRelatedResource()->linkTo($object),
+                'subtitle' => $this->getRelatedResource()->getSubtitle($object),
             ];
         }
 

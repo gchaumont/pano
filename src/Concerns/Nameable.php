@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 
 trait Nameable
 {
-    protected string|\Closure $name;
+    protected string $name;
 
     public function name(string $name): static
     {

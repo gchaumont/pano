@@ -113,6 +113,9 @@ export default {
         this.suggest();
 
         this._keyListener = function(e) {
+            if (!this.active) {
+                return
+            }
 
             if (e.key == 'Backspace') { // delete closing brackets if no content between
                 var deletedLetter = this.search.slice(this.$refs.searchInput.selectionStart - 1, this.$refs.searchInput.selectionStart);

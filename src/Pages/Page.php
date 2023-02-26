@@ -32,18 +32,6 @@ class Page extends Component
     {
     }
 
-    public function data(): array
-    {
-        return $this->data ?? [];
-    }
-
-    public function setData(array $data): static
-    {
-        $this->data = $data;
-
-        return $this;
-    }
-
     public function breadcrumbs(): array
     {
         $app = $this;

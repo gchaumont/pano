@@ -69,10 +69,10 @@ abstract class SignificantPartition extends Partition
         return $this;
     }
 
-    public function jsonConfig(): array
+    public function config(): array
     {
         return [
-            ...parent::jsonConfig(),
+            ...parent::config(),
             'prefix' => $this->prefix,
             'suffix' => $this->suffix,
         ];

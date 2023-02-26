@@ -13,20 +13,21 @@ trait HasOptions
         return $this;
     }
 
-    public function getOptions($request, $resource): array
+    public function getOptions($request): array
     {
         if (!$this->isFilterable($request)) {
             return [];
         }
         if (!isset($this->options)) {
-            return $resource
+            return $this->getResource()
                 ->fieldOptions($this->field)
                 ->all()
             ;
         }
 
-        return collect($this->options instanceof \Closure ? $this->options($request) : $this->options)
+        return collect($this->options instanceof \Closure ? ($this->options)($request) : $this->options)
             ->map(fn ($label, $value) => ['label' => $label, 'value' => $value])
+            ->values()
             ->all()
         ;
     }

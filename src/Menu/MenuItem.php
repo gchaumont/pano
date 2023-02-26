@@ -15,9 +15,9 @@ class MenuItem extends Component
 
     public string $component = 'pano-menu-item';
 
-    protected null|string|\Closure $icon = null;
+    protected null|string $icon = null;
 
-    protected string|\Closure $path;
+    protected string $path;
 
     protected bool $canSee;
 
@@ -48,21 +48,21 @@ class MenuItem extends Component
 
     //     return $this;
     // }
-    public function path(string|\Closure $path): static
+    public function path(string $path): static
     {
         $this->path = $path;
 
         return $this;
     }
 
-    public function getName(): string
-    {
-        return is_string($this->name) ? $this->name : ($this->name)($this->getApplication());
-    }
+    // public function getName(): string
+    // {
+    //     return is_string($this->name) ? $this->name : ($this->name)($this->getApplication());
+    // }
 
     public function getPath(): string
     {
-        return is_string($this->path) ? $this->path : ($this->path)($this->getApplication());
+        return $this->path;
     }
 
     public function getIcon(): ?string
@@ -110,15 +110,13 @@ class MenuItem extends Component
     public static function application(string $application, array|callable $items = null): static
     {
         $static = new static('');
-        $static->path = fn (Application $app) => $app->getApp($application)
-            ->url()
-        ;
-        $static->name = fn (Application $app) => $app->getApp($application)
-            ->getName()
-        ;
-        $static->icon = fn (Application $app) => $app->getApp($application)
-            ->getIcon()
-        ;
+
+        $static->onRegistered(function (MenuItem $item) use ($application): void {
+            $app = $item->getApplication()->getApp($application);
+            $item->path = $app->url();
+            $item->name = $app->getName();
+            $item->icon ??= $app->getIcon();
+        });
 
         return $static;
     }
@@ -126,15 +124,12 @@ class MenuItem extends Component
     public static function dashboard(string $dashboard): static
     {
         $static = new static('');
-        $static->path = fn (Application $app) => $app->getDashboard($dashboard)
-            ->url()
-        ;
-        $static->name = fn (Application $app) => $app->getDashboard($dashboard)
-            ->getName()
-        ;
-        $static->icon = fn (Application $app) => $app->getDashboard($dashboard)
-            ->getIcon()
-        ;
+        $static->onRegistered(function (MenuItem $item) use ($dashboard): void {
+            $dash = $item->getApplication()->getDashboard($dashboard);
+            $item->path = $dash->url();
+            $item->name = $dash->getName();
+            $item->icon ??= $dash->getIcon();
+        });
 
         return $static;
     }
@@ -142,16 +137,13 @@ class MenuItem extends Component
     public static function resource(string $resource): static
     {
         $static = new static('');
-        $static->path = fn (Application $app) => $app->getResource($resource)
-            ->url()
-        ;
 
-        $static->name = fn (Application $app) => $app->getResource($resource)
-            ->getName()
-        ;
-        $static->icon = fn (Application $app) => $app->getResource($resource)
-            ->getIcon()
-        ;
+        $static->onRegistered(function (MenuItem $item) use ($resource): void {
+            $resource = $item->getApplication()->getResource($resource);
+            $item->path = $resource->url();
+            $item->name = $resource->getName();
+            $item->icon ??= $resource->getIcon();
+        });
 
         return $static;
     }

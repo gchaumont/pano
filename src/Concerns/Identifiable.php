@@ -28,7 +28,7 @@ trait Identifiable
             return $this->key;
         }
 
-        return Str::slug($this->getName() ?? class_basename(static::class));
+        return $this->_key ??= Str::slug($this->getName() ?? class_basename(static::class));
     }
 
     public function id(string $id): static

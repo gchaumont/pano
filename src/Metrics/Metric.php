@@ -59,7 +59,7 @@ abstract class Metric extends Component
         // Route::get($this->getPath(), [ResourceController::class, 'metric'])->name($this->getContextSeparator().$this->getKey());
     }
 
-    public function data(): array
+    public function data($request): array
     {
         return [
             'value' => fn ($request) => $this->calculate($request, $this->getResource()->newFilteredQuery($request)),

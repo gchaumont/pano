@@ -45,15 +45,15 @@ class BelongsToMany extends RelatesToMany
             return [
                 'id' => $object,
                 'title' => $object,
-                'link' => $this->getResource()->linkTo($object),
+                'link' => $this->getRelatedResource()->linkTo($object),
             ];
         }
         if (!empty($object)) {
             return [
                 'id' => $object->getKey(),
-                'title' => $this->getResource()->getTitle($object),
-                'link' => $this->getResource()->linkTo($object),
-                'subtitle' => $this->getResource()->getSubtitle($object),
+                'title' => $this->getRelatedResource()->getTitle($object),
+                'link' => $this->getRelatedResource()->linkTo($object),
+                'subtitle' => $this->getRelatedResource()->getSubtitle($object),
             ];
         }
 
@@ -62,7 +62,7 @@ class BelongsToMany extends RelatesToMany
 
     public function getForeignKey(): string
     {
-        $class = $this->getResource()->model;
+        $class = $this->getRelatedResource()->model;
 
         return $this->foreignKey ?? $this->field.'.'.(new $class())->getForeignKey();
     }
@@ -76,7 +76,7 @@ class BelongsToMany extends RelatesToMany
 
     // public function serialiseValue(DataAccessObject $object): mixed
     // {
-    //     return $this->getResource()->getTitle($object->{$this->field});
+    //     return $this->getRelatedResource()->getTitle($object->{$this->field});
 
     //     return $object;
     //     $value = $object->getAttribute($this->getForeignKey());
