@@ -26,7 +26,7 @@
                     <br>
                 </li>
             </ul>
-            <!-- <ListResource v-if="currentRelation" :resource="currentRelation.resource" :endpoint="relatedEndpoint" :show_metrics="false" :uiPath="uiPath/> -->
+            <!-- <ListResource v-if="currentRelation" :resource="currentRelation"   :uiPath="uiPath"/> -->
         </section>
     </div>
 </template>
@@ -55,7 +55,6 @@ const props = defineProps({
         type: String,
         required: true,
     },
-
 })
 
 const data = reactive({
@@ -65,6 +64,7 @@ const data = reactive({
     selectedRelation: null,
 })
 
+console.log(props.resource)
 const relations = computed(function() {
     return data.fields.filter((f) => f.type == 'relates-to-many-field');
 })
@@ -73,10 +73,10 @@ const breadcrumbs = computed(() => [...props.resource.breadcrumbs, {name: props.
 const simpleFields = computed(function() {
     return data.fields.filter((f) => f.type != 'relates-to-many-field');
 })
-const relatedEndpoint = computed(function() {
-    console.log(props.resource.endpoints)
-    return props.resource.endpoints.recordsrecordrelationrelation.url.replace(':record', props.record).replace(':relation', currentRelation.value.key)
-})
+
+// const relatedEndpoint = computed(function() {
+//     return props.resource.endpoints.resource.url.replace(':record', props.record).replace(':relation', currentRelation.value.key)
+// })
 const currentRelation = computed(function() {
     if (data.selectedRelation) {
         var relation = relations.value.find(r => r.key == data.selectedRelation)
@@ -93,7 +93,6 @@ const loadResource = function() {
 
         endpoint.query({endpoint: 'record', params :{record:props.record}, uiPath: props.uiPath})
             .then(r => {
-                console.log(r.record)
                 var json = r.record;
 
                     data.error = null;
@@ -101,7 +100,7 @@ const loadResource = function() {
                     data.fields = json.fields
                     data.selectedRelation = relations.value[0]?.key
 
-                    console.log(relations.value);
+                    // console.log(relations.value);
 
 
             })

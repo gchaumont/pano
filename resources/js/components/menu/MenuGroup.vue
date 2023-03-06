@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="mb-6">
         <p class="mt-6 text-gray-300 font-medium text-sm mb-2" v-if="!collapsed">{{config.name}}</p>
         <ul class="menu-group-items ">
             <li v-for="item in config.items">

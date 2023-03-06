@@ -18,6 +18,7 @@ trait HasOptions
         if (!$this->isFilterable($request)) {
             return [];
         }
+
         if (!isset($this->options)) {
             return $this->getResource()
                 ->fieldOptions($this->field)

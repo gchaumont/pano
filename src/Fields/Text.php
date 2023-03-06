@@ -3,7 +3,6 @@
 namespace Pano\Fields;
 
 use Pano\Fields\Concerns\HasFilters;
-use Pano\Fields\Concerns\HasOptions;
 use Pano\Query\Directives\Directive;
 use Pano\Query\Directives\FieldDirective;
 
@@ -12,7 +11,6 @@ use Pano\Query\Directives\FieldDirective;
  */
 class Text extends Field
 {
-    use HasOptions;
     use HasFilters;
 
     const TYPE = 'text';

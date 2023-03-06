@@ -49,6 +49,7 @@ export function useData() {
 
     function query({uiPath, endpoint, params = {}}) {
         const path = route.matched.filter(r => r.meta?.page).at(-1).path;
+        // console.log(route.matched.filter(r => r.meta?.page))
         params = ref(params)
         params.value.uiPath = uiPath;
         params.value.endpoint = endpoint;
@@ -88,7 +89,7 @@ export const getCurrentApp = computed(() => currentApp.value)
 export default function Pano(config) {
 
     this.config = reactive(config);
-
+    console.log(config);
     this.useRouter = Router => {
         for (var i = this.config.length - 1; i >= 0; i--) {
             this.registerConfig(this.config[i], Router);

@@ -35,8 +35,6 @@ const props = defineProps({
     },
 })
 
-console.log(props)
-
 import { ref, watch } from 'vue'
 import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
 import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'

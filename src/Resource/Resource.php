@@ -397,7 +397,7 @@ abstract class Resource extends Page
                 ->component('ShowResource')
                 ->setData([
                     'record' => fn ($request) => app(ResourceController::class)->withResource($this)->show($request->input('record')),
-                    'related' => fn ($request) => app(ResourceController::class)->withResource($this)->relation($request->input('record'), $request->input('relation')),
+                    'resource' => fn ($request) => app(ResourceController::class)->withResource($this)->relation($request->input('record'), $request->input('relation')),
                 ])
                 ->props([
                     'record' => QueryParameter::make('record'),
@@ -491,7 +491,7 @@ abstract class Resource extends Page
              return $builder
                  ->take(0)
                  ->addAggregation(
-                     (new Terms('terms'))->field($field)->size(5)
+                     (new Terms('terms'))->field($field)->size(5)->missing('N/A')
                  )
                  ->get()
                  ->aggregation('terms')
@@ -500,6 +500,7 @@ abstract class Resource extends Page
                      'label' => $bucket['key'],
                      'value' => $bucket['key'],
                  ])
+
              ;
          }
          if ($builder instanceof \Illuminate\Database\Eloquent\Builder) {

@@ -95,7 +95,7 @@ abstract class Partition extends Metric
         }
 
         if (is_a($query->getModel(), \Elastico\Eloquent\Model::class)) {
-            $results = $query
+            $aggregation = $query
                 ->take(0)
                 ->select()
                 ->addAggregation(
@@ -104,12 +104,21 @@ abstract class Partition extends Metric
                 ->when(!empty($callback), fn ($q) => $callback($q))
                 ->get()
                 ->aggregation('terms')
-                ->buckets()
+            ;
+
+            $results = $aggregation->buckets()
                 ->map(fn ($bucket) => [
                     'name' => $bucket['key'],
                     'id' => $bucket['key'],
                     'value' => 'count' == $function ? $bucket['doc_count'] : $bucket['agg']['value'],
                 ])
+                ->when($aggregation->get('sum_other_doc_count') > 0, fn ($results) => $results->push([
+                    'name' => 'Others',
+                    'id' => null,
+                    'value' => $aggregation->get('sum_other_doc_count'),
+                ]))
+
+                // ->ddd()
                 ->all()
             ;
         } elseif (is_a($query->getModel(), \Illuminate\Database\Eloquent\Model::class)) {

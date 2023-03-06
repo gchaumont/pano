@@ -135,7 +135,10 @@ class ResourceController extends Controller
             'resource' => $resource->config(),
             'fields' => collect($resource->fieldsForIndex(request()))->map(fn ($f) => $f->config()),
             'filterOptions' => $resource->getFilters()
-                ->map(fn ($f) => [...$f->config(), ...$f->getData(request())->map(fn ($data, $key) => is_callable($data) ? $data(request()) : $data)]),
+                ->map(fn ($f) => [
+                    ...$f->config(),
+                    ...$f->getData(request())->map(fn ($data, $key) => is_callable($data) ? $data(request()) : $data),
+                ]),
         ];
     }
 

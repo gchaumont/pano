@@ -28,7 +28,7 @@
     var panoConfig = {{ Illuminate\Support\Js::from($panoConfig) }};
 </script>
 <body>
-    <div id="pano-app" />
+    <div id="pano-app"  />
 </body>
 
 </html>

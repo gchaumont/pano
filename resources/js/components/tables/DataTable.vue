@@ -5,7 +5,7 @@
             <tr v-if="fields.length">
                 <!-- <pano-field-table-header /> -->
                 <th scope="col" :class="[theme.tableHeader, 'relative w-16 px-8 sm:w-12 sm:px-6']">
-                    <input type="checkbox" :class="['absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded  focus:ring-sky-500 sm:left-4']" :checked="indeterminate || selectedItems.length === models.length" :indeterminate="indeterminate" @change="selectedItems = $event.target.checked ? models.map((p) => p.id) : []" />
+                    <input type="checkbox" :class="['absolute left-6 top-1/2 -mt-2 h-4 w-4 rounded  focus:ring-sky-500 sm:left-4']" :checked="indeterminate || (selectedItems.length === models.length && models.length>0)" :indeterminate="indeterminate" @change="selectedItems = $event.target.checked ? models.map((p) => p.id) : []" />
                 </th>
                 <template v-for="field in fields">
                     <pano-field-table-header @sortBy="sortBy" class="px-3 py-3" :config="field" v-if="field.type != 'hidden-field'" />
@@ -51,9 +51,7 @@ const state = reactive({
     emitting: null,
 })
 
-
 const emit = defineEmits(['nextPage', 'sortBy'])
-
 
 const props = defineProps({
     fields: {
@@ -93,6 +91,5 @@ function sortBy(sortKey) {
     emit('sortBy', sortKey);
 }
 
-
-const indeterminate = computed(() => selectedItems.value.length > 0 && selectedItems.value.length < props.models.length)
+const indeterminate = computed(() => selectedItems.value.length > 0 && selectedItems.value.length < props.models.length )
 </script>

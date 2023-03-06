@@ -29,12 +29,21 @@ class LinkDev extends Command
     {
         $target = base_path('vendor/gchaumont/pano/public');
         $link = public_path('/vendor/pano');
-        app()->make('files')->delete($link);
+        if (is_link($link)) {
+            app()->make('files')->delete($link);
+        } else {
+            app()->make('files')->deleteDirectory($link);
+        }
         app()->make('files')->link($target, $link);
 
-        $target = base_path('vendor/gchaumont/pano/resources');
-        $link = resource_path('/vendor/pano');
-        app()->make('files')->delete($link);
-        app()->make('files')->link($target, $link);
+        // $target = base_path('vendor/gchaumont/pano/resources');
+        // $link = resource_path('/vendor/pano');
+        // if (is_link($link)) {
+        //     app()->make('files')->delete($link);
+        // } else {
+        //     app()->make('files')->deleteDirectory($link);
+        // }
+        // app()->make('files')->delete($link);
+        // app()->make('files')->link($target, $link);
     }
 }

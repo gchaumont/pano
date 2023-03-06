@@ -137,11 +137,12 @@ class MenuItem extends Component
     public static function resource(string $resource): static
     {
         $static = new static('');
+        $static->name('');
 
         $static->onRegistered(function (MenuItem $item) use ($resource): void {
             $resource = $item->getApplication()->getResource($resource);
             $item->path = $resource->url();
-            $item->name = $resource->getName();
+            $item->name = $item->name ?: $resource->getName();
             $item->icon ??= $resource->getIcon();
         });
 

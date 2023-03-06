@@ -9,6 +9,7 @@ use Illuminate\Support\Str;
 use Pano\Components\Component;
 use Pano\Fields\Concerns\HasFilters;
 use Pano\Fields\Concerns\HasFormat;
+use Pano\Fields\Concerns\HasOptions;
 use Pano\Fields\Concerns\HasVisibility;
 use Pano\Resource\Resource;
 
@@ -22,6 +23,7 @@ abstract class Field extends Component
     use HasVisibility;
     use HasFormat;
     use HasFilters;
+    use HasOptions;
 
     protected mixed $value;
 
@@ -327,6 +329,7 @@ abstract class Field extends Component
     {
         return [
             'filterable' => $this->isFilterable($request),
+            'options' => fn ($request) => $this->getOptions($request),
         ];
     }
 

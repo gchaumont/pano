@@ -3,8 +3,9 @@
         <PageHeading :title="resource.name" :actions="resource.actions" :breadcrumbs="resource.breadcrumbs" :meta="resource.meta" class="p-2 sm:p-5" />
         <section v-if="state.definition && props.show_metrics" class="max-w-full overflow-x-scroll overflow-y-hidden">
             <ul class="flex flex-row gap-3 items-stretch justify-start my-4 max-h-[25rem] mx-2 sm:mx-5">
-                <li v-for="metric in state.definition.metrics" class="basis-96 shrink-0  ">
-                    <component :class="[theme.cardBg, ' rounded-lg  h-full']" :is="metric.component" :metric="metric.props" :path="state.definition.path" :params="getQueryParams" @filter="handleFilter" :uiPath="metric.uiPath" />
+                <li v-for="metric in state.definition.metrics" class="basis-[30rem]">
+                    <component :class="[theme.cardBg, ' rounded-lg  h-full']" :is="metric.component" :metric="metric.props" :path="state.definition.path" :params="getQueryParams" @filter="handleFilter" :uiPath="metric.uiPath" :key="metric.uiPath"/>
+                    
                 </li>
             </ul>
         </section>
@@ -42,7 +43,7 @@
             </PopoverGroup>
         </header>
         <div class="min-h-screen overflow-x-scroll ">
-            <data-table @nextPage="nextPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" :page="state.page" :isLoading="state.isLoading" />
+            <data-table @nextPage="nextPage" @sortBy="sortBy" :fields="state.fields" :models="state.models" :total="state.total" :page="state.page" :isLoading="state.isLoading" :key="resource.path"/>
         </div>
     </section>
 </template>
@@ -109,13 +110,7 @@ const props = defineProps({
         required: false,
         default: true
     },
-    endpoint: {
-        type: String,
-        required: false,
-        default: null
-    }
 })
-
 
 const endpoint = useData()
 
@@ -156,6 +151,8 @@ function loadResource() {
             state.isLoading = false;
             // state.definition = json.resource
             state.fields = json.fields
+            state.filterOptions = json.filterOptions
+            state.total = json.total
 
             json.filterOptions.forEach(section => {
                 if (!state.filters.hasOwnProperty(section.key)) {
@@ -163,18 +160,11 @@ function loadResource() {
                 }
             })
 
-            state.filterOptions = json.filterOptions
-
-
-
             if (state.page > 1) {
-                console.log('Pushing Hits')
                 state.models.push(...json.hits)
             } else {
-                console.log('Initialising Hits')
                 state.models = json.hits
             }
-            state.total = json.total
         })
   
 }

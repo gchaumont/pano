@@ -32,7 +32,7 @@ class PartitionResult extends MetricResult
     public function label(callable $callback): static
     {
         foreach ($this->partition as &$part) {
-            $part['name'] = $callback($part['name']);
+            $part['name'] = $callback($part['name'], $part['id']);
         }
 
         return $this;
