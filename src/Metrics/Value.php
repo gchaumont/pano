@@ -182,33 +182,44 @@ abstract class Value extends Metric
         $range = $request->input('range') ?? array_key_first($this->ranges());
 
         if ('ALL' !== $range) {
-            $result = $this->result(
-                round((clone $query)
-                    ->when($range, fn ($q) => $q->whereBetween(
-                        $dateColumn ?? $query->getModel()->getCreatedAtColumn(),
-                        $this->currentRange($range, $timezone)
-                    ))
+            $result = (clone $query)
+                ->when($range, fn ($q) => $q->whereBetween(
+                    $dateColumn ?? $query->getModel()->getCreatedAtColumn(),
+                    $this->currentRange($range, $timezone)
+                ))
+                ->when(!empty($callback), fn ($q) => $callback($q))
+                ->{$function}($column);
 
-                    ->when(!empty($callback), fn ($q) => $callback($q))
-                    ->{$function}($column), $this->precision)
-            );
+            if (is_numeric($result) && $this->precision) {
+                $result = round($result, $this->precision);
+            }
+
+            $result = $this->result($result);
             if ($prevRange = $this->previousRange($range, $timezone)) {
-                $previousValue = round((clone $query)
+                $previousValue = (clone $query)
                     ->whereBetween(
                         $dateColumn ?? $query->getModel()->getCreatedAtColumn(),
                         $prevRange
                     )
                     ->when(!empty($callback), fn ($q) => $callback($q))
-                    ->{$function}($column), $this->precision);
+                    ->{$function}($column);
+
+                if (is_numeric($previousValue) && $this->precision) {
+                    $previousValue = round($previousValue, $this->precision);
+                }
 
                 $result->previous($previousValue);
             }
         } else {
-            $result = $this->result(
-                round((clone $query)
-                    ->when(!empty($callback), fn ($q) => $callback($q))
-                    ->{$function}($column), $this->precision)
-            )
+            $result = (clone $query)
+                ->when(!empty($callback), fn ($q) => $callback($q))
+                ->{$function}($column);
+
+            if (is_numeric($result) && $this->precision) {
+                $result = round($result, $this->precision);
+            }
+
+            $result = $this->result($result)
             ;
         }
 
