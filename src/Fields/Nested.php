@@ -53,6 +53,7 @@ class Nested extends Field
     public function serialiseValue(object $object): mixed
     {
         $list = [];
+
         foreach ($this->resolveValue($object) ?? [] as $nested) {
             $entity = [];
             foreach ($this->fields as $field) {

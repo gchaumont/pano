@@ -25,6 +25,12 @@ use Pano\Query\Directives\Directive;
 
      public function formatValue(mixed $value): mixed
      {
+        if(is_string($value)) {
+            try{
+                $value = new DateTimeImmutable($value);
+            } catch (\Exception) {
+            }
+        }
          if ($value instanceof BaseDateTime || $value instanceof DateTimeImmutable) {
              return [
                  'raw' => $value->format('Y-M-d H:i:s'),
@@ -32,6 +38,8 @@ use Pano\Query\Directives\Directive;
                  'time' => $value->format('H:i:s'),
              ];
          }
+
+
 
          return ['raw' => $value];
      }

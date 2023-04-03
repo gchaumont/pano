@@ -50,6 +50,8 @@ class ContextManager
 
         // dd($page::$remember);
 
+        app(PanoServiceProvider::class, ['app' => app()])->registerRoutes();
+
         return $this;
     }
 

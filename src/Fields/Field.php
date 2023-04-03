@@ -361,6 +361,15 @@ abstract class Field extends Component
         if (!empty($this->resolveUsing)) {
             return call_user_func($this->resolveUsing, $object);
         }
+
+        if(str_contains($this->field(), '.')) {
+            $parts = explode('.', $this->field());
+            foreach ($parts as $part) {
+                $object = $object->{$part};
+            }
+            return $object;
+        }
+
         // Get the value from the model
         return $object->getAttribute($this->field());
     }

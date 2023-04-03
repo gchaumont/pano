@@ -17,12 +17,12 @@
       "node_modules/chart.js/dist/chart.mjs",
       "node_modules/chart.js/dist/chart.mjs"
     ],
-    "file": "assets/app-808caff0.js",
+    "file": "assets/app-b265683e.js",
     "isEntry": true,
     "src": "resources/js/app.js"
   },
   "resources/js/components/NotFound.vue": {
-    "file": "assets/NotFound-278e6859.js",
+    "file": "assets/NotFound-2a891963.js",
     "imports": [
       "resources/js/app.js"
     ],

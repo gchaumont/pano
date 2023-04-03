@@ -5,7 +5,7 @@
       <h2 class=" text-lh font-bold leading-7 text-slate-800 dark:text-white sm:truncate text-2xl sm:text-3xl sm:tracking-tight">{{title}}</h2>
       <ResourceMeta v-if="meta" :meta="meta" /> 
     </div>
-    <ResourceActions v-if="actions" :actions="actions" /> 
+    <!-- <ResourceActions v-if="actions" :actions="actions" />  -->
   </header>
 </template>
 

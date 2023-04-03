@@ -1,9 +1,10 @@
 <?php
 
+use Pano\Context;
 use Pano\Facades\Pano;
 
 Pano::getContexts()
-    ->each(fn ($context) => Route::group([], $context->getRoutes()))
+    ->each(fn (Context $context) => Route::group([], $context->getRoutes()))
 ;
 
 // Route::group(array_filter([

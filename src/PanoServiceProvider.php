@@ -29,8 +29,6 @@ class PanoServiceProvider extends ServiceProvider
 
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'pano');
 
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
-
         $this->publishes([
             __DIR__.'/../public' => public_path('vendor/pano'),
         ], ['pano-assets']);
@@ -55,7 +53,14 @@ class PanoServiceProvider extends ServiceProvider
 
     public function register()
     {
+        $this->booted(fn () => $this->registerRoutes());
+
         $this->app->singleton('pano', fn (): ContextManager => new ContextManager());
         // $this->app->scoped('pano', fn (): ContextManager => new ContextManager());
+    }
+
+    public function registerRoutes()
+    {
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
     }
 }
